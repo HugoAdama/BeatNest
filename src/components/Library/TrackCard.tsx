@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Play, Pause, Heart, Music, MoreVertical, PlaySquare, ListPlus, FolderPlus, Trash2 } from 'lucide-react';
+import { Play, Pause, Heart, Music, MoreVertical, PlaySquare, ListPlus, FolderPlus, Trash2, Edit3 } from 'lucide-react';
 import type { Track } from '../../types/music';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useLibraryStore } from '../../stores/useLibraryStore';
+import { useUIStore } from '../../stores/useUIStore';
 import { formatDuration } from '../../lib/metadata';
 import { AddToPlaylistMenu } from '../Playlists/AddToPlaylistMenu';
 import { PlayingIndicator } from '../Common/PlayingIndicator';
@@ -150,6 +151,16 @@ export const TrackCard: React.FC<TrackCardProps> = ({
               >
                 <FolderPlus size={14} className="text-[var(--app-text-muted)]" />
                 <span>Añadir a playlist</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  useUIStore.getState().setEditingTrack(track);
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]"
+              >
+                <Edit3 size={14} className="text-[#7C5CFF]" />
+                <span>Editar metadatos</span>
               </button>
               <div className="my-1 border-t border-[var(--app-border)]" />
               <button

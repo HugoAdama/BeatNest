@@ -135,3 +135,57 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 - **Fondo Ambiental Flotante**: Halos de gradiente orgánico `floatAmbient` que aportan profundidad visual sin impacto en el rendimiento de renderizado a 60 FPS.
 - **Microinteracciones en Controles**: Rebotes elásticos al presionar botones principales, resaltado y zoom sutil en carátulas activas, y seguimiento suave en el depurador de ondas de audio.
 
+---
+
+## 12. Temporizador de Apagado (Sleep Timer) con Desvanecimiento
+
+- **Opciones de Tiempo**: Presets de 15, 30, 45, 60 minutos, o al finalizar la canción actual.
+- **Desvanecimiento Progresivo (*Fade-Out*)**: Durante los últimos 45 segundos del temporizador, el motor de audio reduce gradualmente la ganancia principal a cero de manera imperceptible para evitar cortes abruptos durante el sueño.
+- **Pausa Automática y Restauración**: Al expirar el tiempo, el reproductor pausa la reproducción y restaura el volumen al valor nominal para la próxima sesión.
+- **Indicador Visual**: Botón con insignia temporal en tiempo real y punto pulsante en la barra de control inferior.
+
+---
+
+## 13. Acústica Espacial (Reverberación de Sala)
+
+- **Simulador Convolutivo**: Integración de un nodo `ConvolverNode` en la cadena de procesamiento de Web Audio API.
+- **Generación de Impulso Sintético**: Construcción matemática en memoria de respuestas al impulso estéreo con envolvente de decaimiento exponencial (`decay = Math.pow(1 - t, decayRate)`), eliminando la dependencia de descargas de archivos externos de audio y garantizando funcionamiento offline absoluto.
+- **Modos Acústicos**:
+  - **Desactivado**: Señal pura en seco (*Dry 100%, Wet 0%*).
+  - **Habitación (*Room*)**: Espacio íntimo con reverberación corta (1.2s).
+  - **Sala de Conciertos (*Hall*)**: Espacio amplio con profundidad media (2.5s).
+  - **Catedral (*Cathedral*)**: Espacio monumental con decaimiento prolongado (4.2s).
+- **Control Integrado**: Selector por botones segmentados en el modal de ecualización.
+
+---
+
+## 14. Respaldo y Restauración de Biblioteca (JSON)
+
+- **Exportación Segura**: Descarga un archivo JSON estructurado con listas de reproducción, metadatos, favoritos, fechas de adición y letras personalizadas.
+- **Validación de Esquema**: Analiza el archivo importado, valida tipos y versión de esquema antes de escribir en IndexedDB.
+- **Sincronización Inmediata**: Actualiza la base de datos Dexie y rehidrata los estados de Zustand en tiempo real sin requerir recargar la página.
+- **Acceso Directo**: Botones dedicados de «Respaldar» y «Restaurar» ubicados en el pie de la barra lateral.
+
+---
+
+## 15. Historial Reciente y Filtros por Género
+
+- **Historial de Reproducción**: Pestaña dedicada en la barra lateral que almacena en orden cronológico inverso las últimas 50 pistas reproducidas.
+- **Filtro de Géneros por Chips**: Fila horizontal de etiquetas dinámicas calculadas a partir de las pistas disponibles en la biblioteca. Permite alternar y filtrar con un solo clic entre géneros como Rock, Pop, Synthwave, Electrónica, etc.
+
+---
+
+## 16. Editor de Metadatos ID3 en Caliente
+
+- **Edición en Tiempo Real**: Modifica título, artista, álbum, género y año de lanzamiento de cualquier pista desde los menús de opciones en tarjetas o filas.
+- **Persistencia en IndexedDB**: Guarda las modificaciones en el almacén local de Dexie y propaga los cambios inmediatamente a la cola de reproducción, reproductor activo e interfaz de biblioteca.
+
+---
+
+## 17. Modo Aplicación Web Progresiva (PWA y Soporte Offline)
+
+- **Instalable como Aplicación de Escritorio/Móvil**: Manifiesto web configurado con modo de visualización autónomo (*standalone*) y soporte de temas visuales.
+- **Service Worker Local**: Estrategia de caché de recursos estáticos (*network-first* con respaldo en caché) que permite abrir y utilizar BeatNest incluso sin conexión a Internet.
+- **Respeto a Recursos Locales**: El Service Worker omite intercepciones de streams de audio `blob:` y URLs en memoria para mantener el rendimiento nativo del decodificador del navegador.
+
+

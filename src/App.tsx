@@ -9,6 +9,8 @@ import { MiniPlayer } from './components/Player/MiniPlayer';
 import { ShortcutsModal } from './components/Shortcuts/ShortcutsModal';
 import { PlaylistModal } from './components/Playlists/PlaylistModal';
 import { LyricsModal } from './components/Player/LyricsModal';
+import { SleepTimerModal } from './components/Player/SleepTimerModal';
+import { EditTrackModal } from './components/Library/EditTrackModal';
 import { useLibraryStore } from './stores/useLibraryStore';
 import { usePlayerStore } from './stores/usePlayerStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -43,6 +45,8 @@ export const App: React.FC = () => {
       <EqualizerModal />
       <ShortcutsModal />
       <LyricsModal />
+      <SleepTimerModal />
+      <EditTrackModal />
       <PlaylistModal
         isOpen={isCreatePlaylistOpen}
         onClose={() => setIsCreatePlaylistOpen(false)}

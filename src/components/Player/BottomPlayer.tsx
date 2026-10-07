@@ -7,10 +7,12 @@ import {
   Minimize2,
   Music,
   AlignLeft,
+  Timer,
 } from 'lucide-react';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useUIStore } from '../../stores/useUIStore';
 import { useLibraryStore } from '../../stores/useLibraryStore';
+import { useSleepTimerStore } from '../../stores/useSleepTimerStore';
 import { WaveformScrubber } from './WaveformScrubber';
 import { QueueDrawer } from './QueueDrawer';
 import { PlayingIndicator } from '../Common/PlayingIndicator';
@@ -54,6 +56,7 @@ export const BottomPlayer: React.FC = () => {
   } = useUIStore();
 
   const { toggleFavorite } = useLibraryStore();
+  const { activeOption: sleepTimerOption, toggleModal: toggleSleepTimerModal } = useSleepTimerStore();
   const [isQueueOpen, setIsQueueOpen] = useState(false);
 
   if (isMiniPlayer) return null;
@@ -198,6 +201,22 @@ export const BottomPlayer: React.FC = () => {
               title="Visualizador de audio con Canvas"
             >
               <Activity size={18} />
+            </button>
+
+            {/* Sleep Timer trigger */}
+            <button
+              onClick={() => toggleSleepTimerModal(true)}
+              className={`p-2 rounded-lg transition-colors relative ${
+                sleepTimerOption !== null
+                  ? 'text-[#4FD1C5] hover:bg-[#4FD1C5]/15 font-bold'
+                  : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
+              }`}
+              title="Temporizador de apagado"
+            >
+              <Timer size={18} />
+              {sleepTimerOption !== null && (
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#4FD1C5] animate-pulse" />
+              )}
             </button>
 
             {/* Mini Player mode toggle */}

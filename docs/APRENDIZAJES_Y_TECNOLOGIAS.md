@@ -102,8 +102,25 @@ Los reproductores modernos suelen exigir cuentas de usuario, suscripciones o sub
 - **El Desafío**: Inicialmente, agrupar las propiedades del motor de audio junto con la visibilidad de los modales en un único store provocaba que componentes suscritos se re-evaluaran innecesariamente con las actualizaciones frecuentes del reloj de audio (`currentTime`). Asimismo, concentrar la síntesis de audio y múltiples vistas dentro del componente de biblioteca generaba archivos monolíticos difíciles de mantener.
 - **El Aprendizaje**: Aislar el estado de la interfaz en `useUIStore`, modularizar los controles del reproductor en subcomponentes atómicos (`PlaybackControls`, `VolumeControl`, `PlayerMenus`) y extraer la síntesis de audio a un módulo de servicio independiente (`audioGenerator.ts`) garantiza un rendimiento óptimo de renderizado y facilita el mantenimiento a largo plazo con componentes de menos de 150 líneas.
 
+### 3.7 Acústica Espacial con ConvolverNode y Respuestas al Impulso Sintéticas
+- **El Desafío**: La reverberación convolutiva tradicional en Web Audio API requiere cargar archivos de audio `.wav` con respuestas al impulso grabadas en recintos físicos. Esto añadiría peso al empaquetado y requeriría conectividad de red o almacenamiento en disco adicional.
+- **El Aprendizaje**: Se desarrolló un generador estocástico de respuesta al impulso en memoria mediante `AudioContext.createBuffer`. Al calcular ruido blanco estéreo modulado por una envolvente de decaimiento exponencial (`Math.pow(1 - t, decayRate)`), se modela acústicamente la densidad de reflexiones de una habitación pequeña, una sala de conciertos o una catedral de manera sintética, instantánea y con huella cero de datos externos.
+
+### 3.8 Temporizador de Apagado con Atenuación Gradual (Fade-Out)
+- **El Desafío**: Un temporizador de apagado tradicional que simplemente pausa la reproducción provoca un sobresalto acústico involuntario al usuario si se encuentra en fase de sueño ligero.
+- **El Aprendizaje**: Se orquestó un store reactivo `useSleepTimerStore` que supervisa la cuenta regresiva en segundos. Al entrar en los últimos 45 segundos, se activa `audioEngine.fadeOut(45)`, el cual programa una curva lineal suave en la ganancia principal hasta silenciar el flujo. Al alcanzar el segundo cero, se pausa la reproducción y se restablece el volumen al nivel nominal previo, asegurando que la próxima sesión inicie sin pérdidas de configuración.
+
+### 3.9 Portabilidad y Respaldos Atómicos en JSON
+- **El Desafío**: Al ser una aplicación 100% local, limpiar la caché del navegador o cambiar de equipo borraría las listas de reproducción, las letras personalizadas y los favoritos del usuario sin posibilidad de recuperación.
+- **El Aprendizaje**: Se diseñó el módulo `backup.ts` con un esquema versionado (`version: 1`). La exportación recopila todas las listas y metadatos descartando los binarios pesados (los cuales residen en el disco del usuario), permitiendo generar archivos de respaldo livianos de pocos kilobytes. La importación valida exhaustivamente la estructura JSON y ejecuta escrituras masivas en IndexedDB con recarga automática de los stores de Zustand, protegiendo al usuario contra pérdidas de datos accidentales.
+
+### 3.10 Estrategia de Caché PWA para Reproductores de Audio Locales
+- **El Desafío**: Un Service Worker estándar que intercepte indiscriminadamente todas las solicitudes de red puede romper o degradar el rendimiento al intentar almacenar en caché URLs `blob:` de archivos de audio de alta fidelidad (FLAC/WAV de 50MB o más), lo que agotaría rápidamente la cuota de almacenamiento del navegador.
+- **El Aprendizaje**: Se configuró `public/sw.js` con una regla de filtrado estricta: solo se interceptan solicitudes HTTP/HTTPS `GET` para los recursos del cascarón de la aplicación (`index.html`, bundles JS, CSS e iconos vectoriales), ignorando por completo los flujos binarios y URLs en memoria. Esto brinda soporte offline total y capacidad de instalación como aplicación nativa manteniendo el acceso ultrarrápido a los archivos locales.
+
 ---
 
 ## 4. Conclusión
 
 BeatNest demuestra que las aplicaciones web modernas pueden competir en rendimiento, capacidades de procesamiento de audio en tiempo real y fidelidad visual con aplicaciones de escritorio tradicionales, manteniendo al mismo tiempo las ventajas de portabilidad, instalación PWA y garantía de privacidad absoluta.
+

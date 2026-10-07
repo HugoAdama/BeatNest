@@ -1,8 +1,9 @@
 import React from 'react';
-import { Sliders, Power, RotateCcw, X } from 'lucide-react';
+import { Sliders, Power, RotateCcw, X, Sparkles } from 'lucide-react';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useUIStore } from '../../stores/useUIStore';
 import { EQ_LABELS, DEFAULT_PRESETS } from '../../lib/audioEngine';
+import type { ReverbMode } from '../../types/music';
 
 export const EqualizerModal: React.FC = () => {
   const {
@@ -12,14 +13,24 @@ export const EqualizerModal: React.FC = () => {
     setEqGain,
     activePresetId,
     setEqPreset,
+    reverbMode,
+    setReverbMode,
   } = usePlayerStore();
 
   const { isEqualizerOpen, toggleEqualizer } = useUIStore();
 
   if (!isEqualizerOpen) return null;
 
+  const reverbOptions: { id: ReverbMode; label: string }[] = [
+    { id: 'off', label: 'Desactivado' },
+    { id: 'room', label: 'Habitación' },
+    { id: 'hall', label: 'Sala de conciertos' },
+    { id: 'cathedral', label: 'Catedral / Amplio' },
+  ];
+
   const handleReset = () => {
     setEqPreset('flat');
+    setReverbMode('off');
   };
 
   return (
@@ -131,8 +142,34 @@ export const EqualizerModal: React.FC = () => {
           ))}
         </div>
 
+        {/* Spatial Reverb Simulator */}
+        <div className="mt-4 p-3 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)]">
+          <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-[var(--app-text)]">
+            <Sparkles size={14} className="text-[#4FD1C5]" />
+            <span>Acústica Espacial (Reverb de Sala)</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {reverbOptions.map((opt) => {
+              const isSelected = reverbMode === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => setReverbMode(opt.id)}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    isSelected
+                      ? 'bg-[#7C5CFF] text-white shadow-sm'
+                      : 'bg-[var(--app-surface)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] border border-[var(--app-border)]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Footer controls */}
-        <div className="mt-5 flex items-center justify-between text-xs">
+        <div className="mt-4 flex items-center justify-between text-xs">
           <button
             onClick={handleReset}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--app-surface-elevated)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"

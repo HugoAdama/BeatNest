@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import type { Track, Playlist } from '../types/music';
 import { db, type StoredTrack } from '../db';
 import { extractMetadata } from '../lib/metadata';
+import { usePlayerStore } from './usePlayerStore';
 
-export type LibraryTab = 'tracks' | 'artists' | 'albums' | 'favorites' | 'playlists';
+export type LibraryTab = 'tracks' | 'artists' | 'albums' | 'favorites' | 'playlists' | 'history';
 export type SortField = 'title' | 'artist' | 'album' | 'duration' | 'dateAdded';
 export type SortOrder = 'asc' | 'desc';
 
@@ -36,6 +37,10 @@ interface LibraryStore {
   setSelectedGenre: (genre: string | null) => void;
   setSort: (field: SortField, order?: SortOrder) => void;
   setViewMode: (mode: 'list' | 'grid') => void;
+  updateTrackMetadata: (
+    trackId: string,
+    updates: Partial<Pick<Track, 'title' | 'artist' | 'album' | 'genre' | 'year'>>
+  ) => Promise<void>;
 }
 
 export const useLibraryStore = create<LibraryStore>((set, get) => ({
@@ -345,5 +350,18 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
 
   setViewMode: (mode: 'list' | 'grid') => {
     set({ viewMode: mode });
+  },
+
+  updateTrackMetadata: async (trackId, updates) => {
+    try {
+      await db.tracks.update(trackId, updates as any);
+    } catch (err) {
+      console.warn('Error updating track metadata in DB:', err);
+    }
+    const tracks = get().tracks.map((t) =>
+      t.id === trackId ? { ...t, ...updates } : t
+    );
+    set({ tracks });
+    usePlayerStore.getState().updateTrackInPlayer(trackId, updates);
   },
 }));

@@ -1,4 +1,4 @@
-import type { EqualizerPreset } from '../types/music';
+import type { EqualizerPreset, ReverbMode } from '../types/music';
 
 export const EQ_FREQUENCIES = [60, 250, 1000, 4000, 16000] as const;
 export const EQ_LABELS = ['60 Hz', '250 Hz', '1 kHz', '4 kHz', '16 kHz'] as const;
@@ -28,6 +28,10 @@ export class AudioEngine {
   private analyser: AnalyserNode | null = null;
   private eqFilters: BiquadFilterNode[] = [];
   private eqEnabled: boolean = true;
+  private convolver: ConvolverNode | null = null;
+  private dryGain: GainNode | null = null;
+  private wetGain: GainNode | null = null;
+  private reverbMode: ReverbMode = 'off';
   private isInitialized: boolean = false;
 
   private activeUrlA: string | null = null;
@@ -112,19 +116,91 @@ export class AudioEngine {
         return filter;
       });
 
-      // Chain: MasterGain -> EQ0 -> ... -> EQ4 -> Analyser -> Destination
+      // Reverb Convolver and Wet/Dry nodes
+      this.dryGain = this.ctx.createGain();
+      this.wetGain = this.ctx.createGain();
+      this.convolver = this.ctx.createConvolver();
+
+      this.dryGain.gain.value = 1.0;
+      this.wetGain.gain.value = 0.0;
+
+      // Chain: MasterGain -> EQ0 -> ... -> EQ4 -> (dryGain + convolver/wetGain) -> Analyser -> Destination
       let currentNode: AudioNode = this.masterGain;
       for (const filter of this.eqFilters) {
         currentNode.connect(filter);
         currentNode = filter;
       }
-      currentNode.connect(this.analyser);
+
+      currentNode.connect(this.dryGain);
+      currentNode.connect(this.convolver);
+      this.convolver.connect(this.wetGain);
+
+      this.dryGain.connect(this.analyser);
+      this.wetGain.connect(this.analyser);
       this.analyser.connect(this.ctx.destination);
 
       this.isInitialized = true;
     } catch (err) {
       console.warn('Web Audio API context could not be fully initialized:', err);
     }
+  }
+
+  private buildImpulseResponse(durationSec: number, decayRate: number): AudioBuffer {
+    const rate = this.ctx!.sampleRate;
+    const length = Math.floor(rate * durationSec);
+    const impulse = this.ctx!.createBuffer(2, length, rate);
+    const left = impulse.getChannelData(0);
+    const right = impulse.getChannelData(1);
+
+    for (let i = 0; i < length; i++) {
+      const t = i / length;
+      const decay = Math.pow(1 - t, decayRate);
+      left[i] = (Math.random() * 2 - 1) * decay;
+      right[i] = (Math.random() * 2 - 1) * decay;
+    }
+    return impulse;
+  }
+
+  public setSpatialReverb(mode: ReverbMode): void {
+    this.reverbMode = mode;
+    if (!this.ctx || !this.convolver || !this.dryGain || !this.wetGain) return;
+
+    if (mode === 'off') {
+      this.dryGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      this.wetGain.gain.setValueAtTime(0.0, this.ctx.currentTime);
+      return;
+    }
+
+    const configs: Record<Exclude<ReverbMode, 'off'>, { dur: number; decay: number; wet: number; dry: number }> = {
+      room: { dur: 1.0, decay: 2.5, wet: 0.28, dry: 0.85 },
+      hall: { dur: 2.2, decay: 1.8, wet: 0.42, dry: 0.75 },
+      cathedral: { dur: 3.8, decay: 1.3, wet: 0.55, dry: 0.65 },
+    };
+
+    const cfg = configs[mode];
+    if (cfg) {
+      this.convolver.buffer = this.buildImpulseResponse(cfg.dur, cfg.decay);
+      const now = this.ctx.currentTime;
+      this.dryGain.gain.setValueAtTime(cfg.dry, now);
+      this.wetGain.gain.setValueAtTime(cfg.wet, now);
+    }
+  }
+
+  public getSpatialReverb(): ReverbMode {
+    return this.reverbMode;
+  }
+
+  public async fadeOut(durationSec: number): Promise<void> {
+    if (!this.masterGain || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const currentVol = this.masterGain.gain.value;
+    this.masterGain.gain.setValueAtTime(currentVol, now);
+    this.masterGain.gain.linearRampToValueAtTime(0.0001, now + durationSec);
+  }
+
+  public restoreVolume(targetVolume: number): void {
+    if (!this.masterGain || !this.ctx) return;
+    this.masterGain.gain.setValueAtTime(targetVolume, this.ctx.currentTime);
   }
 
   public getAnalyser(): AnalyserNode | null {

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { VisualizerMode } from '../types/music';
+import type { Track, VisualizerMode } from '../types/music';
 
 interface UIStore {
   isVisualizerOpen: boolean;
@@ -8,6 +8,7 @@ interface UIStore {
   isShortcutModalOpen: boolean;
   isLyricsOpen: boolean;
   isMiniPlayer: boolean;
+  editingTrack: Track | null;
 
   // Actions
   toggleVisualizer: (open?: boolean) => void;
@@ -16,6 +17,7 @@ interface UIStore {
   toggleShortcutModal: (open?: boolean) => void;
   toggleLyrics: (open?: boolean) => void;
   toggleMiniPlayer: (open?: boolean) => void;
+  setEditingTrack: (track: Track | null) => void;
   closeAllModals: () => void;
 }
 
@@ -26,6 +28,7 @@ export const useUIStore = create<UIStore>((set) => ({
   isShortcutModalOpen: false,
   isLyricsOpen: false,
   isMiniPlayer: false,
+  editingTrack: null,
 
   toggleVisualizer: (open?: boolean) =>
     set((state) => ({
@@ -55,11 +58,15 @@ export const useUIStore = create<UIStore>((set) => ({
       isMiniPlayer: open !== undefined ? open : !state.isMiniPlayer,
     })),
 
+  setEditingTrack: (track: Track | null) =>
+    set({ editingTrack: track }),
+
   closeAllModals: () =>
     set({
       isVisualizerOpen: false,
       isEqualizerOpen: false,
       isShortcutModalOpen: false,
       isLyricsOpen: false,
+      editingTrack: null,
     }),
 }));

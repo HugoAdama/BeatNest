@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Track, RepeatMode, VisualizerMode } from '../types/music';
+import type { Track, RepeatMode, VisualizerMode, ReverbMode } from '../types/music';
 import { audioEngine, DEFAULT_PRESETS } from '../lib/audioEngine';
 import { db } from '../db';
 import { useUIStore } from './useUIStore';
@@ -17,6 +17,8 @@ interface PlayerStore {
   crossfadeDuration: number; // in seconds (0 = off)
   queue: Track[];
   queueIndex: number;
+  recentTracks: Track[];
+  reverbMode: ReverbMode;
   isMiniPlayer: boolean;
   isVisualizerOpen: boolean;
   visualizerMode: VisualizerMode;
@@ -40,6 +42,7 @@ interface PlayerStore {
   cycleRepeat: () => void;
   setPlaybackRate: (rate: number) => void;
   setCrossfadeDuration: (sec: number) => void;
+  setReverbMode: (mode: ReverbMode) => void;
   addToQueue: (track: Track) => void;
   playNextInQueue: (track: Track) => void;
   removeFromQueue: (index: number) => void;
@@ -55,6 +58,7 @@ interface PlayerStore {
   toggleShortcutModal: (open?: boolean) => void;
   toggleLyrics: (open?: boolean) => void;
   setTrackLyrics: (trackId: string, lyricsText: string) => Promise<void>;
+  updateTrackInPlayer: (trackId: string, updates: Partial<Track>) => void;
 }
 
 let hasTriggeredAutoCrossfade = false;
@@ -72,6 +76,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   crossfadeDuration: 3,
   queue: [],
   queueIndex: -1,
+  recentTracks: [],
+  reverbMode: 'off',
   isMiniPlayer: false,
   isVisualizerOpen: false,
   visualizerMode: 'bars',
@@ -162,10 +168,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       }
     }
 
+    const filteredRecent = get().recentTracks.filter((t) => t.id !== track.id);
     set({
       currentTrack: track,
       queue,
       queueIndex,
+      recentTracks: [track, ...filteredRecent].slice(0, 50),
       currentTime: 0,
       duration: track.duration || 0,
     });
@@ -381,6 +389,11 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     set({ eqEnabled: newEnabled });
   },
 
+  setReverbMode: (mode: ReverbMode) => {
+    audioEngine.setSpatialReverb(mode);
+    set({ reverbMode: mode });
+  },
+
   setVisualizerMode: (mode: VisualizerMode) => {
     useUIStore.getState().setVisualizerMode(mode);
   },
@@ -420,5 +433,24 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     } catch (err) {
       console.warn('Error saving lyrics in IndexedDB:', err);
     }
+  },
+
+  updateTrackInPlayer: (trackId: string, updates: Partial<Track>) => {
+    const { currentTrack, queue, recentTracks } = get();
+    const updatedCurrent =
+      currentTrack && currentTrack.id === trackId
+        ? { ...currentTrack, ...updates }
+        : currentTrack;
+    const updatedQueue = queue.map((t) =>
+      t.id === trackId ? { ...t, ...updates } : t
+    );
+    const updatedRecent = recentTracks.map((t) =>
+      t.id === trackId ? { ...t, ...updates } : t
+    );
+    set({
+      currentTrack: updatedCurrent,
+      queue: updatedQueue,
+      recentTracks: updatedRecent,
+    });
   },
 }));

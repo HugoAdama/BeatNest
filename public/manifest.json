@@ -2,13 +2,14 @@
   "name": "BeatNest — Tu música, sin nube",
   "short_name": "BeatNest",
   "description": "Reproductor de audio local 100% privado en el navegador. Tus archivos se quedan contigo.",
-  "start_url": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0F0F12",
   "theme_color": "#0F0F12",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

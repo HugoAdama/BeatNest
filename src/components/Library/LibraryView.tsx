@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Play, Heart, ListMusic } from 'lucide-react';
+import { Play, Heart, ListMusic, History, Tag } from 'lucide-react';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { TrackRow } from './TrackRow';
@@ -22,6 +22,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     activeTab,
     selectedPlaylistId,
     searchQuery,
+    selectedGenre,
+    setSelectedGenre,
     sortBy,
     sortOrder,
     viewMode,
@@ -29,12 +31,23 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     importFiles,
   } = useLibraryStore();
 
-  const { playTrack } = usePlayerStore();
+  const { playTrack, recentTracks } = usePlayerStore();
   const [isDragOver, setIsDragOver] = useState(false);
 
-  // Filter & sort tracks based on activeTab, selected playlist, and search query
+  // Extract unique genres across entire library
+  const uniqueGenres = useMemo(() => {
+    const set = new Set<string>();
+    tracks.forEach((t) => {
+      if (t.genre && t.genre.trim() && t.genre.toLowerCase() !== 'unknown') {
+        set.add(t.genre.trim());
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [tracks]);
+
+  // Filter & sort tracks based on activeTab, selected playlist, search query, and genre
   const displayedTracks = useMemo(() => {
-    let list = [...tracks];
+    let list = activeTab === 'history' ? [...recentTracks] : [...tracks];
 
     // Filter by Playlist or Favorites
     if (activeTab === 'playlists' && selectedPlaylistId) {
@@ -44,6 +57,13 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
       }
     } else if (activeTab === 'favorites') {
       list = list.filter((t) => t.isFavorite);
+    }
+
+    // Filter by Genre
+    if (selectedGenre) {
+      list = list.filter(
+        (t) => t.genre && t.genre.toLowerCase() === selectedGenre.toLowerCase()
+      );
     }
 
     // Filter by Search Query
@@ -58,41 +78,43 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
       );
     }
 
-    // Sort
-    list.sort((a, b) => {
-      let valA: string | number = '';
-      let valB: string | number = '';
+    // Sort (skip custom sort on history to maintain chronological playback order)
+    if (activeTab !== 'history') {
+      list.sort((a, b) => {
+        let valA: string | number = '';
+        let valB: string | number = '';
 
-      switch (sortBy) {
-        case 'title':
-          valA = a.title.toLowerCase();
-          valB = b.title.toLowerCase();
-          break;
-        case 'artist':
-          valA = a.artist.toLowerCase();
-          valB = b.artist.toLowerCase();
-          break;
-        case 'album':
-          valA = a.album.toLowerCase();
-          valB = b.album.toLowerCase();
-          break;
-        case 'duration':
-          valA = a.duration;
-          valB = b.duration;
-          break;
-        case 'dateAdded':
-          valA = a.dateAdded;
-          valB = b.dateAdded;
-          break;
-      }
+        switch (sortBy) {
+          case 'title':
+            valA = a.title.toLowerCase();
+            valB = b.title.toLowerCase();
+            break;
+          case 'artist':
+            valA = a.artist.toLowerCase();
+            valB = b.artist.toLowerCase();
+            break;
+          case 'album':
+            valA = a.album.toLowerCase();
+            valB = b.album.toLowerCase();
+            break;
+          case 'duration':
+            valA = a.duration;
+            valB = b.duration;
+            break;
+          case 'dateAdded':
+            valA = a.dateAdded;
+            valB = b.dateAdded;
+            break;
+        }
 
-      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
-      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
+        if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+        if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
 
     return list;
-  }, [tracks, playlists, activeTab, selectedPlaylistId, searchQuery, sortBy, sortOrder]);
+  }, [tracks, recentTracks, playlists, activeTab, selectedPlaylistId, selectedGenre, searchQuery, sortBy, sortOrder]);
 
   // Groupings for Artists and Albums view
   const groupedArtists = useMemo(() => {
@@ -219,6 +241,18 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
               </p>
             </div>
           </div>
+        ) : activeTab === 'history' ? (
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#4FD1C5]/15 border border-[#4FD1C5]/30 flex items-center justify-center text-[#4FD1C5] shadow-md">
+              <History size={28} />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-[var(--app-text)]">Historial reciente</h2>
+              <p className="text-xs text-[var(--app-text-muted)]">
+                {displayedTracks.length} {displayedTracks.length === 1 ? 'pista reproducida' : 'pistas reproducidas'} recientemente
+              </p>
+            </div>
+          </div>
         ) : (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
@@ -255,6 +289,42 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             albumCount={groupedAlbums.length}
           />
         )}
+
+        {/* Interactive Genre filter chips */}
+        {uniqueGenres.length > 0 && activeTab !== 'artists' && activeTab !== 'albums' && (
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 mt-2">
+            <span className="text-[11px] font-semibold text-[var(--app-text-muted)] uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1">
+              <Tag size={12} />
+              <span>Género:</span>
+            </span>
+            <button
+              onClick={() => setSelectedGenre(null)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 ${
+                selectedGenre === null
+                  ? 'bg-[#7C5CFF] text-white shadow-sm shadow-[#7C5CFF]/30'
+                  : 'bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/40'
+              }`}
+            >
+              Todos
+            </button>
+            {uniqueGenres.map((genre) => {
+              const isSelected = selectedGenre?.toLowerCase() === genre.toLowerCase();
+              return (
+                <button
+                  key={genre}
+                  onClick={() => setSelectedGenre(isSelected ? null : genre)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 ${
+                    isSelected
+                      ? 'bg-[#7C5CFF] text-white shadow-sm shadow-[#7C5CFF]/30'
+                      : 'bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/40'
+                  }`}
+                >
+                  {genre}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Render based on view mode and tab */}
@@ -262,11 +332,15 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
         {displayedTracks.length === 0 ? (
           <div className="py-20 flex flex-col items-center justify-center text-center text-[var(--app-text-muted)]">
             <p className="text-sm font-medium text-[var(--app-text)] mb-1">
-              No se encontraron canciones
+              {activeTab === 'history' ? 'Historial vacío' : 'No se encontraron canciones'}
             </p>
             <p className="text-xs">
-              {searchQuery
+              {activeTab === 'history'
+                ? 'Las canciones que reproduzcas aparecerán aquí automáticamente.'
+                : searchQuery
                 ? `No hay resultados para «${searchQuery}».`
+                : selectedGenre
+                ? `No hay pistas con el género «${selectedGenre}».`
                 : 'Añade pistas a esta sección.'}
             </p>
           </div>

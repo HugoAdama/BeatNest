@@ -11,9 +11,14 @@ import {
   ShieldCheck,
   Keyboard,
   Trash2,
+  History,
+  Download,
+  Upload,
 } from 'lucide-react';
 import { useLibraryStore, type LibraryTab } from '../../stores/useLibraryStore';
+import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useUIStore } from '../../stores/useUIStore';
+import { exportLibraryBackup, importLibraryBackup } from '../../lib/backup';
 
 interface SidebarProps {
   onOpenCreatePlaylistModal: () => void;
@@ -32,8 +37,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
     deletePlaylist,
   } = useLibraryStore();
 
+  const { recentTracks } = usePlayerStore();
   const { toggleShortcutModal } = useUIStore();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const backupInputRef = useRef<HTMLInputElement | null>(null);
 
   const favoriteCount = tracks.filter((t) => t.isFavorite).length;
 
@@ -43,11 +50,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
     }
   };
 
+  const handleBackupRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      try {
+        const res = await importLibraryBackup(e.target.files[0]);
+        alert(`Respaldo restaurado: ${res.playlistsRestored} playlists y ${res.favoritesRestored} favoritos.`);
+      } catch (err: any) {
+        alert(err.message || 'Error al restaurar respaldo.');
+      }
+      e.target.value = '';
+    }
+  };
+
   const navItems: { id: LibraryTab; label: string; icon: React.ReactNode; count?: number }[] = [
     { id: 'tracks', label: 'Todas las pistas', icon: <Music size={17} />, count: tracks.length },
     { id: 'favorites', label: 'Favoritos', icon: <Heart size={17} />, count: favoriteCount },
     { id: 'artists', label: 'Artistas', icon: <Mic2 size={17} /> },
     { id: 'albums', label: 'Álbumes', icon: <Disc size={17} /> },
+    { id: 'history', label: 'Historial reciente', icon: <History size={17} />, count: recentTracks.length },
   ];
 
   return (
@@ -204,6 +224,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
             <span className="text-[var(--app-text)] font-semibold block">100% Local & Privado</span>
             <span>Archivos seguros en tu equipo</span>
           </div>
+        </div>
+
+        {/* Backup export / import */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => exportLibraryBackup()}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-[var(--app-surface-elevated)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] text-[11px] font-medium border border-[var(--app-border)] hover:border-[#7C5CFF]/40 transition-colors"
+            title="Descargar archivo .json con tus playlists y favoritos"
+          >
+            <Download size={13} className="text-[#7C5CFF]" />
+            <span>Respaldar</span>
+          </button>
+
+          <button
+            onClick={() => backupInputRef.current?.click()}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-[var(--app-surface-elevated)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] text-[11px] font-medium border border-[var(--app-border)] hover:border-[#7C5CFF]/40 transition-colors"
+            title="Restaurar archivo de respaldo .json"
+          >
+            <Upload size={13} className="text-[#4FD1C5]" />
+            <span>Restaurar</span>
+          </button>
+          <input
+            ref={backupInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleBackupRestore}
+          />
         </div>
 
         <button

@@ -97,6 +97,19 @@ BiquadFilterNode #3 (Peaking: 4 kHz, Q: 1.0)
         ▼
 BiquadFilterNode #4 (Highshelf: 16 kHz)
         │
+        ├───────────────────────────────┐ (Canal Seco / Dry)
+        │                               ▼
+        │                         GainNode (dryGain)
+        ▼                               │
+ConvolverNode (Impulso Sintético)       │
+        │                               │
+        ▼                               │
+GainNode (wetGain)                      │
+        │                               │
+        ├───────────────────────────────┘
+        ▼
+GainNode (masterGain — Fade-Out y Volumen Principal)
+        │
         ▼
 AnalyserNode (getByteFrequencyData / getByteTimeDomainData)
         │
@@ -113,17 +126,21 @@ Sincronización bidireccional con el sistema operativo:
 Para garantizar un mantenimiento óptimo y escalable, el código se estructura en módulos desacoplados:
 
 1. **Gestión de Estado Especializada (`src/stores/`)**:
-   - `usePlayerStore`: Controla exclusivamente la reproducción de audio, el progreso, la cola de pistas y los parámetros del ecualizador.
-   - `useUIStore`: Administra de manera aislada la visibilidad de modales y paneles (Visualizador, Ecualizador, Letras sincronizadas, Mini Reproductor, Atajos de teclado), evitando re-renderizados innecesarios cuando el temporizador de audio (`currentTime`) se actualiza continuamente.
-   - `useLibraryStore`: Gestiona la biblioteca musical, playlists, filtros, búsqueda y persistencia en IndexedDB.
+   - `usePlayerStore`: Controla exclusivamente la reproducción de audio, el progreso, la cola de pistas, el historial reciente de 50 canciones y los parámetros del ecualizador.
+   - `useSleepTimerStore`: Gestiona el temporizador de apagado en segundo plano, calculando el desvanecimiento de volumen progresivo en los últimos 45 segundos y pausando el reproductor al culminar.
+   - `useUIStore`: Administra de manera aislada la visibilidad de modales y paneles (Visualizador, Ecualizador, Letras sincronizadas, Mini Reproductor, Atajos de teclado, Editor de metadatos), evitando re-renderizados innecesarios cuando el temporizador de audio (`currentTime`) se actualiza continuamente.
+   - `useLibraryStore`: Gestiona la biblioteca musical, playlists, ordenamiento, filtrado por chips de género y persistencia en IndexedDB.
    - `useThemeStore`: Controla el modo claro y modo oscuro.
 
 2. **Capa de Servicios y Utilidades (`src/lib/`)**:
-   - `audioEngine.ts`: Manejo de Web Audio API, nodos de ganancia, crossfade dual y análisis espectral.
+   - `audioEngine.ts`: Manejo de Web Audio API, nodos de ganancia con crossfade dual, simulación de sala acústica (`ConvolverNode`), atenuación gradual y análisis espectral.
    - `audioGenerator.ts`: Síntesis de ondas armónicas en memoria y codificación binaria WAV (`audioBufferToWav`).
+   - `backup.ts`: Exportación e importación segura en formato JSON con validación de esquema y resincronización de IndexedDB.
    - `lyrics.ts`: Procesamiento y emparejamiento de letras en formato LRC.
    - `metadata.ts`: Extracción de metadatos ID3 y formateo de duración.
 
-3. **Descomposición de Componentes de UI**:
-   - Vistas orquestadoras limpias respaldadas por subcomponentes enfocados (`LibraryStatsBanner`, `LibraryEmptyState`, `ArtistsGridView`, `AlbumsGridView`, `PlaybackControls`, `VolumeControl`, `PlayerMenus`).
+3. **Soporte PWA y Modo Offline (`public/sw.js`)**:
+   - Manifiesto web para instalación como aplicación autónoma en escritorio y móviles.
+   - Service Worker que implementa almacenamiento en caché estático sin interferir en peticiones de datos de audio locales.
+
 

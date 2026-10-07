@@ -31,6 +31,10 @@ export type RepeatMode = 'off' | 'all' | 'one';
 
 export type VisualizerMode = 'bars' | 'wave' | 'circle' | 'pulse';
 
+export type ReverbMode = 'off' | 'room' | 'hall' | 'cathedral';
+
+export type SleepTimerOption = 15 | 30 | 45 | 60 | 'track_end' | null;
+
 export interface EqualizerPreset {
   id: string;
   name: string;
