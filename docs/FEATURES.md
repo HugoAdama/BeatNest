@@ -64,7 +64,9 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 
 - Creación, edición de descripción y eliminación de listas de reproducción.
 - Añadir o quitar canciones desde cualquier fila o tarjeta mediante menú contextual.
-- Marcado de pistas favoritas con acceso directo en la barra lateral.
+- Favoritos desde el reproductor, las filas, las tarjetas o el atajo `L`; el estado se actualiza en todas las vistas.
+- Confirmación visible al agregar o quitar una pista, contador actualizado y persistencia local en IndexedDB.
+- Los controles de favorito siguen visibles y accesibles en pantallas táctiles.
 - Persistencia automática de listas y metadatos en IndexedDB mediante Dexie.js.
 
 ---

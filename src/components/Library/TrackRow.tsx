@@ -175,16 +175,19 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       {/* Duration & Actions */}
       <div className="flex items-center gap-2 shrink-0">
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
-            toggleFavorite(track.id);
+            void toggleFavorite(track.id);
           }}
           className={`p-1.5 rounded-lg transition-colors ${
             track.isFavorite
               ? 'text-red-500'
-              : 'text-[var(--app-text-muted)] opacity-0 group-hover:opacity-100 hover:text-red-400'
+              : 'text-[var(--app-text-muted)] opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-red-400'
           }`}
           title={track.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+          aria-label={track.isFavorite ? 'Quitar pista de favoritos' : 'Añadir pista a favoritos'}
+          aria-pressed={Boolean(track.isFavorite)}
         >
           <Heart size={15} fill={track.isFavorite ? 'currentColor' : 'none'} />
         </button>

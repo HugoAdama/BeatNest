@@ -104,13 +104,17 @@ export const TrackCard: React.FC<TrackCardProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            toggleFavorite(track.id);
+            void toggleFavorite(track.id);
           }}
           className={`absolute top-2 left-2 p-1.5 rounded-lg bg-black/50 backdrop-blur-md transition-colors ${
             track.isFavorite
               ? 'text-red-500'
-              : 'text-white/80 opacity-0 group-hover:opacity-100 hover:text-white'
+              : 'text-white/80 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-white'
           }`}
+          type="button"
+          title={track.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+          aria-label={track.isFavorite ? 'Quitar pista de favoritos' : 'Añadir pista a favoritos'}
+          aria-pressed={Boolean(track.isFavorite)}
         >
           <Heart size={15} fill={track.isFavorite ? 'currentColor' : 'none'} />
         </button>

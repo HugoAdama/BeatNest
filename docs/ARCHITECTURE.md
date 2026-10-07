@@ -205,3 +205,8 @@ Para garantizar un mantenimiento óptimo y escalable, el código se estructura e
 - `DashboardPreferencesModal` configura página inicial, orden y visibilidad de secciones y cantidad de elementos. `useHomeDashboardStore` conserva estos datos en `beatnest_home_dashboard`. En el arranque, una preferencia de página inicial solo sustituye una ruta base; los enlaces a detalles y rutas con parámetros se mantienen.
 - `DisplayPreferencesModal` configura densidad y columnas mediante `useLibraryDisplayPreferencesStore` (`beatnest_library_display`). La cuadrícula se adapta en móvil y usa el valor elegido en pantallas grandes; filas y tarjetas reducen su espaciado en densidad compacta.
 - Las tarjetas de playlist en Inicio reutilizan las portadas de las pistas relacionadas para componer un mosaico 2x2 cuando no hay una imagen personalizada.
+
+### 2.10 Consistencia de Favoritos
+- `useLibraryStore.toggleFavorite` actualiza de forma inmediata la pista en biblioteca y sincroniza el estado actual, la cola y el historial del reproductor con `usePlayerStore.updateTrackInPlayer`.
+- La escritura a IndexedDB se espera y verifica. Si falla, se revierte el cambio si no existe una acción posterior para la misma pista y se informa con una notificación.
+- Los botones expresan su estado con `aria-pressed`, etiquetas accesibles y estado visual; las acciones están disponibles desde el reproductor, las filas y las tarjetas.

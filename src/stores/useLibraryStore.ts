@@ -289,16 +289,40 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   },
 
   toggleFavorite: async (trackId: string) => {
-    const tracks = get().tracks.map((t) => {
-      if (t.id === trackId) {
-        const updated = { ...t, isFavorite: !t.isFavorite };
-        // Update in DB
-        db.tracks.update(trackId, { isFavorite: updated.isFavorite }).catch(console.warn);
-        return updated;
-      }
-      return t;
-    });
-    set({ tracks });
+    const track = get().tracks.find((item) => item.id === trackId);
+    if (!track) {
+      showToast('No se pudo actualizar Favoritos', 'La pista ya no está en tu biblioteca.', 'warning');
+      return;
+    }
+
+    const nextIsFavorite = !track.isFavorite;
+    const updateLibraryTrack = (isFavorite: boolean) => {
+      set((state) => ({
+        tracks: state.tracks.map((item) =>
+          item.id === trackId ? { ...item, isFavorite } : item
+        ),
+      }));
+      usePlayerStore.getState().updateTrackInPlayer(trackId, { isFavorite });
+    };
+
+    // Update the library and player immediately so all heart buttons stay in sync.
+    updateLibraryTrack(nextIsFavorite);
+
+    try {
+      const updatedRows = await db.tracks.update(trackId, { isFavorite: nextIsFavorite });
+      if (updatedRows === 0) throw new Error('La pista no existe en IndexedDB.');
+      showToast(
+        nextIsFavorite ? 'Añadida a favoritos' : 'Eliminada de favoritos',
+        `«${track.title}» ${nextIsFavorite ? 'se guardó en' : 'se quitó de'} Favoritos.`,
+        'success',
+      );
+    } catch (error) {
+      console.warn('Error saving favorite state in IndexedDB:', error);
+      // Roll back only if no later click has changed this track again.
+      const current = get().tracks.find((item) => item.id === trackId);
+      if (current?.isFavorite === nextIsFavorite) updateLibraryTrack(Boolean(track.isFavorite));
+      showToast('No se pudieron guardar los cambios', 'Comprueba el almacenamiento local e inténtalo de nuevo.', 'warning');
+    }
   },
 
   deleteTrack: async (trackId: string) => {

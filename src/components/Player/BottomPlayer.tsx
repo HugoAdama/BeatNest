@@ -119,13 +119,16 @@ export const BottomPlayer: React.FC = () => {
 
             {controls.favorite && currentTrack && (
               <button
-                onClick={() => toggleFavorite(currentTrack.id)}
+                type="button"
+                onClick={() => void toggleFavorite(currentTrack.id)}
                 className={`p-1.5 lg:p-2 rounded-xl transition-all hover:scale-110 active:scale-95 shrink-0 ${
                   isFavorite
                     ? 'text-red-500 bg-red-500/10'
                     : 'text-[var(--app-text-muted)] hover:text-red-500 hover:bg-[var(--app-surface-hover)]'
                 }`}
                 title={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                aria-label={isFavorite ? 'Quitar pista de favoritos' : 'Añadir pista a favoritos'}
+                aria-pressed={isFavorite}
               >
                 <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
               </button>
@@ -280,11 +283,14 @@ export const BottomPlayer: React.FC = () => {
             <div className="flex items-center gap-1 shrink-0">
               {controls.favorite && currentTrack && (
                 <button
-                  onClick={() => toggleFavorite(currentTrack.id)}
+                  type="button"
+                  onClick={() => void toggleFavorite(currentTrack.id)}
                   className={`p-1.5 rounded-lg transition-colors ${
                     isFavorite ? 'text-red-500' : 'text-[var(--app-text-muted)]'
                   }`}
                   title={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                  aria-label={isFavorite ? 'Quitar pista de favoritos' : 'Añadir pista a favoritos'}
+                  aria-pressed={isFavorite}
                 >
                   <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
                 </button>
