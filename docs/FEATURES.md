@@ -293,6 +293,45 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 - **Almacenamiento Local de Datos de Audio**: Guardado del blob binario de cada pista importada en IndexedDB (`StoredTrack.audioData`), permitiendo rehidratar pistas y reproducirlas entre sesiones sin perder la fuente original de audio.
 - **Gestión de Cuota de Disco**: Manejo transparente de cuota para priorizar metadatos y portadas en caso de límites de almacenamiento en navegadores estrictos.
 
+---
 
+## 32. Rediseño UX/UI Liquid Glass y Modo Oscuro Obsidian
 
+- **Estética Liquid Glass Refinada**: Paneles y dock con refracción especular de alta definición, bordes luminosos sutiles y contraste de grado estudio musical.
+- **Modo Oscuro Predeterminado**: La aplicación inicializa por defecto en modo oscuro obsidian (`#09090E`), permitiendo que el arte de los álbumes y las formas de onda resalten con máximo contraste.
+- **Dock Inferior Rebalanceado (12 Columnas)**: Reorganización en rejilla donde el centro cuenta con el 50% del ancho para máxima amplitud de los controles y del Waveform Scrubber.
+- **Menú Flotante de Herramientas de Audio**: Panel popover que agrupa controles secundarios (velocidad de reproducción, selector de crossfade, temporizador de apagado, visualizador y mini-reproductor) evitando sobrecarga en la barra principal.
 
+---
+
+## 33. Gestor de Carátulas e Imágenes de Canciones
+
+- **Subida y Arrastre de Fotos**: Selector de archivos e interactividad drag & drop en el modal de edición de metadatos para asignar imágenes (PNG, JPG, WEBP) a cualquier canción.
+- **Generador de Arte Procedural**: Motor basado en Canvas que dibuja ondas de sonido y degradados de color personalizados para crear portadas de estudio al instante si no se dispone de un archivo.
+- **Acceso Rápido**: Opción «Cambiar carátula / foto» integrada directamente en el menú de tres puntos de filas y tarjetas.
+- **Persistencia en IndexedDB**: Las portadas se almacenan localmente y se propagan en tiempo real al reproductor activo, cola y mini-reproductor.
+
+---
+
+## 34. Listas de Reproducción Estilo Spotify
+
+- **Vista Inmersiva de Playlist**: Encabezado con tipografía prominente, información de duración y conteo de pistas.
+- **Collage Automático 2x2**: Generación dinámica de una cuadrícula de 4 carátulas con las primeras canciones de la playlist si no cuenta con portada propia, o soporte para subir una foto personalizada.
+- **Sección «Añadir canciones a esta playlist»**: Listado inferior integrado que muestra canciones de la biblioteca aún no añadidas, con botón rápido `+ Añadir` para incorporar temas en un solo clic.
+- **Hub de Playlists**: Vista general en cuadrícula accesible desde la barra lateral con tarjetas interactivas y botón de reproducción flotante al pasar el cursor.
+
+---
+
+## 35. Reproducción Completa y Aleatoria de Listas
+
+- **Reproducir Todo**: Carga la totalidad de las pistas visibles en la pantalla (biblioteca completa, género o playlist) en la cola activa y comienza desde la pista inicial de forma instantánea.
+- **Reproducción Aleatoria (Shuffle Play)**: Botón dedicado que desordena las pistas antes de iniciar para escuchar la selección con distribución aleatoria.
+- **Notificaciones Informativas**: Avisos flotantes que confirman la cantidad de canciones encoladas al iniciar la reproducción.
+
+---
+
+## 36. Motor de Crossfade Refinado y Pack de Demostración
+
+- **Transición sin Cortes y Curvas Sincronizadas**: Conmutación inmediata de canal activo y programación de rampas de volumen lineales justo al comenzar a fluir el audio entrante, eliminando retardos o saltos abruptos.
+- **Bloqueo de Cascada por ID (`lastCrossfadedTrackId`)**: Previene la activación repetida del crossfade en la misma pista, garantizando que cada canción complete su duración.
+- **Pack Demo Integrado**: Generador en memoria de 3 pistas musicales sintetizadas completas de 14 segundos («Aurora Synthwave», «Velvet Horizon» y «Cyber Pulse») con portadas artísticas y la playlist «Favoritos Synth & Chill», permitiendo evaluar inmediatamente el reproductor, la cola y el crossfade.

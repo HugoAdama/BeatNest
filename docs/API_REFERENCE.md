@@ -39,6 +39,8 @@ export interface Playlist {
   name: string;            // Nombre de la playlist
   description?: string;    // Descripción opcional
   trackIds: string[];      // Lista ordenada de IDs de canciones
+  coverUrl?: string;       // URL en memoria o blob URL de la carátula personalizada
+  coverData?: Blob | null; // Blob binario de la imagen persistido en IndexedDB
   createdAt: number;       // Fecha de creación
   updatedAt: number;       // Fecha de última modificación
 }
@@ -53,7 +55,8 @@ La clase `AudioEngine` expone un singleton para controlar el flujo de reproducci
 ### Métodos Principales:
 - `getInstance(): AudioEngine`: Retorna la instancia compartida.
 - `initAudioContext(): Promise<void>`: Inicializa o reanuda el `AudioContext` tras interacción de usuario.
-- `loadTrack(fileOrUrl: File | string): Promise<void>`: Carga una pista en el elemento `HTMLAudioElement` liberando URLs previas.
+- `loadTrack(fileOrUrl: File | string, crossfadeSec?: number): Promise<void>`: Carga una pista con soporte para crossfade continuo de doble canal (fade-in en canal receptor y fade-out en canal emisor sincronizados vía nodos `GainNode`).
+- `stop(): void`: Detiene la reproducción en ambos canales y resetea el tiempo a cero.
 - `play(): Promise<void>`: Inicia la reproducción de audio.
 - `pause(): void`: Pausa la reproducción de audio.
 - `seek(seconds: number): void`: Desplaza la posición de reproducción a la marca de tiempo indicada.
@@ -106,5 +109,8 @@ Administra las colecciones de pistas, persistencia con Dexie y filtros de búsqu
 | `deletePlaylist(playlistId)` | Elimina la lista de reproducción seleccionada |
 | `addTrackToPlaylist(plId, trackId)` | Asocia una pista a la lista |
 | `removeTrackFromPlaylist(plId, trackId)` | Desvincula una pista de la lista |
+| `updateTrackCover(trackId, blob)` | Actualiza la carátula de una pista con un Blob binario, genera preview en memoria y persiste en IndexedDB |
+| `updatePlaylistCover(plId, blob)` | Asigna o reemplaza la carátula personalizada de una playlist persistiendo el Blob en IndexedDB |
+| `loadDemoPack()` | Sintetiza e inserta 3 pistas demo de estudio con carátulas procedurales y genera una playlist temática inicial |
 | `setSearchQuery(query)` | Aplica filtro de búsqueda en tiempo real |
 | `setSort(field, order)` | Modifica el criterio y dirección de ordenación |
