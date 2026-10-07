@@ -1,0 +1,105 @@
+# Aprendizajes y Tecnologías Utilizadas — BeatNest
+
+Este documento detalla las decisiones arquitectónicas, la selección de cada tecnología del stack y los aprendizajes técnicos obtenidos durante el desarrollo de **BeatNest**.
+
+---
+
+## 1. Filosofía del Proyecto: «Tu música, sin nube»
+
+Los reproductores modernos suelen exigir cuentas de usuario, suscripciones o subir archivos a servidores remotos para sincronizarlos. BeatNest se concibió bajo una premisa opuesta:
+- **Privacidad estricta por diseño**: Los archivos de audio nunca salen de la máquina del usuario.
+- **Sin backend**: La aplicación es un cliente web estático autosuficiente capaz de operar 100% desconectado de internet.
+- **Rendimiento nativo en navegador**: Aprovechamiento exhaustivo de las APIs modernas de la plataforma web (Web Audio API, File System Access API, IndexedDB).
+
+---
+
+## 2. Tecnologías Utilizadas y Justificación Técnica (El Porqué)
+
+### 2.1 React 19 + TypeScript
+- **Por qué React 19**: Proporciona un modelo declarativo y reactivo para coordinar una interfaz de usuario compleja con múltiples estados simultáneos (reproducción, cola, volumen, ecualizador, visualizador, búsqueda en tiempo real).
+- **Por qué TypeScript**: En aplicaciones que manipulan buffers de audio binarios, eventos de tiempo (`ontimeupdate`, `onended`), estructuras de metadatos ID3 heterogéneas y esquemas de base de datos indexada, el tipado estricto previene errores en tiempo de ejecución y documenta los contratos de datos de forma inequívoca.
+
+### 2.2 Vite 8
+- **Por qué Vite**: Ofrece tiempos de arranque y reemplazo modular en caliente (HMR) casi instantáneos gracias al uso de módulos ES nativos en desarrollo. Para producción, genera un bundle altamente optimizado con división de código y compresión eficiente.
+
+### 2.3 Tailwind CSS v4
+- **Por qué Tailwind CSS v4**: Esta versión elimina la sobrecarga de configuración tradicional de PostCSS gracias a `@tailwindcss/vite`. Permite definir una paleta de colores coherente basada en variables CSS nativas (`@theme`), facilitando la construcción de una estética oscura profesional (`#0F0F12`, `#1A1A1F`, `#7C5CFF`, `#4FD1C5`) con un impacto mínimo en el tamaño final del archivo CSS (~7.5 KB comprimido).
+
+### 2.4 Zustand
+- **Por qué Zustand frente a Redux o Context API**:
+  - **Frente a Context API**: El reproductor emite actualizaciones de tiempo (`currentTime`) varias veces por segundo. En React Context, esto provocaría un re-renderizado masivo de todo el árbol de componentes. Zustand permite suscripciones atómicas mediante selectores (`state => state.currentTime`), de modo que solo los componentes que realmente leen el progreso se vuelven a dibujar.
+  - **Frente a Redux**: Elimina la necesidad de reducers, actions y boilerplate repetitivo, manteniendo el código limpio y mantenible con un peso ínfimo (~1 KB).
+
+### 2.5 Web Audio API
+- **Por qué no usar únicamente la etiqueta `<audio>`**:
+  El elemento `<audio>` estándar es suficiente para reproducción básica, pero no permite:
+  1. Analizar el espectro de frecuencias en tiempo real para visualizadores.
+  2. Aplicar ecualización paramétrica por bandas de frecuencia.
+  3. Realizar transiciones cruzadas (*crossfade*) con rampas matemáticas de ganancia.
+- **Cadena de Nodos implementada**:
+  - `MediaElementAudioSourceNode`: Extrae el flujo del elemento de audio sin necesidad de cargar y descompilar todo el archivo en memoria.
+  - `BiquadFilterNode` (5 instancias): Filtros pasa-bajos (*lowshelf* a 60 Hz), pasa-altos (*highshelf* a 16 kHz) y paramétricos pico (*peaking* con Q=1.0 a 250 Hz, 1 kHz y 4 kHz) que alteran la respuesta de ganancia entre -12 dB y +12 dB.
+  - `GainNode` (Doble canal + Master): Permite fundir canales de forma no lineal para el crossfade suave entre canciones.
+  - `AnalyserNode`: Calcula transformadas rápidas de Fourier (FFT con 512 puntos y suavizado de 0.8) exponiendo datos de frecuencia y dominio temporal.
+
+### 2.6 HTML5 Canvas (60 FPS)
+- **Por qué Canvas frente a SVG o DOM**:
+  Dibujar 64 barras de espectro, partículas de ritmo o un osciloscopio que cambia 60 veces por segundo sobre elementos del DOM o SVG colapsaría el rendimiento del navegador debido a recálculos continuos de *reflow* y *layout*. Canvas utiliza aceleración por hardware de la GPU para limpiar y re-dibujar en un único búfer de píxeles sin afectar la jerarquía de la página.
+
+### 2.7 Dexie.js + IndexedDB
+- **Por qué no `localStorage`**:
+  - `localStorage` tiene un límite rígido de ~5 MB, es síncrono (bloquea el hilo principal al leer/escribir) y solo soporta cadenas de texto simples.
+  - Una biblioteca musical con carátulas de alta resolución superaría 5 MB con apenas un par de álbumes.
+- **Ventajas de Dexie.js**:
+  - Proporciona una capa tipada y orientada a promesas sobre IndexedDB.
+  - Permite persistir imágenes de carátulas directamente como objetos binarios `Blob` de cientos de kilobytes sin necesidad de codificarlas a base64 (ahorrando un 33% de espacio).
+  - Admite índices secundarios para ordenar y buscar al instante por título, artista o álbum.
+
+### 2.8 File System Access API
+- **Por qué `showDirectoryPicker()`**:
+  Permite al usuario seleccionar un directorio completo de música y leer de forma recursiva todas las canciones y subcarpetas con un solo permiso, ofreciendo una experiencia similar a una aplicación de escritorio nativa.
+- **Estrategia de Fallback**: Para navegadores sin soporte completo (Firefox o Safari), se incluye un fallback transparente con `<input type="file" webkitdirectory>` y `<input type="file" multiple accept="audio/*">`.
+
+### 2.9 `music-metadata-browser`
+- **Por qué esta librería**:
+  Es una solución pura para cliente web capaz de parsear etiquetas ID3v1, ID3v2.2, ID3v2.3, ID3v2.4, FLAC Vorbis Comments y contenedores MP4 sin necesidad de enviar los archivos a un servidor externo.
+
+### 2.10 Lucide React
+- **Por qué Lucide**:
+  Proporciona una colección homogénea y moderna de iconos vectoriales SVG con trazos geométricos precisos, perfectamente alineados con la identidad visual técnica y musical del reproductor.
+
+---
+
+## 3. Principales Aprendizajes y Desafíos Técnicos
+
+### 3.1 Streaming Eficiente vs Decodificación en Memoria
+- **El Desafío**: Inicialmente, la tentación al trabajar con la Web Audio API es decodificar archivos enteros con `ctx.decodeAudioData(arrayBuffer)`. Sin embargo, un archivo FLAC de 50 MB en disco al ser descomprimido en audio PCM sin comprimir ocupa entre 300 MB y 500 MB en la memoria RAM del navegador. Si un usuario importa 100 canciones, la pestaña colapsaría por falta de memoria.
+- **El Aprendizaje**: La solución óptima consistió en alimentar un elemento `HTMLAudioElement` con una URL efímera (`URL.createObjectURL(file)`) y vincularlo a la Web Audio API mediante `createMediaElementSource`. De esta manera, el navegador realiza un streaming eficiente por trozos (*chunking*), manteniendo el consumo de memoria en valores mínimos independientemente de la duración o peso del archivo.
+
+### 3.2 Política de Autoplay y Reactivación de Contexto de Audio
+- **El Desafío**: Por políticas de seguridad y experiencia de usuario en navegadores modernos (Google Chrome, Safari), cualquier `AudioContext` creado antes de que el usuario interactúe con la página nace en estado `suspended`.
+- **El Aprendizaje**: Se diseñó el singleton `AudioEngine` para que, en cualquier llamada a reproducir o cargar pista, verifique el estado del contexto (`if (ctx.state === 'suspended') await ctx.resume();`), asegurando una transición imperceptible y evitando errores de reproducción bloqueada.
+
+### 3.3 Arquitectura de Doble Canal para Crossfade Gapless
+- **El Desafío**: Un único elemento `HTMLAudioElement` no puede reproducir dos fuentes de audio al mismo tiempo: al asignarle una nueva `src`, detiene inmediatamente la pista actual, haciendo imposible un fundido cruzado.
+- **El Aprendizaje**: Se implementó una arquitectura de doble canal físico (`audioA` y `audioB`), cada uno con su propio nodo `GainNode` enrutado al master. Cuando la canción A se acerca a su final:
+  1. Se carga y se inicia la canción B con ganancia 0.
+  2. Mediante `linearRampToValueAtTime`, se programa una rampa cruzada de volumen en un intervalo exacto (ej. 3 segundos).
+  3. Al completarse la rampa, el canal A se pausa y los roles de canal activo e inactivo se intercambian automáticamente.
+
+### 3.4 Sincronización y Auto-scroll de Letras LRC
+- **El Desafío**: Los archivos LRC pueden contener marcas de tiempo duplicadas para estribillos repetidos (`[01:10.50][02:25.00] Letra...`), líneas desordenadas o marcas de tiempo ausentes. Además, si el desplazamiento (*scroll*) se ejecuta en cada evento de tiempo, la interfaz vibraría de manera errática.
+- **El Aprendizaje**:
+  1. El analizador normaliza y aplana todas las marcas de tiempo en objetos `{ time, text }` y los ordena cronológicamente.
+  2. Se diseñó un algoritmo de búsqueda binaria/lineal que detecta únicamente el momento en que el **índice activo cambia**.
+  3. Solo en el cambio de índice se dispara `scrollIntoView({ behavior: 'smooth', block: 'center' })`, logrando una experiencia de lectura fluida idéntica a la de las principales aplicaciones de streaming comercial.
+
+### 3.5 Persistencia de Objetos Binarios en IndexedDB
+- **El Desafío**: Los identificadores generados por `URL.createObjectURL(blob)` tienen un ciclo de vida atado a la pestaña del navegador. Si se guardaban esas URLs en la base de datos, al recargar la página quedaban rotas e inservibles.
+- **El Aprendizaje**: La base de datos guarda el objeto binario puro `Blob` en la tabla `tracks`. Al iniciar la aplicación en [useLibraryStore.ts](file:///e:/BeatNest/src/stores/useLibraryStore.ts), el proceso de hidratación genera URLs vivas en memoria a partir de los Blobs recuperados, garantizando persistencia permanente entre sesiones sin dependencias externas.
+
+---
+
+## 4. Conclusión
+
+BeatNest demuestra que las aplicaciones web modernas pueden competir en rendimiento, capacidades de procesamiento de audio en tiempo real y fidelidad visual con aplicaciones de escritorio tradicionales, manteniendo al mismo tiempo las ventajas de portabilidad, instalación PWA y garantía de privacidad absoluta.
