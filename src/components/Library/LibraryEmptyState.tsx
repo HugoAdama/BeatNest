@@ -7,7 +7,7 @@ interface LibraryEmptyStateProps {
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
   onImportDirectory: () => void;
-  onGenerateSampleTrack: () => void;
+  onLoadDemoPack: () => void;
 }
 
 export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
@@ -16,7 +16,7 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
   onDragLeave,
   onDrop,
   onImportDirectory,
-  onGenerateSampleTrack,
+  onLoadDemoPack,
 }) => {
   return (
     <div
@@ -49,11 +49,12 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
           </button>
 
           <button
-            onClick={onGenerateSampleTrack}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl liquid-glass-subtle text-[var(--app-accent)] text-sm hover:border-[var(--app-accent)]/50 hover:bg-[var(--app-surface-hover)] transition-all shadow-sm"
+            onClick={onLoadDemoPack}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl liquid-glass-subtle text-[var(--app-accent)] text-sm hover:border-[var(--app-accent)]/50 hover:bg-[var(--app-surface-hover)] transition-all shadow-sm font-semibold"
+            title="Genera 3 canciones de prueba con sintetizadores y portadas artísticas para probar BeatNest"
           >
             <Sparkles size={16} />
-            <span>Generar pista demo</span>
+            <span>Cargar 3 canciones demo con arte</span>
           </button>
         </div>
 

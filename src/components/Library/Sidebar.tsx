@@ -279,9 +279,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
           {/* Playlists Section */}
           <div>
             <div className="flex items-center justify-between px-3 mb-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--app-text-muted)] opacity-80">
+              <button
+                onClick={() => {
+                  setActiveTab('playlists');
+                  setSelectedPlaylistId(null);
+                  if (isMobileSidebarOpen) toggleMobileSidebar(false);
+                }}
+                className="text-[10px] font-bold uppercase tracking-wider text-[var(--app-text-muted)] hover:text-[var(--app-text)] opacity-80 text-left transition-colors"
+                title="Ver todas las playlists"
+              >
                 Playlists ({playlists.length})
-              </span>
+              </button>
               <button
                 onClick={onOpenCreatePlaylistModal}
                 className="text-[var(--app-accent)] hover:opacity-80 p-1 rounded-lg transition-colors hover:bg-[var(--app-surface-hover)]"

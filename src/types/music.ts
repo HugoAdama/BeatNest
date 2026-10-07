@@ -25,6 +25,8 @@ export interface Playlist {
   trackIds: string[];
   createdAt: number;
   updatedAt: number;
+  coverUrl?: string;
+  coverData?: Blob | null;
 }
 
 export type RepeatMode = 'off' | 'all' | 'one';

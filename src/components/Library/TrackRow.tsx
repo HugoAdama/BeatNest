@@ -12,6 +12,7 @@ import {
   Edit3,
   ArrowUp,
   ArrowDown,
+  Image as ImageIcon,
 } from 'lucide-react';
 import type { Track } from '../../types/music';
 import { usePlayerStore } from '../../stores/usePlayerStore';
@@ -231,6 +232,17 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               >
                 <FolderPlus size={14} className="text-[var(--app-text-muted)]" />
                 <span>Añadir a playlist...</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  useUIStore.getState().setEditingTrack(track);
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
+              >
+                <ImageIcon size={14} className="text-[#4FD1C5]" />
+                <span>Cambiar carátula / foto</span>
               </button>
 
               <button

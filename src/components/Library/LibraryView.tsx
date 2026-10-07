@@ -1,5 +1,23 @@
-import React, { useMemo, useState } from 'react';
-import { Play, Heart, ListMusic, History, Tag, Sparkles, Clock, Timer, FileDown, Layers } from 'lucide-react';
+import React, { useMemo, useState, useRef } from 'react';
+import {
+  Play,
+  Pause,
+  Heart,
+  ListMusic,
+  History,
+  Tag,
+  Sparkles,
+  Clock,
+  Timer,
+  FileDown,
+  Layers,
+  Shuffle,
+  Plus,
+  Trash2,
+  Upload,
+  Music,
+  FolderPlus,
+} from 'lucide-react';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { TrackRow } from './TrackRow';
@@ -9,7 +27,6 @@ import { LibraryEmptyState } from './LibraryEmptyState';
 import { ArtistsGridView } from './ArtistsGridView';
 import { AlbumsGridView } from './AlbumsGridView';
 import { formatDuration } from '../../lib/metadata';
-import { generateDemoArpeggioTrack } from '../../lib/audioGenerator';
 import { exportPlaylistAsM3U } from '../../lib/playlistExport';
 import { showToast } from '../../stores/useToastStore';
 
@@ -32,11 +49,17 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     importDirectoryWithPicker,
     importFiles,
     reorderPlaylistTracks,
+    deletePlaylist,
+    addTrackToPlaylist,
+    updatePlaylistCover,
+    loadDemoPack,
+    setSelectedPlaylistId,
   } = useLibraryStore();
 
-  const { playTrack, recentTracks } = usePlayerStore();
+  const { playTrack, recentTracks, isPlaying, currentTrack, togglePlay } = usePlayerStore();
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
+  const playlistFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Extract unique genres across entire library
   const uniqueGenres = useMemo(() => {
@@ -164,6 +187,28 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
 
   const currentPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
 
+  // Available tracks from library not yet in current playlist
+  const availableTracksToAdd = useMemo(() => {
+    if (!currentPlaylist) return [];
+    const inPlaylist = new Set(currentPlaylist.trackIds);
+    return tracks.filter((t) => !inPlaylist.has(t.id));
+  }, [currentPlaylist, tracks]);
+
+  // Up to 4 covers for Spotify 2x2 collage
+  const playlistCollageCovers = useMemo(() => {
+    if (!currentPlaylist) return [];
+    const trackMap = new Map(tracks.map((t) => [t.id, t]));
+    const urls: string[] = [];
+    for (const tid of currentPlaylist.trackIds) {
+      const t = trackMap.get(tid);
+      if (t?.coverUrl) {
+        urls.push(t.coverUrl);
+        if (urls.length >= 4) break;
+      }
+    }
+    return urls;
+  }, [currentPlaylist, tracks]);
+
   const totalDuration = useMemo(() => {
     return displayedTracks.reduce((acc, t) => acc + (t.duration || 0), 0);
   }, [displayedTracks]);
@@ -186,18 +231,27 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     }
   };
 
+  // Play whole list in order
   const handlePlayAll = () => {
     if (displayedTracks.length > 0) {
-      playTrack(displayedTracks[0], displayedTracks);
+      playTrack(displayedTracks[0], displayedTracks, false);
+      showToast('Reproduciendo', `Iniciada lista de ${displayedTracks.length} canciones en orden`, 'info');
     }
   };
 
-  const handleGenerateSampleTrack = async () => {
-    try {
-      const demoFile = await generateDemoArpeggioTrack();
-      await importFiles([demoFile]);
-    } catch (err) {
-      console.warn('Could not generate sample track:', err);
+  // Play whole list in random order
+  const handleShuffleAll = () => {
+    if (displayedTracks.length > 0) {
+      const shuffled = [...displayedTracks].sort(() => Math.random() - 0.5);
+      playTrack(shuffled[0], shuffled, false);
+      showToast('Modo aleatorio', `Reproduciendo ${displayedTracks.length} canciones en orden aleatorio`, 'info');
+    }
+  };
+
+  const handlePlaylistCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && currentPlaylist) {
+      await updatePlaylistCover(currentPlaylist.id, file);
     }
   };
 
@@ -210,7 +264,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onImportDirectory={importDirectoryWithPicker}
-        onGenerateSampleTrack={handleGenerateSampleTrack}
+        onLoadDemoPack={loadDemoPack}
       />
     );
   }
@@ -227,65 +281,225 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
       {/* Header Banner */}
       <div className="px-4 sm:px-8 pt-5 sm:pt-8 pb-4 relative z-10">
         {activeTab === 'playlists' && currentPlaylist ? (
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-6">
+          /* Spotify-Style Playlist View Header */
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
             <div className="flex flex-col sm:flex-row sm:items-end gap-5">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-[#7C5CFF] to-[#4FD1C5] flex items-center justify-center shadow-xl shrink-0 border border-white/20">
-                <ListMusic size={44} className="text-white" />
+              {/* Cover Artwork / 2x2 collage */}
+              <div
+                onClick={() => playlistFileInputRef.current?.click()}
+                className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-2xl overflow-hidden bg-gradient-to-tr from-[#7C5CFF] to-[#4FD1C5] flex items-center justify-center shadow-2xl shrink-0 border border-white/20 group cursor-pointer"
+                title="Haz clic para subir una foto de portada personalizada"
+              >
+                {currentPlaylist.coverUrl ? (
+                  <img
+                    src={currentPlaylist.coverUrl}
+                    alt={currentPlaylist.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : playlistCollageCovers.length >= 4 ? (
+                  <div className="grid grid-cols-2 grid-rows-2 w-full h-full">
+                    {playlistCollageCovers.slice(0, 4).map((url, i) => (
+                      <img key={i} src={url} alt="" className="w-full h-full object-cover" />
+                    ))}
+                  </div>
+                ) : playlistCollageCovers.length > 0 ? (
+                  <img src={playlistCollageCovers[0]} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <ListMusic size={48} className="text-white" />
+                )}
+
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold transition-opacity gap-1.5">
+                  <Upload size={16} />
+                  <span>Cambiar foto</span>
+                </div>
               </div>
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--app-accent)]">
-                  Playlist
+
+              <input
+                type="file"
+                ref={playlistFileInputRef}
+                accept="image/*"
+                className="hidden"
+                onChange={handlePlaylistCoverChange}
+              />
+
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-[#4FD1C5]">
+                  Playlist pública
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--app-text)] tracking-tight mt-0.5 mb-1.5">
+                <h2 className="text-2xl sm:text-4xl font-black text-[var(--app-text)] tracking-tight mt-1 mb-2 truncate">
                   {currentPlaylist.name}
                 </h2>
                 {currentPlaylist.description && (
-                  <p className="text-xs text-[var(--app-text-muted)] mb-2">
+                  <p className="text-xs text-[var(--app-text-muted)] mb-2.5 line-clamp-2">
                     {currentPlaylist.description}
                   </p>
                 )}
-                <div className="flex items-center gap-2.5 text-xs text-[var(--app-text-muted)]">
-                  <span>{displayedTracks.length} pistas</span>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--app-text-muted)]">
+                  <span className="font-semibold text-[var(--app-text)]">BeatNest</span>
                   <span>•</span>
-                  <span>{formatDuration(totalDuration)} tiempo total</span>
+                  <span>{displayedTracks.length} canciones</span>
+                  <span>•</span>
+                  <span>{formatDuration(totalDuration)}</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Spotify-style Action Bar */}
+            <div className="flex items-center gap-2.5 self-start md:self-end shrink-0">
+              {displayedTracks.length > 0 && (
+                <>
+                  <button
+                    onClick={() => {
+                      const isThisPlaying = isPlaying && currentTrack && displayedTracks.some((t) => t.id === currentTrack.id);
+                      if (isThisPlaying) {
+                        togglePlay();
+                      } else {
+                        handlePlayAll();
+                      }
+                    }}
+                    className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#7C5CFF] to-[#6366F1] text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all border border-white/20"
+                    title="Reproducir playlist"
+                  >
+                    {isPlaying && currentTrack && displayedTracks.some((t) => t.id === currentTrack.id) ? (
+                      <Pause size={20} fill="currentColor" />
+                    ) : (
+                      <Play size={20} fill="currentColor" className="ml-0.5" />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={handleShuffleAll}
+                    className="p-3 rounded-2xl liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[#4FD1C5] hover:bg-[var(--app-surface-hover)] transition-all shadow-sm"
+                    title="Reproducir en orden aleatorio"
+                  >
+                    <Shuffle size={18} />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      exportPlaylistAsM3U(currentPlaylist.name, displayedTracks);
+                      showToast('Exportación M3U', `Descargado archivo .m3u para «${currentPlaylist.name}»`);
+                    }}
+                    className="p-3 rounded-2xl liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-all shadow-sm"
+                    title="Exportar archivo de playlist .M3U"
+                  >
+                    <FileDown size={18} />
+                  </button>
+                </>
+              )}
+
+              <button
+                onClick={() => {
+                  deletePlaylist(currentPlaylist.id);
+                  setSelectedPlaylistId(null);
+                  showToast('Playlist eliminada', `Se eliminó la playlist «${currentPlaylist.name}»`, 'warning');
+                }}
+                className="p-3 rounded-2xl liquid-glass-subtle text-[var(--app-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-all shadow-sm"
+                title="Eliminar esta playlist"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          </div>
+        ) : activeTab === 'playlists' && !selectedPlaylistId ? (
+          /* Spotify-Style Playlists Hub View */
+          <div className="mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--app-text)] tracking-tight">
+                  Tus Playlists
+                </h2>
+                <p className="text-xs text-[var(--app-text-muted)] mt-1">
+                  Colecciones locales creadas en BeatNest
+                </p>
+              </div>
+
+              <button
+                onClick={onOpenCreatePlaylistModal}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-md border border-white/20 self-start sm:self-auto"
+              >
+                <FolderPlus size={15} />
+                <span>Crear playlist</span>
+              </button>
+            </div>
+
+            {/* Playlists Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {playlists.map((pl) => {
+                const count = pl.trackIds.length;
+                return (
+                  <div
+                    key={pl.id}
+                    onClick={() => setSelectedPlaylistId(pl.id)}
+                    className="group relative p-3.5 rounded-2xl liquid-glass hover:bg-[var(--app-surface-hover)] border border-[var(--liquid-glass-border)] cursor-pointer transition-all shadow-sm hover:shadow-xl hover:-translate-y-0.5"
+                  >
+                    <div className="relative aspect-square rounded-xl overflow-hidden bg-gradient-to-tr from-[#7C5CFF] to-[#4FD1C5] mb-3 flex items-center justify-center shadow-md">
+                      {pl.coverUrl ? (
+                        <img src={pl.coverUrl} alt={pl.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <ListMusic size={36} className="text-white opacity-90" />
+                      )}
+
+                      {/* Play Hover Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const plTracks = pl.trackIds
+                            .map((id) => tracks.find((t) => t.id === id))
+                            .filter((t): t is (typeof tracks)[0] => !!t);
+                          if (plTracks.length > 0) {
+                            playTrack(plTracks[0], plTracks, false);
+                            showToast('Reproduciendo playlist', `Iniciando «${pl.name}»`, 'info');
+                          }
+                        }}
+                        className="absolute bottom-2.5 right-2.5 w-10 h-10 rounded-full bg-gradient-to-tr from-[#7C5CFF] to-[#6366F1] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:scale-110 shadow-lg transition-all"
+                        title="Reproducir playlist"
+                      >
+                        <Play size={16} fill="currentColor" className="ml-0.5" />
+                      </button>
+                    </div>
+
+                    <h4 className="text-sm font-bold text-[var(--app-text)] truncate">{pl.name}</h4>
+                    <p className="text-xs text-[var(--app-text-muted)] mt-0.5">
+                      {count} {count === 1 ? 'canción' : 'canciones'}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : activeTab === 'favorites' ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400 shadow-md">
+                <Heart size={26} fill="currentColor" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-[var(--app-text)]">Canciones favoritas</h2>
+                <p className="text-xs text-[var(--app-text-muted)]">
+                  {displayedTracks.length} pistas guardadas
+                </p>
               </div>
             </div>
 
             {displayedTracks.length > 0 && (
               <div className="flex items-center gap-2 self-start sm:self-auto">
                 <button
-                  onClick={() => {
-                    exportPlaylistAsM3U(currentPlaylist.name, displayedTracks);
-                    showToast('Exportación M3U', `Descargado archivo .m3u para «${currentPlaylist.name}»`);
-                  }}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl liquid-glass-subtle text-xs font-semibold text-[var(--app-text)] hover:text-[#4FD1C5] hover:border-[#4FD1C5]/40 transition-colors"
-                  title="Exportar archivo de lista de reproducción M3U"
+                  onClick={handlePlayAll}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-md border border-white/20"
                 >
-                  <FileDown size={14} />
-                  <span>Exportar .M3U</span>
+                  <Play size={15} fill="currentColor" />
+                  <span>Reproducir todo</span>
                 </button>
                 <button
-                  onClick={handlePlayAll}
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] border border-white/20"
+                  onClick={handleShuffleAll}
+                  className="p-2.5 rounded-xl liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[#4FD1C5] hover:bg-[var(--app-surface-hover)] transition-all shadow-sm"
+                  title="Reproducción aleatoria"
                 >
-                  <Play size={14} fill="currentColor" />
-                  <span>Reproducir</span>
+                  <Shuffle size={16} />
                 </button>
               </div>
             )}
-          </div>
-        ) : activeTab === 'favorites' ? (
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400 shadow-md">
-              <Heart size={26} fill="currentColor" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-[var(--app-text)]">Canciones favoritas</h2>
-              <p className="text-xs text-[var(--app-text-muted)]">
-                {displayedTracks.length} pistas guardadas
-              </p>
-            </div>
           </div>
         ) : activeTab === 'history' ? (
           <div className="flex items-center gap-4 mb-4">
@@ -313,13 +527,22 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
               </div>
             </div>
             {displayedTracks.length > 0 && (
-              <button
-                onClick={handlePlayAll}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] border border-white/20 self-start sm:self-auto"
-              >
-                <Play size={15} fill="currentColor" />
-                <span>Reproducir todo</span>
-              </button>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  onClick={handlePlayAll}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-md border border-white/20"
+                >
+                  <Play size={15} fill="currentColor" />
+                  <span>Reproducir todo</span>
+                </button>
+                <button
+                  onClick={handleShuffleAll}
+                  className="p-2.5 rounded-xl liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[#4FD1C5] hover:bg-[var(--app-surface-hover)] transition-all shadow-sm"
+                  title="Reproducción aleatoria"
+                >
+                  <Shuffle size={16} />
+                </button>
+              </div>
             )}
           </div>
         ) : activeTab === 'smart-recent' ? (
@@ -336,13 +559,22 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
               </div>
             </div>
             {displayedTracks.length > 0 && (
-              <button
-                onClick={handlePlayAll}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] border border-white/20 self-start sm:self-auto"
-              >
-                <Play size={15} fill="currentColor" />
-                <span>Reproducir todo</span>
-              </button>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  onClick={handlePlayAll}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-md border border-white/20"
+                >
+                  <Play size={15} fill="currentColor" />
+                  <span>Reproducir todo</span>
+                </button>
+                <button
+                  onClick={handleShuffleAll}
+                  className="p-2.5 rounded-xl liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[#4FD1C5] hover:bg-[var(--app-surface-hover)] transition-all shadow-sm"
+                  title="Reproducción aleatoria"
+                >
+                  <Shuffle size={16} />
+                </button>
+              </div>
             )}
           </div>
         ) : activeTab === 'smart-long' ? (
@@ -359,13 +591,22 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
               </div>
             </div>
             {displayedTracks.length > 0 && (
-              <button
-                onClick={handlePlayAll}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] border border-white/20 self-start sm:self-auto"
-              >
-                <Play size={15} fill="currentColor" />
-                <span>Reproducir todo</span>
-              </button>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  onClick={handlePlayAll}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-md border border-white/20"
+                >
+                  <Play size={15} fill="currentColor" />
+                  <span>Reproducir todo</span>
+                </button>
+                <button
+                  onClick={handleShuffleAll}
+                  className="p-2.5 rounded-xl liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[#4FD1C5] hover:bg-[var(--app-surface-hover)] transition-all shadow-sm"
+                  title="Reproducción aleatoria"
+                >
+                  <Shuffle size={16} />
+                </button>
+              </div>
             )}
           </div>
         ) : (
@@ -384,29 +625,52 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             </div>
 
             {displayedTracks.length > 0 && activeTab !== 'artists' && activeTab !== 'albums' && (
-              <button
-                onClick={handlePlayAll}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] border border-white/20 self-start sm:self-auto"
-              >
-                <Play size={15} fill="currentColor" />
-                <span>Reproducir todo</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                <button
+                  onClick={handlePlayAll}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-md border border-white/20"
+                  title="Inicia la reproducción desde la primera canción y pone todas las canciones en la cola"
+                >
+                  <Play size={15} fill="currentColor" />
+                  <span>Reproducir todo</span>
+                </button>
+
+                <button
+                  onClick={handleShuffleAll}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl liquid-glass-subtle hover:bg-[var(--app-surface-hover)] text-[var(--app-text)] text-xs font-semibold transition-all border border-[var(--liquid-glass-border)] shadow-sm"
+                  title="Reproduce todas las canciones en orden aleatorio"
+                >
+                  <Shuffle size={14} className="text-[#4FD1C5]" />
+                  <span>Aleatorio</span>
+                </button>
+
+                {tracks.length < 5 && (
+                  <button
+                    onClick={loadDemoPack}
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-[#7C5CFF]/15 to-[#4FD1C5]/15 hover:from-[#7C5CFF]/25 hover:to-[#4FD1C5]/25 border border-[#7C5CFF]/30 text-[var(--app-text)] transition-all shadow-sm"
+                    title="Cargar 3 canciones demo con portadas para probar crossfade y playlists"
+                  >
+                    <Sparkles size={13} className="text-[#7C5CFF]" />
+                    <span>Pack demo (3 pistas)</span>
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
 
-        {/* Quick Stats Banner */}
-        {activeTab === 'tracks' && displayedTracks.length > 0 && (
+        {/* Top Slim Stats Strip */}
+        {activeTab !== 'playlists' && (
           <LibraryStatsBanner
             trackCount={tracks.length}
-            totalDuration={totalDuration}
-            artistCount={groupedArtists.length}
+            totalDuration={tracks.reduce((acc, t) => acc + (t.duration || 0), 0)}
+            artistCount={uniqueGenres.length > 0 ? groupedArtists.length : 1}
             albumCount={groupedAlbums.length}
           />
         )}
 
         {/* Interactive Genre & Format filter toolbar */}
-        {activeTab !== 'artists' && activeTab !== 'albums' && (
+        {activeTab !== 'artists' && activeTab !== 'albums' && (activeTab !== 'playlists' || selectedPlaylistId) && (
           <div className="flex flex-wrap items-center justify-between gap-3 py-2 mb-3 border-y border-[var(--liquid-glass-border-subtle)]">
             {/* Format Filter Segmented Controls */}
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
@@ -452,7 +716,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
                   Todos
                 </button>
                 {uniqueGenres.map((genre) => {
-                  const isSelected = selectedGenre?.toLowerCase() === genre.toLowerCase();
+                  const isSelected = selectedGenre === genre;
                   return (
                     <button
                       key={genre}
@@ -471,26 +735,9 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             )}
           </div>
         )}
-      </div>
 
-      {/* Render based on view mode and tab */}
-      <div className="px-4 sm:px-8 flex-1 relative z-10">
-        {displayedTracks.length === 0 ? (
-          <div className="py-20 flex flex-col items-center justify-center text-center text-[var(--app-text-muted)]">
-            <p className="text-sm font-medium text-[var(--app-text)] mb-1">
-              {activeTab === 'history' ? 'Historial vacío' : 'No se encontraron canciones'}
-            </p>
-            <p className="text-xs">
-              {activeTab === 'history'
-                ? 'Las canciones que reproduzcas aparecerán aquí automáticamente.'
-                : searchQuery
-                ? `No hay resultados para «${searchQuery}».`
-                : selectedGenre
-                ? `No hay pistas con el género «${selectedGenre}».`
-                : 'Añade pistas a esta sección.'}
-            </p>
-          </div>
-        ) : activeTab === 'artists' ? (
+        {/* Content Views: Artists, Albums, Table, or Grid */}
+        {activeTab === 'playlists' && !selectedPlaylistId ? null : activeTab === 'artists' ? (
           <ArtistsGridView
             groupedArtists={groupedArtists}
             onPlayArtist={(artistTracks) => playTrack(artistTracks[0], artistTracks)}
@@ -540,6 +787,64 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
                 onOpenCreatePlaylistModal={onOpenCreatePlaylistModal}
               />
             ))}
+          </div>
+        )}
+
+        {/* Spotify-style "Añadir más canciones a esta playlist" section */}
+        {activeTab === 'playlists' && currentPlaylist && (
+          <div className="mt-8 pt-6 border-t border-[var(--liquid-glass-border-subtle)]">
+            <div className="flex items-center justify-between mb-3.5">
+              <div>
+                <h3 className="text-base font-bold text-[var(--app-text)]">
+                  Añadir canciones a «{currentPlaylist.name}»
+                </h3>
+                <p className="text-xs text-[var(--app-text-muted)]">
+                  Canciones disponibles en tu biblioteca para incorporar
+                </p>
+              </div>
+            </div>
+
+            {availableTracksToAdd.length === 0 ? (
+              <div className="p-5 rounded-2xl liquid-glass-subtle text-xs text-[var(--app-text-muted)] text-center">
+                Todas las canciones de tu biblioteca ya están añadidas a esta playlist.
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {availableTracksToAdd.slice(0, 10).map((cand) => (
+                  <div
+                    key={cand.id}
+                    className="flex items-center justify-between p-2.5 rounded-xl liquid-glass-subtle hover:bg-[var(--app-surface-hover)] transition-all"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-[var(--app-surface)] shrink-0 shadow-sm flex items-center justify-center">
+                        {cand.coverUrl ? (
+                          <img src={cand.coverUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Music size={16} className="text-[#7C5CFF]" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-[var(--app-text)] truncate">{cand.title}</p>
+                        <p className="text-[11px] text-[var(--app-text-muted)] truncate">
+                          {cand.artist} • {cand.album}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        addTrackToPlaylist(currentPlaylist.id, cand.id);
+                        showToast('Canción añadida', `«${cand.title}» se agregó a la playlist`);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--app-surface)] hover:bg-[#7C5CFF] hover:text-white border border-[var(--liquid-glass-border)] text-xs font-semibold text-[var(--app-text)] transition-all shrink-0"
+                    >
+                      <Plus size={13} />
+                      <span>Añadir</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

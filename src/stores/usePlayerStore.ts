@@ -90,7 +90,7 @@ const loadSavedCrossfade = (): number => {
   return 3;
 };
 
-let hasTriggeredAutoCrossfade = false;
+let lastCrossfadedTrackId: string | null = null;
 
 export const usePlayerStore = create<PlayerStore>((set, get) => ({
   currentTrack: null,
@@ -134,17 +134,19 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
           });
 
           // Automatic Crossfade trigger before track ends
-          const { crossfadeDuration, queue, queueIndex, repeatMode } = get();
+          const { crossfadeDuration, queue, queueIndex, repeatMode, currentTrack } = get();
           const hasNext = queueIndex < queue.length - 1 || repeatMode === 'all';
           if (
             crossfadeDuration > 0 &&
+            currentTrack &&
+            cur >= 1.2 &&
             dur > crossfadeDuration + 0.5 &&
             dur - cur <= crossfadeDuration &&
-            !hasTriggeredAutoCrossfade &&
+            lastCrossfadedTrackId !== currentTrack.id &&
             hasNext &&
             repeatMode !== 'one'
           ) {
-            hasTriggeredAutoCrossfade = true;
+            lastCrossfadedTrackId = currentTrack.id;
             get().nextTrack(true);
           }
         }
@@ -191,7 +193,9 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   playTrack: async (track: Track, newQueue?: Track[], useCrossfade?: boolean) => {
-    hasTriggeredAutoCrossfade = false;
+    if (!useCrossfade) {
+      lastCrossfadedTrackId = null;
+    }
     let queue = get().queue;
     let queueIndex = get().queueIndex;
 

@@ -3,6 +3,8 @@ import type { Track, Playlist } from '../types/music';
 import { db, type StoredTrack } from '../db';
 import { extractMetadata } from '../lib/metadata';
 import { usePlayerStore } from './usePlayerStore';
+import { generateDemoTracksPack } from '../lib/audioGenerator';
+import { showToast } from './useToastStore';
 
 export type LibraryTab =
   | 'tracks'
@@ -52,6 +54,9 @@ interface LibraryStore {
     trackId: string,
     updates: Partial<Pick<Track, 'title' | 'artist' | 'album' | 'genre' | 'year'>>
   ) => Promise<void>;
+  updateTrackCover: (trackId: string, imageBlob: Blob | File | null) => Promise<void>;
+  updatePlaylistCover: (playlistId: string, imageBlob: Blob | File | null) => Promise<void>;
+  loadDemoPack: () => Promise<void>;
 }
 
 export const useLibraryStore = create<LibraryStore>((set, get) => ({
@@ -102,9 +107,24 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
         };
       });
 
+      const hydratedPlaylists: Playlist[] = storedPlaylists.map((pl) => {
+        let coverUrl: string | undefined = undefined;
+        if (pl.coverData) {
+          try {
+            coverUrl = URL.createObjectURL(pl.coverData);
+          } catch {
+            coverUrl = undefined;
+          }
+        }
+        return {
+          ...pl,
+          coverUrl,
+        };
+      });
+
       set({
         tracks: hydratedTracks,
-        playlists: storedPlaylists,
+        playlists: hydratedPlaylists,
       });
     } catch (err) {
       console.warn('Error reading from IndexedDB:', err);
@@ -416,5 +436,124 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
     );
     set({ tracks });
     usePlayerStore.getState().updateTrackInPlayer(trackId, updates);
+  },
+
+  updateTrackCover: async (trackId: string, imageBlob: Blob | File | null) => {
+    try {
+      await db.tracks.update(trackId, { coverData: imageBlob } as any);
+    } catch (err) {
+      console.warn('Error saving cover in IndexedDB:', err);
+    }
+
+    const current = get().tracks.find((t) => t.id === trackId);
+    let newCoverUrl: string | undefined = undefined;
+    if (imageBlob) {
+      newCoverUrl = URL.createObjectURL(imageBlob);
+    } else {
+      if (current?.coverUrl && current.coverUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(current.coverUrl);
+      }
+    }
+
+    const updatedTracks = get().tracks.map((t) =>
+      t.id === trackId ? { ...t, coverData: imageBlob, coverUrl: newCoverUrl } : t
+    );
+    set({ tracks: updatedTracks });
+    usePlayerStore.getState().updateTrackInPlayer(trackId, {
+      coverData: imageBlob,
+      coverUrl: newCoverUrl,
+    });
+    showToast(
+      'Carátula actualizada',
+      imageBlob ? 'La nueva imagen se guardó correctamente' : 'Carátula eliminada',
+      'info'
+    );
+  },
+
+  updatePlaylistCover: async (playlistId: string, imageBlob: Blob | File | null) => {
+    try {
+      await db.playlists.update(playlistId, { coverData: imageBlob } as any);
+    } catch (err) {
+      console.warn('Error saving playlist cover in IndexedDB:', err);
+    }
+
+    let newCoverUrl: string | undefined = undefined;
+    if (imageBlob) {
+      newCoverUrl = URL.createObjectURL(imageBlob);
+    }
+
+    const updatedPlaylists = get().playlists.map((pl) =>
+      pl.id === playlistId ? { ...pl, coverData: imageBlob, coverUrl: newCoverUrl } : pl
+    );
+    set({ playlists: updatedPlaylists });
+    showToast(
+      'Portada de playlist actualizada',
+      imageBlob ? 'Imagen de playlist guardada' : 'Portada de playlist eliminada',
+      'info'
+    );
+  },
+
+  loadDemoPack: async () => {
+    try {
+      showToast('Cargando pack demo', 'Generando 3 pistas musicales con arte...', 'info');
+      const pack = await generateDemoTracksPack();
+      const newTracks: Track[] = [];
+      const newTrackIds: string[] = [];
+
+      for (const item of pack) {
+        const id = `demo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        const coverUrl = URL.createObjectURL(item.coverBlob);
+        const stored: StoredTrack = {
+          id,
+          title: item.title,
+          artist: item.artist,
+          album: item.album,
+          genre: item.genre,
+          duration: item.duration,
+          fileName: item.file.name,
+          fileSize: item.file.size,
+          fileType: 'audio/wav',
+          dateAdded: Date.now(),
+          coverData: item.coverBlob,
+          audioData: item.file,
+          playCount: 0,
+        };
+        await db.tracks.put(stored);
+        newTracks.push({
+          ...stored,
+          coverUrl,
+          file: item.file,
+        });
+        newTrackIds.push(id);
+      }
+
+      // Create a demo playlist
+      const playlistId = `pl-demo-${Date.now()}`;
+      const demoPlaylist: Playlist = {
+        id: playlistId,
+        name: 'Favoritos Synth & Chill',
+        description: 'Pack de prueba con 3 pistas sintetizadas y carátulas personalizadas',
+        trackIds: newTrackIds,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      await db.playlists.put(demoPlaylist);
+
+      set((state) => ({
+        tracks: [...newTracks, ...state.tracks],
+        playlists: [demoPlaylist, ...state.playlists],
+        activeTab: 'playlists',
+        selectedPlaylistId: playlistId,
+      }));
+
+      showToast(
+        'Pack de demostración cargado',
+        'Se añadieron 3 pistas con carátula y la playlist «Favoritos Synth & Chill»',
+        'info'
+      );
+    } catch (err) {
+      console.warn('Error loading demo pack:', err);
+      showToast('Error', 'No se pudo generar el pack de demostración', 'warning');
+    }
   },
 }));

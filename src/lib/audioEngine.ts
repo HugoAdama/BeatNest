@@ -44,16 +44,6 @@ export class AudioEngine {
   private targetVolume: number = 0.85;
   private crossfadeTimer: ReturnType<typeof setTimeout> | null = null;
 
-  private createFadeCurves(steps: number = 32): { outCurve: Float32Array; inCurve: Float32Array } {
-    const outCurve = new Float32Array(steps);
-    const inCurve = new Float32Array(steps);
-    for (let i = 0; i < steps; i++) {
-      const t = i / (steps - 1);
-      outCurve[i] = Math.cos(t * 0.5 * Math.PI);
-      inCurve[i] = Math.sin(t * 0.5 * Math.PI);
-    }
-    return { outCurve, inCurve };
-  }
 
   private constructor() {
     this.audioA = new Audio();
@@ -349,27 +339,24 @@ export class AudioEngine {
       // Immediately switch activeChannel so all store listeners and UI point to the new track
       this.activeChannel = incomingChannel;
 
-      // Schedule equal-power studio crossfade ramps
-      const now = this.ctx!.currentTime;
-      outgoingGain.gain.cancelScheduledValues(now);
-      incomingGain.gain.cancelScheduledValues(now);
-
-      const { outCurve, inCurve } = this.createFadeCurves(32);
-      try {
-        outgoingGain.gain.setValueCurveAtTime(outCurve, now, crossfadeSec);
-        incomingGain.gain.setValueCurveAtTime(inCurve, now, crossfadeSec);
-      } catch {
-        outgoingGain.gain.setValueAtTime(1.0, now);
-        outgoingGain.gain.linearRampToValueAtTime(0.0, now + crossfadeSec);
-        incomingGain.gain.setValueAtTime(0.0, now);
-        incomingGain.gain.linearRampToValueAtTime(1.0, now + crossfadeSec);
-      }
-
-      // Start playing incoming audio
+      // Start playing incoming audio first so sound is ready to flow
       try {
         await incomingAudio.play();
       } catch (err) {
         console.warn('Playback of incoming track during crossfade was prevented:', err);
+      }
+
+      // Schedule studio crossfade ramps starting from current audio context time
+      if (this.ctx) {
+        const now = this.ctx.currentTime;
+        outgoingGain.gain.cancelScheduledValues(now);
+        incomingGain.gain.cancelScheduledValues(now);
+
+        outgoingGain.gain.setValueAtTime(outgoingGain.gain.value, now);
+        outgoingGain.gain.linearRampToValueAtTime(0.0, now + crossfadeSec);
+
+        incomingGain.gain.setValueAtTime(0.0001, now);
+        incomingGain.gain.linearRampToValueAtTime(1.0, now + crossfadeSec);
       }
 
       // After crossfade duration, silence and pause outgoing audio
