@@ -389,3 +389,31 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 - **Densidad**: Alternar entre filas y tarjetas cómodas o compactas.
 - **Columnas configurables**: En pantallas grandes se pueden elegir entre 2 y 6 columnas; en pantallas pequeñas la cuadrícula se adapta al ancho.
 - **Persistencia local**: Las preferencias se guardan en `beatnest_library_display`.
+
+---
+
+## 43. Restauración de Sesión de Reproducción
+
+- **Continuar donde se dejó**: BeatNest guarda la pista actual, la posición, la cola, el historial reciente, el modo aleatorio y la repetición en `beatnest_playback_session`.
+- **Reanudación explícita**: Al volver a abrir la aplicación la pista queda pausada y se carga cuando el usuario pulsa Reanudar.
+- **Biblioteca local**: La sesión solo conserva identificadores y preferencias de reproducción; los archivos continúan en IndexedDB y no se copian al almacenamiento de sesión.
+- **Más reproducido**: Cada inicio de pista suma una reproducción persistente y alimenta la lista inteligente correspondiente.
+
+## 44. Edición Masiva de Metadatos
+
+- **Selección múltiple**: Selecciona canciones desde la vista de lista o cuadrícula, incluyendo resultados filtrados y detalles de playlists, artistas o álbumes.
+- **Cambios por lote**: Aplica artista, álbum y género a todas las pistas seleccionadas; los campos vacíos conservan el valor actual.
+- **Sincronización de reproducción**: Los cambios persisten en IndexedDB y también se reflejan en la pista actual, la cola y el historial.
+
+## 45. Inicio y Playlists Vacías
+
+- **Acciones de inicio**: Cuando todavía no hay una pista activa, Inicio ofrece reproducir toda la biblioteca o explorar canciones.
+- **Playlists**: Una biblioteca sin playlists ofrece crear una; cada playlist vacía ofrece abrirla para añadir pistas desde la biblioteca.
+- **Estados informativos**: Las secciones sin escuchas o reproducciones muestran instrucciones y un acceso para iniciar la escucha cuando corresponde.
+
+## 46. Biblioteca y Cola para Catálogos Grandes
+
+- **Filas virtualizadas**: Las listas con más de 150 pistas solo montan las filas visibles y un margen para desplazamiento fluido.
+- **Carga diferida de carátulas**: Las imágenes de filas, tarjetas, Inicio y cola se cargan al acercarse al área visible.
+- **Cola táctil y accesible**: Reordenar y quitar canciones está disponible con controles visibles en pantallas táctiles y etiquetas accesibles.
+- **Acciones de cola**: Se mantiene la opción de guardar la cola como playlist y de mover pistas arriba o abajo.

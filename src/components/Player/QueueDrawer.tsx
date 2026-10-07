@@ -81,32 +81,40 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
               {queue.length > 0 && (
                 <>
                   <button
+                    type="button"
                     onClick={() => setIsSavingPlaylist(!isSavingPlaylist)}
-                    className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-[#7C5CFF] hover:bg-[#7C5CFF]/10 transition-colors"
+                    className="min-h-9 min-w-9 rounded-xl text-[var(--app-text-muted)] hover:text-[#7C5CFF] hover:bg-[#7C5CFF]/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
                     title="Guardar cola como playlist"
+                    aria-label="Guardar cola como playlist"
                   >
                     <BookmarkPlus size={16} />
                   </button>
                   <button
+                    type="button"
                     onClick={clearQueueUpcoming}
-                    className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-amber-400 hover:bg-amber-400/10 transition-colors"
+                    className="min-h-9 min-w-9 rounded-xl text-[var(--app-text-muted)] hover:text-amber-400 hover:bg-amber-400/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
                     title="Limpiar siguientes canciones"
+                    aria-label="Limpiar siguientes canciones"
                   >
                     <RotateCcw size={15} />
                   </button>
                   <button
+                    type="button"
                     onClick={clearQueue}
-                    className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                    className="min-h-9 min-w-9 rounded-xl text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                     title="Vaciar toda la cola"
+                    aria-label="Vaciar toda la cola"
                   >
                     <Trash2 size={16} />
                   </button>
                 </>
               )}
               <button
+                type="button"
                 onClick={onClose}
-                className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
+                className="min-h-9 min-w-9 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
                 title="Cerrar cola"
+                aria-label="Cerrar cola"
               >
                 <X size={18} />
               </button>
@@ -175,6 +183,8 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
                   >
                     {track.coverUrl ? (
                       <img
+                        loading="lazy"
+                        decoding="async"
                         src={track.coverUrl}
                         alt={track.title}
                         className="w-full h-full object-cover"
@@ -219,29 +229,35 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
                   </span>
 
                   {/* Reorder and Delete controls */}
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                     {idx > 0 && (
                       <button
+                        type="button"
                         onClick={() => reorderQueue(idx, idx - 1)}
-                        className="p-1 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]"
+                        className="min-h-8 min-w-8 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
                         title="Mover arriba"
+                        aria-label={`Mover ${track.title} arriba en la cola`}
                       >
                         <ChevronUp size={14} />
                       </button>
                     )}
                     {idx < queue.length - 1 && (
                       <button
+                        type="button"
                         onClick={() => reorderQueue(idx, idx + 1)}
-                        className="p-1 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]"
+                        className="min-h-8 min-w-8 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
                         title="Mover abajo"
+                        aria-label={`Mover ${track.title} abajo en la cola`}
                       >
                         <ChevronDown size={14} />
                       </button>
                     )}
                     <button
+                      type="button"
                       onClick={() => removeFromQueue(idx)}
-                      className="p-1 rounded-lg text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10"
+                      className="min-h-8 min-w-8 rounded-lg text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                       title="Quitar de la cola"
+                      aria-label={`Quitar ${track.title} de la cola`}
                     >
                       <X size={14} />
                     </button>

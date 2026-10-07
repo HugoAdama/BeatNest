@@ -41,7 +41,10 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     initAudioListeners();
-    loadFromDatabase();
+    void loadFromDatabase().then(() => {
+      const library = useLibraryStore.getState();
+      usePlayerStore.getState().restorePlaybackSession(library.tracks, library.playlists);
+    });
   }, [initAudioListeners, loadFromDatabase]);
 
   useEffect(() => {

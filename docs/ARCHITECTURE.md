@@ -210,3 +210,12 @@ Para garantizar un mantenimiento óptimo y escalable, el código se estructura e
 - `useLibraryStore.toggleFavorite` actualiza de forma inmediata la pista en biblioteca y sincroniza el estado actual, la cola y el historial del reproductor con `usePlayerStore.updateTrackInPlayer`.
 - La escritura a IndexedDB se espera y verifica. Si falla, se revierte el cambio si no existe una acción posterior para la misma pista y se informa con una notificación.
 - Los botones expresan su estado con `aria-pressed`, etiquetas accesibles y estado visual; las acciones están disponibles desde el reproductor, las filas y las tarjetas.
+
+### 2.11 Sesión de Reproducción y Rendimiento de Biblioteca
+- `usePlayerStore` serializa la sesión reproducible en `beatnest_playback_session`: identificadores de pista y cola, posición, historial reciente, repetición, aleatorio y contexto de playlist. Al iniciar, `App` espera a que `useLibraryStore.loadFromDatabase` hidrate las pistas antes de resolver los identificadores; el audio se carga únicamente tras la acción explícita de Reanudar.
+- El progreso de reproducción se escribe con límite de frecuencia para evitar persistir cada evento `timeupdate`. Los archivos de audio siguen residiendo en IndexedDB.
+- `recordTrackPlay` incrementa y persiste `playCount`; el Inicio usa este dato para la sección Más reproducido.
+- `updateTracksMetadata` agrupa la escritura en IndexedDB y aplica un solo cambio a la biblioteca, sincronizando después la cola y el historial mediante `updateTracksInPlayer`.
+- `LibraryView` ofrece selección múltiple en lista y cuadrícula y abre `BulkEditTracksModal` para artista, álbum y género. La lista de tabla delega catálogos de más de 150 pistas en `VirtualizedTrackRows`, con altura estable por fila y margen de renderizado para desplazamiento.
+- Las carátulas de filas, tarjetas, Inicio y cola usan carga diferida. Los controles de reordenamiento de `QueueDrawer` permanecen visibles en móvil y accesibles por teclado; guardar como playlist reutiliza el flujo existente.
+- `LibraryHomeView` presenta acciones de reproducción/exploración cuando no hay pista activa y accesos para crear o completar playlists vacías.

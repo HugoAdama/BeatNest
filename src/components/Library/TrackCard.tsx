@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Pause, Heart, Music, MoreVertical, PlaySquare, ListPlus, FolderPlus, Trash2, Edit3, Image as ImageIcon } from 'lucide-react';
+import { Play, Pause, Heart, Music, MoreVertical, PlaySquare, ListPlus, FolderPlus, Trash2, Edit3, Image as ImageIcon, Check, Square } from 'lucide-react';
 import type { PlaybackCollectionContext, Track } from '../../types/music';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useLibraryStore } from '../../stores/useLibraryStore';
@@ -13,12 +13,18 @@ interface TrackCardProps {
   track: Track;
   onOpenCreatePlaylistModal: () => void;
   playbackContext?: PlaybackCollectionContext | null;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelected?: () => void;
 }
 
 export const TrackCard: React.FC<TrackCardProps> = ({
   track,
   onOpenCreatePlaylistModal,
   playbackContext,
+  selectionMode = false,
+  isSelected = false,
+  onToggleSelected,
 }) => {
   const { currentTrack, isPlaying, playTrack, togglePlay, addToQueue, playNextInQueue, setPlaybackContextForCurrentTrack } = usePlayerStore();
   const { toggleFavorite, deleteTrack, tracks } = useLibraryStore();
@@ -30,6 +36,10 @@ export const TrackCard: React.FC<TrackCardProps> = ({
   const isCardPlaying = isCurrent && isPlaying;
 
   const handleCardClick = () => {
+    if (selectionMode) {
+      onToggleSelected?.();
+      return;
+    }
     if (isCurrent) {
       setPlaybackContextForCurrentTrack(playbackContext ?? null);
       togglePlay();
@@ -49,13 +59,15 @@ export const TrackCard: React.FC<TrackCardProps> = ({
       className={`group relative ${density === 'compact' ? 'p-2 sm:p-2.5' : 'p-3 sm:p-3.5'} rounded-2xl liquid-card cursor-pointer select-none ${
         isCurrent
           ? 'border-[#7C5CFF]/70 shadow-[0_4px_25px_rgba(124,92,255,0.3)] ring-1 ring-[#7C5CFF]/40 animate-pulse-glow'
-          : 'hover:border-[#7C5CFF]/50'
+        : isSelected ? 'border-[var(--app-accent)]/60 ring-1 ring-[var(--app-accent)]/30 bg-[var(--app-primary-light)]' : 'hover:border-[#7C5CFF]/50'
       }`}
     >
       {/* Cover Image Container */}
       <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--app-surface-elevated)] mb-3 flex items-center justify-center border border-[var(--liquid-glass-border-subtle)]">
         {track.coverUrl ? (
           <img
+            loading="lazy"
+            decoding="async"
             src={track.coverUrl}
             alt={track.title}
             className={`w-full h-full object-cover transition-transform duration-500 ${
@@ -119,8 +131,11 @@ export const TrackCard: React.FC<TrackCardProps> = ({
           <Heart size={15} fill={track.isFavorite ? 'currentColor' : 'none'} />
         </button>
 
-        {/* Context options menu trigger */}
-        <div className="absolute top-2 right-2">
+        {selectionMode ? (
+          <button type="button" onClick={(event) => { event.stopPropagation(); onToggleSelected?.(); }} aria-label={`${isSelected ? 'Quitar' : 'Seleccionar'} ${track.title}`} aria-pressed={isSelected} className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-lg border border-white/30 bg-black/50 text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${isSelected ? 'text-[var(--app-accent)]' : ''}`}>
+            {isSelected ? <Check size={17} /> : <Square size={16} />}
+          </button>
+        ) : <div className="absolute top-2 right-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -207,7 +222,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
               onOpenCreateModal={onOpenCreatePlaylistModal}
             />
           )}
-        </div>
+        </div>}
       </div>
 
       {/* Metadata info */}

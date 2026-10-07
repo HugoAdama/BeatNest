@@ -104,6 +104,7 @@ interface LibraryStore {
   importFiles: (fileList: FileList | File[]) => Promise<void>;
   importDirectoryWithPicker: () => Promise<void>;
   toggleFavorite: (trackId: string) => Promise<void>;
+  recordTrackPlay: (trackId: string) => Promise<void>;
   deleteTrack: (trackId: string) => Promise<void>;
   createPlaylist: (name: string, description?: string, initialTrackIds?: string[]) => Promise<string>;
   deletePlaylist: (playlistId: string) => Promise<void>;
@@ -122,6 +123,10 @@ interface LibraryStore {
   updateTrackMetadata: (
     trackId: string,
     updates: Partial<Pick<Track, 'title' | 'artist' | 'album' | 'genre' | 'year'>>
+  ) => Promise<void>;
+  updateTracksMetadata: (
+    trackIds: string[],
+    updates: Partial<Pick<Track, 'artist' | 'album' | 'genre'>>
   ) => Promise<void>;
   updateTrackCover: (trackId: string, imageBlob: Blob | File | null) => Promise<void>;
   updatePlaylistCover: (playlistId: string, imageBlob: Blob | File | null) => Promise<void>;
@@ -325,6 +330,21 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
     }
   },
 
+  recordTrackPlay: async (trackId: string) => {
+    const track = get().tracks.find((item) => item.id === trackId);
+    if (!track) return;
+    const playCount = (track.playCount ?? 0) + 1;
+    set((state) => ({
+      tracks: state.tracks.map((item) => item.id === trackId ? { ...item, playCount } : item),
+    }));
+    usePlayerStore.getState().updateTrackInPlayer(trackId, { playCount });
+    try {
+      await db.tracks.update(trackId, { playCount });
+    } catch (error) {
+      console.warn('Could not save track play count:', error);
+    }
+  },
+
   deleteTrack: async (trackId: string) => {
     const track = get().tracks.find((item) => item.id === trackId);
     await db.tracks.delete(trackId);
@@ -521,12 +541,28 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       await db.tracks.update(trackId, updates as any);
     } catch (err) {
       console.warn('Error updating track metadata in DB:', err);
+      throw err;
     }
     const tracks = get().tracks.map((t) =>
       t.id === trackId ? { ...t, ...updates } : t
     );
     set({ tracks });
     usePlayerStore.getState().updateTrackInPlayer(trackId, updates);
+  },
+
+  updateTracksMetadata: async (trackIds, updates) => {
+    const libraryTrackIds = new Set(get().tracks.map((track) => track.id));
+    const existingIds = [...new Set(trackIds)].filter((id) => libraryTrackIds.has(id));
+    if (existingIds.length === 0) return;
+    try {
+      await db.tracks.bulkUpdate(existingIds.map((key) => ({ key, changes: updates })));
+    } catch (err) {
+      console.warn('Error updating track metadata in bulk:', err);
+      throw err;
+    }
+    const updatedIds = new Set(existingIds);
+    set((state) => ({ tracks: state.tracks.map((track) => updatedIds.has(track.id) ? { ...track, ...updates } : track) }));
+    usePlayerStore.getState().updateTracksInPlayer(existingIds, updates);
   },
 
   updateTrackCover: async (trackId: string, imageBlob: Blob | File | null) => {

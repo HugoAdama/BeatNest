@@ -13,6 +13,8 @@ import {
   ArrowUp,
   ArrowDown,
   Image as ImageIcon,
+  Check,
+  Square,
 } from 'lucide-react';
 import type { PlaybackCollectionContext, Track } from '../../types/music';
 import { usePlayerStore } from '../../stores/usePlayerStore';
@@ -30,6 +32,10 @@ interface TrackRowProps {
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   playbackContext?: PlaybackCollectionContext | null;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelected?: () => void;
+  virtualized?: boolean;
 }
 
 export const TrackRow: React.FC<TrackRowProps> = ({
@@ -39,6 +45,10 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   onMoveUp,
   onMoveDown,
   playbackContext,
+  selectionMode = false,
+  isSelected = false,
+  onToggleSelected,
+  virtualized = false,
 }) => {
   const { currentTrack, isPlaying, playTrack, togglePlay, addToQueue, playNextInQueue, setPlaybackContextForCurrentTrack } = usePlayerStore();
   const { toggleFavorite, deleteTrack, tracks } = useLibraryStore();
@@ -50,6 +60,10 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   const isRowPlaying = isCurrent && isPlaying;
 
   const handleRowClick = () => {
+    if (selectionMode) {
+      onToggleSelected?.();
+      return;
+    }
     if (isCurrent) {
       setPlaybackContextForCurrentTrack(playbackContext ?? null);
       togglePlay();
@@ -65,22 +79,28 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
   return (
     <div
-      className={`group relative flex items-center gap-3 px-3 ${density === 'compact' ? 'py-2' : 'sm:px-3.5 py-3 sm:py-3.5'} rounded-xl transition-all select-none hover-lift ${
+      className={`group relative flex items-center gap-3 px-3 ${virtualized ? 'h-full py-1' : density === 'compact' ? 'py-2' : 'sm:px-3.5 py-3 sm:py-3.5'} rounded-xl transition-all select-none hover-lift ${
         isCurrent
           ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/40 text-[var(--app-text)] shadow-sm backdrop-blur-md'
-          : 'hover:bg-white/40 dark:hover:bg-white/5 border border-transparent hover:border-[var(--liquid-glass-border-subtle)] text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
+          : isSelected ? 'bg-[var(--app-primary-light)] border border-[var(--app-accent)]/40 text-[var(--app-text)]' : 'hover:bg-white/40 dark:hover:bg-white/5 border border-transparent hover:border-[var(--liquid-glass-border-subtle)] text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
       }`}
     >
       {/* Index number or Live Equalizer / Play icon */}
       <div className="w-8 flex items-center justify-center shrink-0">
-        <button
+        {selectionMode ? (
+          <button type="button" onClick={(event) => { event.stopPropagation(); onToggleSelected?.(); }} aria-label={`${isSelected ? 'Quitar' : 'Seleccionar'} ${track.title}`} aria-pressed={isSelected} className={`flex h-8 w-8 items-center justify-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] ${isSelected ? 'text-[var(--app-accent)]' : 'text-[var(--app-text-muted)] hover:bg-[var(--app-surface-hover)]'}`}>
+            {isSelected ? <Check size={17} /> : <Square size={16} />}
+          </button>
+        ) : <button
           onClick={handleRowClick}
+          type="button"
           className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
             isCurrent
               ? 'bg-[#7C5CFF]/20 group-hover:bg-[#7C5CFF] group-hover:text-white'
               : 'group-hover:bg-[#7C5CFF] group-hover:text-white'
           }`}
           title={isRowPlaying ? 'Pausar' : 'Reproducir'}
+          aria-label={`${isRowPlaying ? 'Pausar' : 'Reproducir'} ${track.title}`}
         >
           {isRowPlaying ? (
             <>
@@ -104,7 +124,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               <Play size={13} className="hidden group-hover:block" fill="currentColor" />
             </>
           )}
-        </button>
+        </button>}
       </div>
 
       {/* Album Cover & Title */}
@@ -121,6 +141,8 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         >
           {track.coverUrl ? (
             <img
+              loading="lazy"
+              decoding="async"
               src={track.coverUrl}
               alt={track.title}
               className={`w-full h-full object-cover transition-transform duration-300 ${
@@ -174,7 +196,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
       {/* Duration & Actions */}
       <div className="flex items-center gap-2 shrink-0">
-        <button
+        {!selectionMode && <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
@@ -190,14 +212,14 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           aria-pressed={Boolean(track.isFavorite)}
         >
           <Heart size={15} fill={track.isFavorite ? 'currentColor' : 'none'} />
-        </button>
+        </button>}
 
         <span className="text-xs font-mono text-[var(--app-text-muted)] w-12 text-right tabular-nums">
           {formatDuration(track.duration)}
         </span>
 
         {/* More actions menu */}
-        <div className="relative">
+        {!selectionMode && <div className="relative">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -321,7 +343,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               onOpenCreateModal={onOpenCreatePlaylistModal}
             />
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );

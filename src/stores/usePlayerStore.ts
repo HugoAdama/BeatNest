@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Track, RepeatMode, PlaybackCollectionContext } from '../types/music';
+import type { Track, Playlist, RepeatMode, PlaybackCollectionContext } from '../types/music';
 import { audioEngine } from '../lib/audioEngine';
 import { db } from '../db';
 import { showToast } from './useToastStore';
@@ -21,9 +21,11 @@ interface PlayerStore {
   queueIndex: number;
   recentTracks: Track[];
   playbackContext: PlaybackCollectionContext | null;
+  needsTrackLoad: boolean;
   // Actions
   initAudioListeners: () => void;
-  playTrack: (track: Track, newQueue?: Track[], useCrossfade?: boolean, context?: PlaybackCollectionContext | null) => Promise<void>;
+  playTrack: (track: Track, newQueue?: Track[], useCrossfade?: boolean, context?: PlaybackCollectionContext | null, startAtSeconds?: number) => Promise<void>;
+  restorePlaybackSession: (libraryTracks: Track[], playlists?: Playlist[]) => void;
   setPlaybackContextForCurrentTrack: (context: PlaybackCollectionContext | null) => void;
   play: () => void;
   pause: () => void;
@@ -45,6 +47,70 @@ interface PlayerStore {
   reorderQueue: (startIndex: number, endIndex: number) => void;
   setTrackLyrics: (trackId: string, lyricsText: string) => Promise<void>;
   updateTrackInPlayer: (trackId: string, updates: Partial<Track>) => void;
+  updateTracksInPlayer: (trackIds: string[], updates: Partial<Track>) => void;
+}
+
+interface SavedPlaybackSession {
+  currentTrackId: string | null;
+  queueTrackIds: string[];
+  queueIndex: number;
+  recentTrackIds: string[];
+  currentTime: number;
+  repeatMode: RepeatMode;
+  isShuffled: boolean;
+  playbackContext: PlaybackCollectionContext | null;
+}
+
+const PLAYBACK_SESSION_KEY = 'beatnest_playback_session';
+
+function readPlaybackSession(): SavedPlaybackSession | null {
+  try {
+    const raw = localStorage.getItem(PLAYBACK_SESSION_KEY);
+    if (!raw) return null;
+    const saved: unknown = JSON.parse(raw);
+    if (!saved || typeof saved !== 'object') return null;
+    const value = saved as Partial<SavedPlaybackSession>;
+    const repeatMode: RepeatMode = value.repeatMode === 'all' || value.repeatMode === 'one' ? value.repeatMode : 'off';
+    return {
+      currentTrackId: typeof value.currentTrackId === 'string' ? value.currentTrackId : null,
+      queueTrackIds: Array.isArray(value.queueTrackIds) ? value.queueTrackIds.filter((id): id is string => typeof id === 'string') : [],
+      queueIndex: typeof value.queueIndex === 'number' && Number.isFinite(value.queueIndex) ? value.queueIndex : -1,
+      recentTrackIds: Array.isArray(value.recentTrackIds) ? value.recentTrackIds.filter((id): id is string => typeof id === 'string').slice(0, 50) : [],
+      currentTime: typeof value.currentTime === 'number' && Number.isFinite(value.currentTime) ? Math.max(0, value.currentTime) : 0,
+      repeatMode,
+      isShuffled: value.isShuffled === true,
+      playbackContext: value.playbackContext && typeof value.playbackContext === 'object'
+        ? {
+            ...(typeof value.playbackContext.playlistId === 'string' ? { playlistId: value.playbackContext.playlistId } : {}),
+            ...(Array.isArray(value.playbackContext.playlistTrackIds)
+              ? { playlistTrackIds: value.playbackContext.playlistTrackIds.filter((id): id is string => typeof id === 'string') }
+              : {}),
+          }
+        : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writePlaybackSession(state: Pick<PlayerStore,
+  'currentTrack' | 'queue' | 'queueIndex' | 'recentTracks' | 'currentTime' | 'repeatMode' | 'isShuffled' | 'playbackContext'
+>) {
+  try {
+    const saved: SavedPlaybackSession = {
+      currentTrackId: state.currentTrack?.id ?? null,
+      queueTrackIds: state.queue.map((track) => track.id),
+      queueIndex: state.queueIndex,
+      recentTrackIds: state.recentTracks.slice(0, 50).map((track) => track.id),
+      currentTime: state.currentTime,
+      repeatMode: state.repeatMode,
+      isShuffled: state.isShuffled,
+      playbackContext: state.playbackContext?.playlistId ? { playlistId: state.playbackContext.playlistId } : null,
+    };
+    localStorage.setItem(PLAYBACK_SESSION_KEY, JSON.stringify(saved));
+  } catch (error) {
+    console.warn('Could not save playback session:', error);
+  }
 }
 
 const loadSavedCrossfade = (): number => {
@@ -74,6 +140,47 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   queueIndex: -1,
   recentTracks: [],
   playbackContext: null,
+  needsTrackLoad: false,
+
+  restorePlaybackSession: (libraryTracks, playlists = []) => {
+    const saved = readPlaybackSession();
+    if (!saved) return;
+    const tracksById = new Map(libraryTracks.map((track) => [track.id, track]));
+    const queue = saved.queueTrackIds
+      .map((id) => tracksById.get(id))
+      .filter((track): track is Track => !!track);
+    const currentTrack = saved.currentTrackId ? tracksById.get(saved.currentTrackId) ?? null : null;
+    if (currentTrack && !queue.some((track) => track.id === currentTrack.id)) queue.unshift(currentTrack);
+    const queueIndex = currentTrack
+      ? queue.findIndex((track) => track.id === currentTrack.id)
+      : queue.length > 0 ? Math.max(0, Math.min(saved.queueIndex, queue.length - 1)) : -1;
+    const recentTracks = saved.recentTrackIds
+      .map((id) => tracksById.get(id))
+      .filter((track): track is Track => !!track);
+    const savedPlaylist = saved.playbackContext?.playlistId
+      ? playlists.find((playlist) => playlist.id === saved.playbackContext?.playlistId)
+      : undefined;
+    const playbackContext = saved.playbackContext
+      ? { ...saved.playbackContext, ...(savedPlaylist ? { playlistTrackIds: savedPlaylist.trackIds } : {}) }
+      : null;
+    const currentTime = currentTrack
+      ? Math.min(saved.currentTime, Math.max(0, currentTrack.duration - 1))
+      : 0;
+
+    set({
+      currentTrack,
+      queue,
+      queueIndex: queue.length > 0 ? queueIndex : -1,
+      recentTracks,
+      currentTime,
+      duration: currentTrack?.duration ?? 0,
+      repeatMode: saved.repeatMode,
+      isShuffled: saved.isShuffled,
+      playbackContext,
+      isPlaying: false,
+      needsTrackLoad: !!currentTrack,
+    });
+  },
 
   initAudioListeners: () => {
     const bindAudioEvents = (audio: HTMLAudioElement) => {
@@ -152,7 +259,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     audioEngine.setVolume(get().volume);
   },
 
-  playTrack: async (track: Track, newQueue?: Track[], useCrossfade?: boolean, context?: PlaybackCollectionContext | null) => {
+  playTrack: async (track: Track, newQueue?: Track[], useCrossfade?: boolean, context?: PlaybackCollectionContext | null, startAtSeconds: number = 0) => {
     if (!useCrossfade) {
       lastCrossfadedTrackId = null;
     }
@@ -198,15 +305,21 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
 
     const filteredRecent = get().recentTracks.filter((t) => t.id !== track.id);
+    const startAt = Math.min(Math.max(0, startAtSeconds), Math.max(0, track.duration - 1));
     set({
       currentTrack: track,
       playbackContext: context ?? null,
       queue,
       queueIndex,
       recentTracks: [track, ...filteredRecent].slice(0, 50),
-      currentTime: 0,
+      currentTime: startAt,
       duration: track.duration || 0,
+      needsTrackLoad: false,
     });
+
+    void import('./useLibraryStore')
+      .then(({ useLibraryStore }) => useLibraryStore.getState().recordTrackPlay(track.id))
+      .catch((error) => console.warn('Could not record track play:', error));
 
     useAudioSettingsStore.getState().applyAutomaticAudioProfile(track, context);
 
@@ -216,6 +329,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       : (get().crossfadeDuration > 0 && isAlreadyPlaying);
     const crossfadeSec = shouldCrossfade ? get().crossfadeDuration : 0;
     await audioEngine.loadTrack(track.file, crossfadeSec);
+    if (startAt > 0) audioEngine.seek(startAt);
 
     try {
       await audioEngine.play();
@@ -256,10 +370,14 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   play: () => {
-    const { isPlaying, currentTrack, queue } = get();
+    const { isPlaying, currentTrack, queue, queueIndex, needsTrackLoad, currentTime, playbackContext } = get();
     if (isPlaying) return;
+    if (currentTrack && needsTrackLoad) {
+      void get().playTrack(currentTrack, queue, false, playbackContext, currentTime);
+      return;
+    }
     if (!currentTrack && queue.length > 0) {
-      get().playTrack(queue[0]);
+      get().playTrack(queue[Math.max(0, queueIndex)]);
       return;
     }
     if (!currentTrack) return;
@@ -339,6 +457,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   seek: (seconds: number) => {
     audioEngine.seek(seconds);
     set({ currentTime: seconds });
+    if (typeof window !== 'undefined') writePlaybackSession(get());
   },
 
   setVolume: (volume: number) => {
@@ -492,4 +611,31 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       recentTracks: updatedRecent,
     });
   },
+
+  updateTracksInPlayer: (trackIds: string[], updates: Partial<Track>) => {
+    const updatedIds = new Set(trackIds);
+    const { currentTrack, queue, recentTracks } = get();
+    set({
+      currentTrack: currentTrack && updatedIds.has(currentTrack.id) ? { ...currentTrack, ...updates } : currentTrack,
+      queue: queue.map((track) => updatedIds.has(track.id) ? { ...track, ...updates } : track),
+      recentTracks: recentTracks.map((track) => updatedIds.has(track.id) ? { ...track, ...updates } : track),
+    });
+  },
 }));
+
+let lastSessionWriteAt = 0;
+usePlayerStore.subscribe((state, previous) => {
+  const queueChanged = state.queue !== previous.queue;
+  const recentChanged = state.recentTracks !== previous.recentTracks;
+  const contextChanged = state.playbackContext !== previous.playbackContext;
+  const importantChange = state.currentTrack?.id !== previous.currentTrack?.id || queueChanged || recentChanged ||
+    state.queueIndex !== previous.queueIndex || state.repeatMode !== previous.repeatMode ||
+    state.isShuffled !== previous.isShuffled || contextChanged || state.isPlaying !== previous.isPlaying;
+  const progressChanged = state.currentTime !== previous.currentTime;
+  if (!importantChange && !progressChanged) return;
+  const now = Date.now();
+  if (!importantChange && now - lastSessionWriteAt < 2000) return;
+  if (typeof window === 'undefined') return;
+  writePlaybackSession(state);
+  lastSessionWriteAt = now;
+});

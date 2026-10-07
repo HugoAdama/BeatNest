@@ -12,9 +12,11 @@ interface LibraryHomeViewProps {
   currentTrack: Track | null;
   isPlaying: boolean;
   onPlayTrack: (track: Track, queue: Track[]) => void;
+  onPlayLibrary: () => void;
   onTogglePlayback: () => void;
   onNavigate: (tab: LibraryTab) => void;
   onOpenPlaylist: (playlistId: string) => void;
+  onOpenCreatePlaylist: () => void;
   onOpenDashboardSettings: () => void;
 }
 
@@ -25,9 +27,11 @@ export const LibraryHomeView: React.FC<LibraryHomeViewProps> = ({
   currentTrack,
   isPlaying,
   onPlayTrack,
+  onPlayLibrary,
   onTogglePlayback,
   onNavigate,
   onOpenPlaylist,
+  onOpenCreatePlaylist,
   onOpenDashboardSettings,
 }) => {
   const { sectionOrder, visibleSections, maxItems } = useHomeDashboardStore();
@@ -56,7 +60,7 @@ export const LibraryHomeView: React.FC<LibraryHomeViewProps> = ({
       title={`Reproducir ${track.title}`}
     >
       <span className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--app-surface-elevated)] ${isCompact ? 'h-9 w-9' : 'h-11 w-11'}`}>
-        {track.coverUrl ? <img src={track.coverUrl} alt="" className="h-full w-full object-cover" /> : <Music2 size={18} className="text-[var(--app-accent)]" />}
+        {track.coverUrl ? <img loading="lazy" decoding="async" src={track.coverUrl} alt="" className="h-full w-full object-cover" /> : <Music2 size={18} className="text-[var(--app-accent)]" />}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-semibold text-[var(--app-text)]">{track.title}</span>
@@ -86,9 +90,16 @@ export const LibraryHomeView: React.FC<LibraryHomeViewProps> = ({
             {items.map((track) => renderTrack(track, items))}
           </div>
         ) : (
-          <p className="rounded-xl border border-dashed border-[var(--liquid-glass-border)] px-4 py-5 text-sm text-[var(--app-text-muted)]">
-            {sectionId === 'recent' ? 'Cuando reproduzcas música, tus escuchas recientes aparecerán aquí.' : sectionId === 'played' ? 'Tus pistas más reproducidas aparecerán aquí conforme las escuches.' : 'Las pistas importadas recientemente aparecerán aquí.'}
-          </p>
+          <div className="flex flex-col gap-1 rounded-xl border border-dashed border-[var(--liquid-glass-border)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-[var(--app-text-muted)]">
+              {sectionId === 'recent' ? 'Aún no hay escuchas recientes. Reproduce una pista para comenzar tu historial.' : sectionId === 'played' ? 'Tus pistas más reproducidas aparecerán aquí conforme las escuches.' : 'Las pistas importadas recientemente aparecerán aquí.'}
+            </p>
+            {sectionId === 'recent' && (
+              <button type="button" onClick={onPlayLibrary} className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[var(--app-accent)] hover:bg-[var(--app-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]">
+                Reproducir biblioteca
+              </button>
+            )}
+          </div>
         )}
       </div>
     );
@@ -108,30 +119,40 @@ export const LibraryHomeView: React.FC<LibraryHomeViewProps> = ({
               .filter((cover): cover is string => !!cover)
               .slice(0, 4);
             return (
-              <button key={playlist.id} type="button" onClick={() => onOpenPlaylist(playlist.id)} className={`group min-w-0 rounded-2xl border border-[var(--liquid-glass-border)] bg-[var(--app-surface)]/55 text-left transition-colors hover:bg-[var(--app-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] ${isCompact ? 'p-2' : 'p-3'}`}>
+              <article key={playlist.id} className={`group min-w-0 rounded-2xl border border-[var(--liquid-glass-border)] bg-[var(--app-surface)]/55 p-2 text-left transition-colors hover:bg-[var(--app-surface-hover)] ${isCompact ? 'sm:p-2' : 'sm:p-3'}`}>
+                <button type="button" onClick={() => onOpenPlaylist(playlist.id)} aria-label={`Abrir playlist ${playlist.name}`} className="block w-full rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]">
                 <span className="mb-2 flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#7C5CFF]/30 to-[#4FD1C5]/30">
                   {playlist.coverUrl ? (
-                    <img src={playlist.coverUrl} alt="" className="h-full w-full object-cover" />
+                    <img loading="lazy" decoding="async" src={playlist.coverUrl} alt="" className="h-full w-full object-cover" />
                   ) : covers.length >= 2 ? (
                     <span className="grid h-full w-full grid-cols-2 grid-rows-2">
                       {[0, 1, 2, 3].map((index) => covers[index]
-                        ? <img key={index} src={covers[index]} alt="" className="h-full w-full object-cover" />
+                        ? <img key={index} loading="lazy" decoding="async" src={covers[index]} alt="" className="h-full w-full object-cover" />
                         : <span key={index} className="flex items-center justify-center bg-[var(--app-primary-light)]"><Disc3 size={16} className="text-[var(--app-accent)]" /></span>)}
                     </span>
                   ) : covers.length === 1 ? (
-                    <img src={covers[0]} alt="" className="h-full w-full object-cover" />
+                    <img loading="lazy" decoding="async" src={covers[0]} alt="" className="h-full w-full object-cover" />
                   ) : (
                     <span className="flex h-full w-full items-center justify-center"><ListMusic size={24} className="text-[var(--app-accent)]" /></span>
                   )}
                 </span>
                 <span className="block truncate text-sm font-semibold text-[var(--app-text)]">{playlist.name}</span>
                 <span className="mt-0.5 block text-xs text-[var(--app-text-muted)]">{playlist.trackIds.length} canciones</span>
-              </button>
+                </button>
+                {playlist.trackIds.length === 0 && (
+                  <button type="button" onClick={() => onOpenPlaylist(playlist.id)} className="mt-2 min-h-9 w-full rounded-lg bg-[var(--app-primary-light)] px-2 text-xs font-semibold text-[var(--app-accent)] hover:bg-[var(--app-primary-light)]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]">
+                    Añadir canciones
+                  </button>
+                )}
+              </article>
             );
           })}
         </div>
       ) : (
-        <p className="rounded-xl border border-dashed border-[var(--liquid-glass-border)] px-4 py-5 text-sm text-[var(--app-text-muted)]">Crea una playlist para organizar tus canciones favoritas.</p>
+        <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-[var(--liquid-glass-border)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-[var(--app-text-muted)]">Crea una playlist para organizar tus canciones favoritas.</p>
+          <button type="button" onClick={onOpenCreatePlaylist} className="min-h-9 rounded-lg bg-[var(--app-primary-light)] px-3 text-xs font-semibold text-[var(--app-accent)] hover:bg-[var(--app-primary-light)]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]">Crear playlist</button>
+        </div>
       )}
     </div>
   );
@@ -158,6 +179,19 @@ export const LibraryHomeView: React.FC<LibraryHomeViewProps> = ({
           <button type="button" onClick={onTogglePlayback} className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] px-4 text-sm font-semibold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-[0.98] sm:self-auto">
             {isPlaying ? <Pause size={16} /> : <Play size={16} fill="currentColor" />}{isPlaying ? 'Pausar reproducción' : 'Reanudar'}
           </button>
+        </div>
+      )}
+
+      {!currentTrack && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-[var(--liquid-glass-border)] bg-gradient-to-r from-[var(--app-primary-light)] via-[var(--app-surface)]/55 to-[var(--app-surface)]/35 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div>
+            <h3 className="text-base font-bold text-[var(--app-text)]">Tu música está lista para sonar</h3>
+            <p className="mt-1 text-sm text-[var(--app-text-muted)]">Reproduce tu biblioteca o elige una pista para empezar.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={onPlayLibrary} className="min-h-10 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] px-3.5 text-xs font-semibold text-white shadow-sm">Reproducir todo</button>
+            <button type="button" onClick={() => onNavigate('tracks')} className="min-h-10 rounded-xl border border-[var(--liquid-glass-border)] px-3.5 text-xs font-semibold text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]">Explorar pistas</button>
+          </div>
         </div>
       )}
 

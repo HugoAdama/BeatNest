@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Music, Plus } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Check, ListChecks, Music, PencilLine, Plus } from 'lucide-react';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useUIStore } from '../../stores/useUIStore';
@@ -15,6 +15,8 @@ import { useLibraryViewModel } from './useLibraryViewModel';
 import { LibraryHeader } from './LibraryHeader';
 import { LibraryFilters } from './LibraryFilters';
 import { LibraryHomeView } from './LibraryHomeView';
+import { BulkEditTracksModal } from './BulkEditTracksModal';
+import { VirtualizedTrackRows } from './VirtualizedTrackRows';
 import type { PlaybackCollectionContext } from '../../types/music';
 
 interface LibraryViewProps {
@@ -52,7 +54,25 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
   const { gridColumns } = useLibraryDisplayPreferencesStore();
   const gridStyle = { '--library-grid-columns': gridColumns } as React.CSSProperties;
   const [isDragOver, setIsDragOver] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(() => new Set());
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+  const canSelectTracks = activeTab === 'tracks' || activeTab === 'favorites' || activeTab === 'history' || activeTab.startsWith('smart-') ||
+    (activeTab === 'playlists' && !!selectedPlaylistId) || (activeTab === 'artists' && !!selectedArtistName) || (activeTab === 'albums' && !!selectedAlbumName);
 
+  useEffect(() => {
+    setSelectionMode(false);
+    setSelectedTrackIds(new Set());
+  }, [activeTab, selectedPlaylistId, selectedArtistName, selectedAlbumName]);
+
+  const toggleTrackSelection = (trackId: string) => {
+    setSelectedTrackIds((current) => {
+      const next = new Set(current);
+      if (next.has(trackId)) next.delete(trackId);
+      else next.add(trackId);
+      return next;
+    });
+  };
   const {
     uniqueGenres,
     displayedTracks,
@@ -81,6 +101,22 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
   const playlistPlaybackContext: PlaybackCollectionContext | null = currentPlaylist
     ? { playlistId: currentPlaylist.id, playlistTrackIds: currentPlaylist.trackIds }
     : null;
+
+  useEffect(() => {
+    const visibleIds = new Set(displayedTracks.map((track) => track.id));
+    setSelectedTrackIds((current) => {
+      const next = new Set([...current].filter((id) => visibleIds.has(id)));
+      return next.size === current.size ? current : next;
+    });
+  }, [displayedTracks]);
+
+  const selectedVisibleCount = displayedTracks.reduce((count, track) => count + Number(selectedTrackIds.has(track.id)), 0);
+  const selectAllVisible = () => setSelectedTrackIds((current) => {
+    const next = new Set(current);
+    const allVisibleSelected = displayedTracks.length > 0 && displayedTracks.every((track) => next.has(track.id));
+    displayedTracks.forEach((track) => allVisibleSelected ? next.delete(track.id) : next.add(track.id));
+    return next;
+  });
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -182,6 +218,18 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             setSelectedFormat(null);
           }}
         />}
+        {canSelectTracks && displayedTracks.length > 0 && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-[var(--liquid-glass-border-subtle)] bg-[var(--app-surface)]/45 px-3 py-2">
+            <button type="button" onClick={() => { setSelectionMode((value) => !value); setSelectedTrackIds(new Set()); }} className="inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-xs font-semibold text-[var(--app-text-muted)] hover:bg-[var(--app-surface-hover)] hover:text-[var(--app-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]">
+              <ListChecks size={15} /> {selectionMode ? 'Cancelar selección' : 'Seleccionar pistas'}
+            </button>
+            {selectionMode && <>
+              <span aria-live="polite" className="text-xs text-[var(--app-text-muted)]">{selectedVisibleCount} seleccionadas</span>
+              <button type="button" onClick={selectAllVisible} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-[var(--app-accent)] hover:bg-[var(--app-primary-light)]"><Check size={14} /> {selectedVisibleCount === displayedTracks.length ? 'Deseleccionar visibles' : 'Seleccionar visibles'}</button>
+              <button type="button" disabled={selectedVisibleCount === 0} onClick={() => setIsBulkEditOpen(true)} className="ml-auto inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[var(--app-primary)] px-3 text-xs font-semibold text-white shadow-sm hover:bg-[var(--app-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"><PencilLine size={14} /> Editar metadatos</button>
+            </>}
+          </div>
+        )}
         {/* Content Views: home, artist/album collections, table, or grid */}
         {activeTab !== 'home' && activeTab !== 'playlists' && displayedTracks.length === 0 && (
           <div className="my-4 rounded-2xl border border-dashed border-[var(--liquid-glass-border)] bg-[var(--app-surface)]/45 px-5 py-8 text-center">
@@ -198,9 +246,11 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             currentTrack={currentTrack}
             isPlaying={isPlaying}
             onPlayTrack={(track, queue) => playTrack(track, queue, false)}
+            onPlayLibrary={handlePlayAll}
             onTogglePlayback={togglePlay}
             onNavigate={(tab) => navigateTo(tab)}
             onOpenPlaylist={(playlistId) => navigateTo('playlists', { playlistId })}
+            onOpenCreatePlaylist={onOpenCreatePlaylistModal}
             onOpenDashboardSettings={() => toggleDashboardPreferences(true)}
           />
         ) : activeTab === 'playlists' && selectedPlaylistId && !currentPlaylist ? null : activeTab !== 'playlists' && displayedTracks.length === 0 ? null : activeTab === 'playlists' && !selectedPlaylistId ? null : activeTab === 'artists' && !selectedArtistName ? (
@@ -225,27 +275,25 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
               <span className="w-24 text-right pr-2">Duración</span>
             </div>
 
-            <div className="divide-y divide-[var(--liquid-glass-border-subtle)]">
-              {displayedTracks.map((track, idx) => (
-                <TrackRow
-                  key={track.id}
-                  track={track}
-                  index={idx}
-                  onOpenCreatePlaylistModal={onOpenCreatePlaylistModal}
-                  playbackContext={playlistPlaybackContext}
-                  onMoveUp={
-                    activeTab === 'playlists' && selectedPlaylistId && idx > 0
-                      ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx - 1)
-                      : undefined
-                  }
-                  onMoveDown={
-                    activeTab === 'playlists' && selectedPlaylistId && idx < displayedTracks.length - 1
-                      ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx + 1)
-                      : undefined
-                  }
-                />
-              ))}
-            </div>
+            {displayedTracks.length > 150 ? (
+              <VirtualizedTrackRows tracks={displayedTracks} renderTrack={(track, idx) => (
+                <TrackRow key={track.id} track={track} index={idx} onOpenCreatePlaylistModal={onOpenCreatePlaylistModal} playbackContext={playlistPlaybackContext} virtualized={true} selectionMode={selectionMode} isSelected={selectedTrackIds.has(track.id)} onToggleSelected={() => toggleTrackSelection(track.id)} onMoveUp={activeTab === 'playlists' && selectedPlaylistId && idx > 0 ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx - 1) : undefined} onMoveDown={activeTab === 'playlists' && selectedPlaylistId && idx < displayedTracks.length - 1 ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx + 1) : undefined} />
+              )} />
+            ) : (
+              <div className="divide-y divide-[var(--liquid-glass-border-subtle)]">
+                {displayedTracks.map((track, idx) => (
+                  <TrackRow
+                    key={track.id} track={track} index={idx}
+                    onOpenCreatePlaylistModal={onOpenCreatePlaylistModal}
+                    playbackContext={playlistPlaybackContext}
+                    selectionMode={selectionMode} isSelected={selectedTrackIds.has(track.id)}
+                    onToggleSelected={() => toggleTrackSelection(track.id)}
+                    onMoveUp={activeTab === 'playlists' && selectedPlaylistId && idx > 0 ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx - 1) : undefined}
+                    onMoveDown={activeTab === 'playlists' && selectedPlaylistId && idx < displayedTracks.length - 1 ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx + 1) : undefined}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div className="library-responsive-grid gap-3.5 sm:gap-4" style={gridStyle}>
@@ -255,6 +303,9 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
                 track={track}
                 onOpenCreatePlaylistModal={onOpenCreatePlaylistModal}
                 playbackContext={playlistPlaybackContext}
+                selectionMode={selectionMode}
+                isSelected={selectedTrackIds.has(track.id)}
+                onToggleSelected={() => toggleTrackSelection(track.id)}
               />
             ))}
           </div>
@@ -323,6 +374,12 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
           <p className="text-sm font-semibold text-[var(--app-text)]">Esta playlist ya no está disponible.</p>
           <button type="button" onClick={() => navigateTo('playlists')} className="mt-2 rounded-lg px-3 py-2 text-sm font-semibold text-[var(--app-accent)] hover:bg-[var(--app-surface-hover)]">Volver a tus playlists</button>
         </div>
+      )}
+      {isBulkEditOpen && (
+        <BulkEditTracksModal
+          tracks={displayedTracks.filter((track) => selectedTrackIds.has(track.id))}
+          onClose={() => { setIsBulkEditOpen(false); setSelectionMode(false); setSelectedTrackIds(new Set()); }}
+        />
       )}
     </div>
   );
