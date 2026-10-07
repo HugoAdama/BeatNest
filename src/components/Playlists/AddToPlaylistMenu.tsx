@@ -16,14 +16,14 @@ export const AddToPlaylistMenu: React.FC<AddToPlaylistMenuProps> = ({
   const { playlists, addTrackToPlaylist, removeTrackFromPlaylist } = useLibraryStore();
 
   return (
-    <div className="absolute right-0 top-8 z-50 w-56 bg-[#1A1A1F] border border-[#2E2E38] rounded-xl shadow-2xl p-1.5 animate-fadeIn">
-      <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[#2E2E38]">
-        <span className="text-[11px] font-semibold text-[#A0A0AB] uppercase tracking-wider">
+    <div className="absolute right-0 top-8 z-50 w-56 liquid-glass border border-[var(--liquid-glass-border)] rounded-2xl shadow-2xl p-1.5 animate-fadeIn">
+      <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[var(--liquid-glass-border-subtle)]">
+        <span className="text-[11px] font-semibold text-[var(--app-text-muted)] uppercase tracking-wider">
           Añadir a playlist
         </span>
         <button
           onClick={onClose}
-          className="text-[#A0A0AB] hover:text-[#F5F5F7] p-0.5 rounded"
+          className="text-[var(--app-text-muted)] hover:text-[var(--app-text)] p-0.5 rounded-lg"
         >
           <X size={14} />
         </button>
@@ -31,7 +31,7 @@ export const AddToPlaylistMenu: React.FC<AddToPlaylistMenuProps> = ({
 
       <div className="max-h-48 overflow-y-auto py-1 space-y-0.5">
         {playlists.length === 0 ? (
-          <div className="p-3 text-center text-xs text-[#A0A0AB]">
+          <div className="p-3 text-center text-xs text-[var(--app-text-muted)]">
             No tienes playlists aún.
           </div>
         ) : (
@@ -47,14 +47,14 @@ export const AddToPlaylistMenu: React.FC<AddToPlaylistMenuProps> = ({
                     addTrackToPlaylist(pl.id, trackId);
                   }
                 }}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-left transition-colors ${
+                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs text-left transition-colors ${
                   hasTrack
-                    ? 'bg-[#7C5CFF]/15 text-[#7C5CFF]'
-                    : 'text-[#F5F5F7] hover:bg-[#24242B]'
+                    ? 'bg-[#7C5CFF]/15 text-[#7C5CFF] font-medium'
+                    : 'text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
-                  <ListMusic size={14} className="shrink-0 text-[#A0A0AB]" />
+                  <ListMusic size={14} className="shrink-0 text-[#7C5CFF]" />
                   <span className="truncate">{pl.name}</span>
                 </div>
                 {hasTrack && <Check size={14} className="shrink-0 text-[#4FD1C5]" />}
@@ -64,16 +64,16 @@ export const AddToPlaylistMenu: React.FC<AddToPlaylistMenuProps> = ({
         )}
       </div>
 
-      <div className="pt-1 border-t border-[#2E2E38]">
+      <div className="pt-1 mt-1 border-t border-[var(--liquid-glass-border-subtle)]">
         <button
           onClick={() => {
             onClose();
             onOpenCreateModal();
           }}
-          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#4FD1C5] hover:bg-[#4FD1C5]/10 transition-colors"
+          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs text-[#7C5CFF] hover:bg-[#7C5CFF]/10 transition-colors font-medium"
         >
           <Plus size={14} />
-          <span>Nueva playlist</span>
+          <span>Crear nueva playlist</span>
         </button>
       </div>
     </div>

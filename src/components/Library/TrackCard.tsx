@@ -36,14 +36,14 @@ export const TrackCard: React.FC<TrackCardProps> = ({
   return (
     <div
       onClick={handleCardClick}
-      className={`group relative p-3.5 rounded-2xl bg-[var(--app-surface)] border transition-all cursor-pointer select-none hover:shadow-xl hover:-translate-y-1 shadow-sm ${
+      className={`group relative p-3 sm:p-3.5 rounded-2xl liquid-card cursor-pointer select-none ${
         isCurrent
-          ? 'border-[#7C5CFF]/70 shadow-[0_4px_25px_rgba(124,92,255,0.25)] ring-1 ring-[#7C5CFF]/40 animate-pulse-glow'
-          : 'border-[var(--app-border)] hover:border-[#7C5CFF]/50'
+          ? 'border-[#7C5CFF]/70 shadow-[0_4px_25px_rgba(124,92,255,0.3)] ring-1 ring-[#7C5CFF]/40 animate-pulse-glow'
+          : 'hover:border-[#7C5CFF]/50'
       }`}
     >
       {/* Cover Image Container */}
-      <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--app-surface-elevated)] mb-3 flex items-center justify-center">
+      <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--app-surface-elevated)] mb-3 flex items-center justify-center border border-[var(--liquid-glass-border-subtle)]">
         {track.coverUrl ? (
           <img
             src={track.coverUrl}
@@ -78,7 +78,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
           }`}
         >
           <div
-            className={`w-12 h-12 rounded-2xl bg-[#7C5CFF] text-white flex items-center justify-center shadow-xl transform transition-transform duration-200 ${
+            className={`w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7C5CFF] to-[#6366F1] text-white flex items-center justify-center shadow-xl transform transition-transform duration-200 border border-white/20 ${
               isCardPlaying ? 'scale-105 shadow-[0_0_20px_rgba(124,92,255,0.6)]' : 'group-hover:scale-105'
             }`}
           >
@@ -119,7 +119,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
 
           {showMenu && (
             <div
-              className="absolute right-0 top-8 z-40 w-44 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-2xl p-1 animate-fadeScale text-xs"
+              className="absolute right-0 top-8 z-40 w-44 liquid-glass rounded-2xl shadow-2xl p-1.5 animate-fadeScale text-xs border border-[var(--liquid-glass-border)]"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -127,7 +127,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
                   playNextInQueue(track);
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
               >
                 <PlaySquare size={14} className="text-[#4FD1C5]" />
                 <span>Reproducir siguiente</span>
@@ -137,7 +137,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
                   addToQueue(track);
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
               >
                 <ListPlus size={14} className="text-[#7C5CFF]" />
                 <span>Añadir a la cola</span>
@@ -147,7 +147,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
                   setShowMenu(false);
                   setShowPlaylistMenu(true);
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
               >
                 <FolderPlus size={14} className="text-[var(--app-text-muted)]" />
                 <span>Añadir a playlist</span>
@@ -157,18 +157,18 @@ export const TrackCard: React.FC<TrackCardProps> = ({
                   setShowMenu(false);
                   useUIStore.getState().setEditingTrack(track);
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
               >
                 <Edit3 size={14} className="text-[#7C5CFF]" />
                 <span>Editar metadatos</span>
               </button>
-              <div className="my-1 border-t border-[var(--app-border)]" />
+              <div className="my-1 border-t border-[var(--liquid-glass-border-subtle)]" />
               <button
                 onClick={() => {
                   deleteTrack(track.id);
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-red-500 hover:bg-red-500/10"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left text-red-500 hover:bg-red-500/10 transition-colors"
               >
                 <Trash2 size={14} />
                 <span>Eliminar</span>
@@ -189,7 +189,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
       {/* Metadata info */}
       <h4
         className={`text-sm font-semibold truncate mb-0.5 ${
-          isCurrent ? 'text-[var(--app-accent)]' : 'text-[var(--app-text)]'
+          isCurrent ? 'text-[#7C5CFF]' : 'text-[var(--app-text)]'
         }`}
       >
         {track.title}

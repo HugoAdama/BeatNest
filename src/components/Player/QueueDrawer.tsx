@@ -35,14 +35,14 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
       {/* Backdrop overlay */}
       <div
         onClick={onClose}
-        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs animate-fadeIn"
+        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm animate-fadeIn"
       />
 
-      <div className="fixed inset-y-0 right-0 w-full sm:w-96 z-40 bg-[var(--app-surface)] border-l border-[var(--app-border)] shadow-2xl flex flex-col animate-slideLeft transition-colors">
+      <div className="fixed inset-y-0 right-0 w-full sm:w-96 z-50 liquid-glass border-l border-[var(--liquid-glass-border)] shadow-2xl flex flex-col animate-slideLeft transition-all">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[var(--app-border)]">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-[#7C5CFF]/15 text-[#7C5CFF]">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--liquid-glass-border-subtle)]">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-[#7C5CFF]/15 text-[#7C5CFF] border border-[#7C5CFF]/30">
               <ListMusic size={18} />
             </div>
             <div>
@@ -59,7 +59,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
             {queue.length > 0 && (
               <button
                 onClick={clearQueue}
-                className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors"
                 title="Vaciar cola"
               >
                 <Trash2 size={16} />
@@ -67,7 +67,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
             )}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
+              className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
               title="Cerrar cola"
             >
               <X size={18} />
@@ -79,8 +79,8 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
         <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
           {queue.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center p-6 text-center text-[var(--app-text-muted)]">
-              <div className="w-12 h-12 rounded-2xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] flex items-center justify-center mb-3">
-                <ListMusic size={22} />
+              <div className="w-12 h-12 rounded-2xl liquid-glass-subtle flex items-center justify-center mb-3">
+                <ListMusic size={22} className="text-[#7C5CFF]" />
               </div>
               <p className="text-sm font-medium text-[var(--app-text)] mb-1">
                 La cola está vacía
@@ -97,14 +97,14 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
                   key={`${track.id}-${idx}`}
                   className={`group flex items-center gap-3 p-2 rounded-xl transition-all ${
                     isCurrent
-                      ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/30 text-[var(--app-text)]'
-                      : 'bg-[var(--app-surface-elevated)]/60 hover:bg-[var(--app-surface-elevated)] border border-transparent text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
+                      ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/35 text-[var(--app-text)] backdrop-blur-md'
+                      : 'liquid-glass-subtle hover:bg-[var(--app-surface-hover)] border border-transparent hover:border-[var(--liquid-glass-border-subtle)] text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
                   }`}
                 >
                   {/* Thumbnail / Status */}
                   <div
                     onClick={() => playTrack(track)}
-                    className="relative w-10 h-10 rounded-lg overflow-hidden bg-[var(--app-surface-elevated)] shrink-0 cursor-pointer flex items-center justify-center border border-[var(--app-border)]"
+                    className="relative w-10 h-10 rounded-xl overflow-hidden bg-[var(--app-surface-elevated)] shrink-0 cursor-pointer flex items-center justify-center border border-[var(--liquid-glass-border-subtle)]"
                   >
                     {track.coverUrl ? (
                       <img
@@ -129,62 +129,62 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
                     </div>
                   </div>
 
-                {/* Track details */}
-                <div
-                  onClick={() => playTrack(track)}
-                  className="flex-1 min-w-0 cursor-pointer"
-                >
-                  <p
-                    className={`text-xs font-semibold truncate ${
-                      isCurrent ? 'text-[var(--app-accent)]' : 'text-[var(--app-text)]'
-                    }`}
+                  {/* Track details */}
+                  <div
+                    onClick={() => playTrack(track)}
+                    className="flex-1 min-w-0 cursor-pointer"
                   >
-                    {track.title}
-                  </p>
-                  <p className="text-[11px] text-[var(--app-text-muted)] truncate">
-                    {track.artist}
-                  </p>
-                </div>
-
-                {/* Duration */}
-                <span className="text-[11px] font-mono text-[var(--app-text-muted)] shrink-0">
-                  {formatDuration(track.duration)}
-                </span>
-
-                {/* Reorder and Delete controls */}
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {idx > 0 && (
-                    <button
-                      onClick={() => reorderQueue(idx, idx - 1)}
-                      className="p-1 rounded text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]"
-                      title="Mover arriba"
+                    <p
+                      className={`text-xs font-semibold truncate ${
+                        isCurrent ? 'text-[#7C5CFF]' : 'text-[var(--app-text)]'
+                      }`}
                     >
-                      <ChevronUp size={14} />
-                    </button>
-                  )}
-                  {idx < queue.length - 1 && (
+                      {track.title}
+                    </p>
+                    <p className="text-[11px] text-[var(--app-text-muted)] truncate">
+                      {track.artist}
+                    </p>
+                  </div>
+
+                  {/* Duration */}
+                  <span className="text-[11px] font-mono text-[var(--app-text-muted)] shrink-0">
+                    {formatDuration(track.duration)}
+                  </span>
+
+                  {/* Reorder and Delete controls */}
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {idx > 0 && (
+                      <button
+                        onClick={() => reorderQueue(idx, idx - 1)}
+                        className="p-1 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]"
+                        title="Mover arriba"
+                      >
+                        <ChevronUp size={14} />
+                      </button>
+                    )}
+                    {idx < queue.length - 1 && (
+                      <button
+                        onClick={() => reorderQueue(idx, idx + 1)}
+                        className="p-1 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]"
+                        title="Mover abajo"
+                      >
+                        <ChevronDown size={14} />
+                      </button>
+                    )}
                     <button
-                      onClick={() => reorderQueue(idx, idx + 1)}
-                      className="p-1 rounded text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]"
-                      title="Mover abajo"
+                      onClick={() => removeFromQueue(idx)}
+                      className="p-1 rounded-lg text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10"
+                      title="Quitar de la cola"
                     >
-                      <ChevronDown size={14} />
+                      <X size={14} />
                     </button>
-                  )}
-                  <button
-                    onClick={() => removeFromQueue(idx)}
-                    className="p-1 rounded text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10"
-                    title="Quitar de la cola"
-                  >
-                    <X size={14} />
-                  </button>
+                  </div>
                 </div>
-              </div>
-            );
-          })
-        )}
+              );
+            })
+          )}
+        </div>
       </div>
-    </div>
     </>
   );
 };

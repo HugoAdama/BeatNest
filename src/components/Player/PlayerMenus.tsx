@@ -35,7 +35,7 @@ export const PlayerMenus: React.FC<PlayerMenusProps> = ({
             setShowSpeedMenu(!showSpeedMenu);
             setShowCrossfadeMenu(false);
           }}
-          className="p-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors flex items-center gap-1 text-xs font-mono"
+          className="p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors flex items-center gap-1 text-xs font-mono"
           title="Velocidad de reproducción"
         >
           <Gauge size={16} />
@@ -43,7 +43,7 @@ export const PlayerMenus: React.FC<PlayerMenusProps> = ({
         </button>
 
         {showSpeedMenu && (
-          <div className="absolute bottom-11 right-0 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-xl p-1 z-50 flex flex-col min-w-20 animate-fadeScale">
+          <div className="absolute bottom-11 right-0 liquid-glass border border-[var(--liquid-glass-border)] rounded-2xl shadow-2xl p-1.5 z-50 flex flex-col min-w-24 animate-fadeScale">
             {speedOptions.map((speed) => (
               <button
                 key={speed}
@@ -51,10 +51,10 @@ export const PlayerMenus: React.FC<PlayerMenusProps> = ({
                   onSelectPlaybackRate(speed);
                   setShowSpeedMenu(false);
                 }}
-                className={`px-3 py-1.5 text-xs font-mono rounded-lg text-left transition-colors ${
+                className={`px-3 py-1.5 text-xs font-mono rounded-xl text-left transition-colors ${
                   playbackRate === speed
-                    ? 'bg-[#7C5CFF] text-white'
-                    : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
+                    ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm border border-white/20'
+                    : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
                 }`}
               >
                 {speed}x
@@ -71,10 +71,10 @@ export const PlayerMenus: React.FC<PlayerMenusProps> = ({
             setShowCrossfadeMenu(!showCrossfadeMenu);
             setShowSpeedMenu(false);
           }}
-          className={`p-2 rounded-lg transition-colors flex items-center gap-1 text-xs font-mono ${
+          className={`p-2 rounded-xl transition-colors flex items-center gap-1 text-xs font-mono ${
             crossfadeDuration > 0
-              ? 'text-[var(--app-accent)] hover:bg-[var(--app-accent)]/10 font-bold'
-              : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
+              ? 'text-[var(--app-accent)] bg-[var(--app-accent)]/15 font-bold'
+              : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
           }`}
           title="Transición suave (Crossfade)"
         >
@@ -83,8 +83,8 @@ export const PlayerMenus: React.FC<PlayerMenusProps> = ({
         </button>
 
         {showCrossfadeMenu && (
-          <div className="absolute bottom-11 right-0 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-xl p-1.5 z-50 flex flex-col min-w-36 text-xs animate-fadeScale">
-            <div className="px-2.5 py-1 text-[10px] uppercase font-bold text-[var(--app-text-muted)] border-b border-[var(--app-border)] mb-1">
+          <div className="absolute bottom-11 right-0 liquid-glass border border-[var(--liquid-glass-border)] rounded-2xl shadow-2xl p-2 z-50 flex flex-col min-w-40 text-xs animate-fadeScale">
+            <div className="px-2.5 py-1 text-[10px] uppercase font-bold text-[var(--app-text-muted)] border-b border-[var(--liquid-glass-border-subtle)] mb-1">
               Crossfade entre pistas
             </div>
             {crossfadeOptions.map((opt) => (
@@ -94,10 +94,10 @@ export const PlayerMenus: React.FC<PlayerMenusProps> = ({
                   onSelectCrossfadeDuration(opt.sec);
                   setShowCrossfadeMenu(false);
                 }}
-                className={`px-2.5 py-1.5 rounded-lg text-left transition-colors ${
+                className={`px-2.5 py-1.5 rounded-xl text-left transition-colors ${
                   crossfadeDuration === opt.sec
-                    ? 'bg-[#7C5CFF] text-white font-medium'
-                    : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
+                    ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white font-medium shadow-sm border border-white/20'
+                    : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
                 }`}
               >
                 {opt.label}

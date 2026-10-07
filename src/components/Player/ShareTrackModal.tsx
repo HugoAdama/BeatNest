@@ -196,11 +196,11 @@ export const ShareTrackModal: React.FC = () => {
       onClick={() => toggleShareTrack(false)}
     >
       <div
-        className="w-full max-w-2xl bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-2xl overflow-hidden p-6 animate-scale-up"
+        className="w-full max-w-2xl liquid-glass-elevated border border-[var(--liquid-glass-border)] rounded-3xl shadow-2xl overflow-hidden p-6 animate-fadeScale"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[var(--app-border)]">
+        <div className="flex items-center justify-between pb-4 border-b border-[var(--liquid-glass-border-subtle)]">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-[#7C5CFF]/15 text-[#7C5CFF]">
               <Share2 size={20} />

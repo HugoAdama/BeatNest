@@ -40,12 +40,12 @@ export const EqualizerModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-lg bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-2xl p-6 text-[var(--app-text)] transition-colors animate-fadeScale">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-lg liquid-glass-elevated rounded-3xl shadow-2xl p-6 text-[var(--app-text)] transition-colors animate-fadeScale border border-[var(--liquid-glass-border)]">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[var(--app-border)]">
+        <div className="flex items-center justify-between pb-4 border-b border-[var(--liquid-glass-border-subtle)]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[#7C5CFF]/15 text-[#7C5CFF]">
+            <div className="p-2 rounded-xl bg-[#7C5CFF]/15 text-[#7C5CFF] border border-[#7C5CFF]/30">
               <Sliders size={20} />
             </div>
             <div>
@@ -65,7 +65,7 @@ export const EqualizerModal: React.FC = () => {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 eqEnabled
                   ? 'bg-[#4FD1C5]/20 text-[#4FD1C5] border border-[#4FD1C5]/40 shadow-[0_0_12px_rgba(79,209,197,0.2)]'
-                  : 'bg-[var(--app-surface-elevated)] text-[var(--app-text-muted)] border border-[var(--app-border)]'
+                  : 'liquid-glass-subtle text-[var(--app-text-muted)]'
               }`}
               title={eqEnabled ? 'Desactivar ecualizador' : 'Activar ecualizador'}
             >
@@ -75,7 +75,7 @@ export const EqualizerModal: React.FC = () => {
 
             <button
               onClick={() => toggleEqualizer(false)}
-              className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
+              className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
             >
               <X size={18} />
             </button>
@@ -95,10 +95,10 @@ export const EqualizerModal: React.FC = () => {
                   key={preset.id}
                   onClick={() => setEqPreset(preset.id)}
                   disabled={!eqEnabled}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                  className={`px-3 py-1 rounded-xl text-xs font-medium transition-all ${
                     isSelected
-                      ? 'bg-[#7C5CFF] text-white shadow-[0_0_10px_rgba(124,92,255,0.4)]'
-                      : 'bg-[var(--app-surface-elevated)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] disabled:opacity-40'
+                      ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-[0_0_12px_rgba(124,92,255,0.4)] border border-white/20'
+                      : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] disabled:opacity-40'
                   }`}
                 >
                   {preset.name}
@@ -110,7 +110,7 @@ export const EqualizerModal: React.FC = () => {
 
         {/* Equalizer Sliders Area */}
         <div
-          className={`grid grid-cols-5 gap-3 p-4 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] transition-opacity ${
+          className={`grid grid-cols-5 gap-3 p-4 rounded-2xl liquid-glass-subtle border border-[var(--liquid-glass-border)] transition-opacity ${
             eqEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'
           }`}
         >
@@ -149,7 +149,7 @@ export const EqualizerModal: React.FC = () => {
         </div>
 
         {/* Audiophile Preamp & Dynamic Auto-Gain Leveling */}
-        <div className="mt-4 p-3 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] space-y-3">
+        <div className="mt-4 p-3 rounded-2xl liquid-glass-subtle border border-[var(--liquid-glass-border-subtle)] space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Volume1 size={14} className="text-[#7C5CFF]" />
@@ -170,7 +170,7 @@ export const EqualizerModal: React.FC = () => {
               />
               <button
                 onClick={() => setPreampGain(0)}
-                className="text-[10px] px-2 py-0.5 rounded bg-[var(--app-surface)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] border border-[var(--app-border)]"
+                className="text-[10px] px-2 py-0.5 rounded-lg liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)]"
                 title="Restablecer preamplificador a 0 dB"
               >
                 0 dB
@@ -178,7 +178,7 @@ export const EqualizerModal: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-2 border-t border-[var(--app-border-subtle)] flex items-center justify-between">
+          <div className="pt-2 border-t border-[var(--liquid-glass-border-subtle)] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Gauge size={14} className="text-[#4FD1C5]" />
               <div>
@@ -195,7 +195,7 @@ export const EqualizerModal: React.FC = () => {
               className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 autoGainEnabled
                   ? 'bg-[#4FD1C5] text-black shadow-sm font-semibold'
-                  : 'bg-[var(--app-surface)] text-[var(--app-text-muted)] border border-[var(--app-border)] hover:text-[var(--app-text)]'
+                  : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
               }`}
             >
               {autoGainEnabled ? 'Activado' : 'Desactivado'}
@@ -204,7 +204,7 @@ export const EqualizerModal: React.FC = () => {
         </div>
 
         {/* Spatial Reverb Simulator */}
-        <div className="mt-4 p-3 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)]">
+        <div className="mt-4 p-3 rounded-2xl liquid-glass-subtle border border-[var(--liquid-glass-border-subtle)]">
           <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-[var(--app-text)]">
             <Sparkles size={14} className="text-[#4FD1C5]" />
             <span>Acústica Espacial (Reverb de Sala)</span>
@@ -216,10 +216,10 @@ export const EqualizerModal: React.FC = () => {
                 <button
                   key={opt.id}
                   onClick={() => setReverbMode(opt.id)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                     isSelected
-                      ? 'bg-[#7C5CFF] text-white shadow-sm'
-                      : 'bg-[var(--app-surface)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] border border-[var(--app-border)]'
+                      ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm border border-white/20'
+                      : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
                   }`}
                 >
                   {opt.label}
@@ -233,7 +233,7 @@ export const EqualizerModal: React.FC = () => {
         <div className="mt-4 flex items-center justify-between text-xs">
           <button
             onClick={handleReset}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--app-surface-elevated)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
           >
             <RotateCcw size={13} />
             <span>Restablecer todo a 0 dB</span>

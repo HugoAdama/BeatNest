@@ -199,40 +199,30 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`flex-1 flex flex-col overflow-y-auto pb-32 transition-colors relative ${
-        isDragOver ? 'bg-[#7C5CFF]/5 border-2 border-dashed border-[#7C5CFF]' : ''
+      className={`flex-1 flex flex-col overflow-y-auto pb-36 sm:pb-32 transition-colors relative ${
+        isDragOver ? 'bg-[#7C5CFF]/10 border-2 border-dashed border-[#7C5CFF]' : ''
       }`}
     >
-      {/* Ambient background glows */}
-      <div
-        className="pointer-events-none absolute -top-24 right-10 w-96 h-96 rounded-full blur-3xl animate-float-1 transition-colors duration-1000"
-        style={{ backgroundColor: 'var(--dynamic-glow-1, rgba(124, 92, 255, 0.15))' }}
-      />
-      <div
-        className="pointer-events-none absolute top-40 left-10 w-80 h-80 rounded-full blur-3xl animate-float-2 transition-colors duration-1000"
-        style={{ backgroundColor: 'var(--dynamic-glow-2, rgba(79, 209, 197, 0.15))' }}
-      />
-
       {/* Header Banner */}
-      <div className="px-8 pt-8 pb-4 relative z-10">
+      <div className="px-4 sm:px-8 pt-5 sm:pt-8 pb-4 relative z-10">
         {activeTab === 'playlists' && currentPlaylist ? (
-          <div className="flex flex-col sm:flex-row sm:items-end gap-6 mb-6">
-            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-tr from-[#7C5CFF] to-[#4FD1C5] flex items-center justify-center shadow-xl shrink-0">
-              <ListMusic size={48} className="text-white" />
+          <div className="flex flex-col sm:flex-row sm:items-end gap-5 mb-6">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-[#7C5CFF] to-[#4FD1C5] flex items-center justify-center shadow-xl shrink-0 border border-white/20">
+              <ListMusic size={44} className="text-white" />
             </div>
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--app-accent)]">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--app-accent)]">
                 Playlist
               </span>
-              <h2 className="text-3xl font-extrabold text-[var(--app-text)] tracking-tight mt-1 mb-2">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--app-text)] tracking-tight mt-0.5 mb-1.5">
                 {currentPlaylist.name}
               </h2>
               {currentPlaylist.description && (
-                <p className="text-xs text-[var(--app-text-muted)] mb-3">
+                <p className="text-xs text-[var(--app-text-muted)] mb-2">
                   {currentPlaylist.description}
                 </p>
               )}
-              <div className="flex items-center gap-3 text-xs text-[var(--app-text-muted)]">
+              <div className="flex items-center gap-2.5 text-xs text-[var(--app-text-muted)]">
                 <span>{displayedTracks.length} pistas</span>
                 <span>•</span>
                 <span>{formatDuration(totalDuration)} tiempo total</span>
@@ -242,7 +232,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
         ) : activeTab === 'favorites' ? (
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 rounded-2xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400 shadow-md">
-              <Heart size={28} fill="currentColor" />
+              <Heart size={26} fill="currentColor" />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-[var(--app-text)]">Canciones favoritas</h2>
@@ -254,7 +244,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
         ) : activeTab === 'history' ? (
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 rounded-2xl bg-[#4FD1C5]/15 border border-[#4FD1C5]/30 flex items-center justify-center text-[#4FD1C5] shadow-md">
-              <History size={28} />
+              <History size={26} />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-[var(--app-text)]">Historial reciente</h2>
@@ -281,7 +271,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             {displayedTracks.length > 0 && activeTab !== 'artists' && activeTab !== 'albums' && (
               <button
                 onClick={handlePlayAll}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#7C5CFF] text-white text-xs font-semibold hover:bg-[#6D48F7] active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.35)]"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] border border-white/20 self-start sm:self-auto"
               >
                 <Play size={15} fill="currentColor" />
                 <span>Reproducir todo</span>
@@ -302,8 +292,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
 
         {/* Interactive Genre filter chips */}
         {uniqueGenres.length > 0 && activeTab !== 'artists' && activeTab !== 'albums' && (
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 mt-2">
-            <span className="text-[11px] font-semibold text-[var(--app-text-muted)] uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 mt-1">
+            <span className="text-[11px] font-semibold text-[var(--app-text-muted)] uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1 opacity-80">
               <Tag size={12} />
               <span>Género:</span>
             </span>
@@ -311,8 +301,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
               onClick={() => setSelectedGenre(null)}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 ${
                 selectedGenre === null
-                  ? 'bg-[#7C5CFF] text-white shadow-sm shadow-[#7C5CFF]/30'
-                  : 'bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/40'
+                  ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm shadow-[#7C5CFF]/30 border border-white/20'
+                  : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/40'
               }`}
             >
               Todos
@@ -325,8 +315,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
                   onClick={() => setSelectedGenre(isSelected ? null : genre)}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 ${
                     isSelected
-                      ? 'bg-[#7C5CFF] text-white shadow-sm shadow-[#7C5CFF]/30'
-                      : 'bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/40'
+                      ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm shadow-[#7C5CFF]/30 border border-white/20'
+                      : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/40'
                   }`}
                 >
                   {genre}
@@ -338,7 +328,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
       </div>
 
       {/* Render based on view mode and tab */}
-      <div className="px-8 flex-1 relative z-10">
+      <div className="px-4 sm:px-8 flex-1 relative z-10">
         {displayedTracks.length === 0 ? (
           <div className="py-20 flex flex-col items-center justify-center text-center text-[var(--app-text-muted)]">
             <p className="text-sm font-medium text-[var(--app-text)] mb-1">
@@ -365,8 +355,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             onPlayAlbum={(albumTracks) => playTrack(albumTracks[0], albumTracks)}
           />
         ) : viewMode === 'list' ? (
-          <div className="bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-sm p-2">
-            <div className="flex items-center gap-3 px-3.5 py-2.5 text-[11px] font-bold text-[var(--app-text-muted)] uppercase tracking-wider border-b border-[var(--app-border)]">
+          <div className="liquid-glass rounded-2xl shadow-sm p-1 sm:p-2 border border-[var(--liquid-glass-border)]">
+            <div className="flex items-center gap-3 px-3.5 py-2.5 text-[11px] font-bold text-[var(--app-text-muted)] uppercase tracking-wider border-b border-[var(--liquid-glass-border-subtle)]">
               <span className="w-8 text-center">#</span>
               <span className="flex-1 md:w-5/12">Título</span>
               <span className="hidden md:block w-3/12">Artista</span>
@@ -374,7 +364,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
               <span className="w-24 text-right pr-2">Duración</span>
             </div>
 
-            <div className="divide-y divide-[var(--app-border-subtle)]">
+            <div className="divide-y divide-[var(--liquid-glass-border-subtle)]">
               {displayedTracks.map((track, idx) => (
                 <TrackRow
                   key={track.id}
@@ -396,7 +386,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-4">
             {displayedTracks.map((track) => (
               <TrackCard
                 key={track.id}

@@ -25,11 +25,11 @@ export const PlaylistModal: React.FC<PlaylistModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-2xl p-6 text-[var(--app-text)] transition-colors animate-fadeScale">
-        <div className="flex items-center justify-between pb-4 border-b border-[var(--app-border)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-md liquid-glass-elevated rounded-3xl shadow-2xl p-6 text-[var(--app-text)] transition-colors animate-fadeScale border border-[var(--liquid-glass-border)]">
+        <div className="flex items-center justify-between pb-4 border-b border-[var(--liquid-glass-border-subtle)]">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-[#7C5CFF]/15 text-[#7C5CFF]">
+            <div className="p-2 rounded-xl bg-[#7C5CFF]/15 text-[#7C5CFF] border border-[#7C5CFF]/30">
               <FolderPlus size={18} />
             </div>
             <h3 className="text-base font-semibold text-[var(--app-text)]">
@@ -38,7 +38,7 @@ export const PlaylistModal: React.FC<PlaylistModalProps> = ({ isOpen, onClose })
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
+            className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
           >
             <X size={18} />
           </button>
@@ -55,7 +55,7 @@ export const PlaylistModal: React.FC<PlaylistModalProps> = ({ isOpen, onClose })
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej. Mis Favoritas, Synthwave, Chill..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-sm text-[var(--app-text)] placeholder-[var(--app-text-muted)]/50 focus:outline-none focus:border-[#7C5CFF] transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-xl liquid-glass-subtle text-sm text-[var(--app-text)] placeholder-[var(--app-text-muted)]/50 focus:outline-none focus:border-[#7C5CFF] transition-colors"
             />
           </div>
 
@@ -68,7 +68,7 @@ export const PlaylistModal: React.FC<PlaylistModalProps> = ({ isOpen, onClose })
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Breve nota sobre esta selección musical..."
               rows={3}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-sm text-[var(--app-text)] placeholder-[var(--app-text-muted)]/50 focus:outline-none focus:border-[#7C5CFF] transition-colors resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl liquid-glass-subtle text-sm text-[var(--app-text)] placeholder-[var(--app-text-muted)]/50 focus:outline-none focus:border-[#7C5CFF] transition-colors resize-none"
             />
           </div>
 
@@ -76,14 +76,14 @@ export const PlaylistModal: React.FC<PlaylistModalProps> = ({ isOpen, onClose })
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-medium text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={!name.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium bg-[#7C5CFF] text-white hover:bg-[#6D48F7] disabled:opacity-40 transition-colors shadow-[0_4px_12px_rgba(124,92,255,0.3)]"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white hover:opacity-95 disabled:opacity-40 transition-all shadow-[0_4px_14px_rgba(124,92,255,0.35)] border border-white/20"
             >
               <Plus size={15} />
               <span>Crear playlist</span>

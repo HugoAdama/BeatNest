@@ -70,11 +70,11 @@ export const EditTrackModal: React.FC = () => {
       onClick={() => setEditingTrack(null)}
     >
       <div
-        className="w-full max-w-md bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-2xl overflow-hidden p-6 relative animate-scale-up"
+        className="w-full max-w-md liquid-glass-elevated border border-[var(--liquid-glass-border)] rounded-3xl shadow-2xl overflow-hidden p-6 relative animate-fadeScale"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--app-border)]">
+        <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--liquid-glass-border-subtle)]">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#7C5CFF]/15 text-[#7C5CFF] flex items-center justify-center">
               <Edit3 size={18} />

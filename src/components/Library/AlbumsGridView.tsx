@@ -19,9 +19,9 @@ export const AlbumsGridView: React.FC<AlbumsGridViewProps> = ({
           <div
             key={albumName}
             onClick={() => onPlayAlbum(albumTracks)}
-            className="p-4 rounded-2xl bg-[var(--app-surface)] border border-[var(--app-border)] hover:border-[#7C5CFF]/60 hover:shadow-lg transition-all cursor-pointer group shadow-sm hover-lift"
+            className="p-4 rounded-2xl liquid-card cursor-pointer group hover-lift"
           >
-            <div className="aspect-square rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] overflow-hidden flex items-center justify-center mb-3">
+            <div className="aspect-square rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--liquid-glass-border-subtle)] overflow-hidden flex items-center justify-center mb-3">
               {coverUrl ? (
                 <img
                   src={coverUrl}

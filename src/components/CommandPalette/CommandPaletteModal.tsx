@@ -274,11 +274,11 @@ export const CommandPaletteModal: React.FC = () => {
       />
 
       <div
-        className="w-full max-w-xl bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-2xl overflow-hidden animate-scale-up"
+        className="w-full max-w-xl liquid-glass-elevated border border-[var(--liquid-glass-border)] rounded-3xl shadow-2xl overflow-hidden animate-fadeScale"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[var(--app-border)]">
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[var(--liquid-glass-border-subtle)]">
           <Search size={18} className="text-[var(--app-text-muted)] shrink-0" />
           <input
             ref={inputRef}
@@ -288,12 +288,12 @@ export const CommandPaletteModal: React.FC = () => {
             placeholder="Buscar pista, álbum, playlist o comando..."
             className="w-full bg-transparent text-sm text-[var(--app-text)] placeholder-[var(--app-text-muted)] focus:outline-none"
           />
-          <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono text-[var(--app-text-muted)] bg-[var(--app-surface-elevated)] border border-[var(--app-border)] rounded-md">
+          <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono text-[var(--app-text-muted)] liquid-glass-subtle rounded-md">
             ESC
           </kbd>
           <button
             onClick={() => toggleCommandPalette(false)}
-            className="p-1 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] transition-colors sm:hidden"
+            className="p-1 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] transition-colors sm:hidden"
           >
             <X size={18} />
           </button>
@@ -318,8 +318,8 @@ export const CommandPaletteModal: React.FC = () => {
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl cursor-pointer text-xs transition-all ${
                     isSelected
-                      ? 'bg-[#7C5CFF] text-white shadow-sm'
-                      : 'text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
+                      ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm border border-white/20'
+                      : 'text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -327,10 +327,10 @@ export const CommandPaletteModal: React.FC = () => {
                     <span className="truncate font-medium">{item.title}</span>
                   </div>
                   <span
-                    className={`text-[10px] uppercase font-mono px-1.5 py-0.5 rounded ${
+                    className={`text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-md ${
                       isSelected
                         ? 'bg-white/20 text-white'
-                        : 'bg-[var(--app-surface-elevated)] text-[var(--app-text-muted)] border border-[var(--app-border)]'
+                        : 'liquid-glass-subtle text-[var(--app-text-muted)]'
                     }`}
                   >
                     {item.category}
@@ -342,7 +342,7 @@ export const CommandPaletteModal: React.FC = () => {
         </div>
 
         {/* Footer tip */}
-        <div className="px-4 py-2 border-t border-[var(--app-border)] bg-[var(--app-surface-elevated)]/50 flex items-center justify-between text-[11px] text-[var(--app-text-muted)]">
+        <div className="px-4 py-2 border-t border-[var(--liquid-glass-border-subtle)] bg-[var(--app-surface-elevated)]/40 flex items-center justify-between text-[11px] text-[var(--app-text-muted)]">
           <div className="flex items-center gap-2">
             <span>Usa las flechas para navegar</span>
             <span>•</span>

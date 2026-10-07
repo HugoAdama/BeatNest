@@ -17,9 +17,9 @@ export const ArtistsGridView: React.FC<ArtistsGridViewProps> = ({
         <div
           key={artistName}
           onClick={() => onPlayArtist(artistTracks)}
-          className="p-4 rounded-2xl bg-[var(--app-surface)] border border-[var(--app-border)] hover:border-[#7C5CFF]/60 hover:shadow-lg transition-all cursor-pointer group shadow-sm hover-lift"
+          className="p-4 rounded-2xl liquid-card cursor-pointer group hover-lift"
         >
-          <div className="w-16 h-16 rounded-full bg-[var(--app-surface-elevated)] border border-[var(--app-border)] flex items-center justify-center mb-3 text-[#7C5CFF] group-hover:bg-[#7C5CFF] group-hover:text-white transition-colors">
+          <div className="w-16 h-16 rounded-full bg-[var(--app-surface-elevated)] border border-[var(--liquid-glass-border)] flex items-center justify-center mb-3 text-[#7C5CFF] group-hover:bg-[#7C5CFF] group-hover:text-white transition-colors shadow-sm">
             <Mic2 size={24} />
           </div>
           <h4 className="text-sm font-semibold text-[var(--app-text)] truncate">

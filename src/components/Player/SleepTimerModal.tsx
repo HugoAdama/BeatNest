@@ -30,12 +30,12 @@ export const SleepTimerModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-sm bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-2xl p-5 text-[var(--app-text)] transition-colors animate-fadeScale">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-sm liquid-glass-elevated rounded-3xl shadow-2xl p-5 text-[var(--app-text)] transition-colors animate-fadeScale border border-[var(--liquid-glass-border)]">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3.5 border-b border-[var(--app-border)] mb-4">
+        <div className="flex items-center justify-between pb-3.5 border-b border-[var(--liquid-glass-border-subtle)] mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-[#7C5CFF]/15 text-[#7C5CFF]">
+            <div className="p-2 rounded-xl bg-[#7C5CFF]/15 text-[#7C5CFF] border border-[#7C5CFF]/30">
               <Moon size={18} />
             </div>
             <div>
@@ -50,7 +50,7 @@ export const SleepTimerModal: React.FC = () => {
 
           <button
             onClick={() => toggleModal(false)}
-            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
+            className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
           >
             <X size={16} />
           </button>
@@ -58,7 +58,7 @@ export const SleepTimerModal: React.FC = () => {
 
         {/* Live Active Countdown Badge */}
         {activeOption !== null && secondsRemaining !== null && (
-          <div className="mb-4 p-3 rounded-xl bg-[#4FD1C5]/10 border border-[#4FD1C5]/30 flex items-center justify-between">
+          <div className="mb-4 p-3 rounded-2xl bg-[#4FD1C5]/10 border border-[#4FD1C5]/30 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Timer size={16} className="text-[#4FD1C5] animate-pulse" />
               <div>
@@ -71,7 +71,7 @@ export const SleepTimerModal: React.FC = () => {
 
             <button
               onClick={cancelSleepTimer}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 text-xs transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-red-500/15 text-red-400 hover:bg-red-500/25 text-xs transition-colors"
             >
               <Power size={12} />
               <span>Desactivar</span>
@@ -92,8 +92,8 @@ export const SleepTimerModal: React.FC = () => {
                 }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
                   isSelected
-                    ? 'bg-[#7C5CFF] text-white shadow-sm'
-                    : 'bg-[var(--app-surface-elevated)]/60 text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] border border-[var(--app-border)]'
+                    ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm border border-white/20'
+                    : 'liquid-glass-subtle text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
                 }`}
               >
                 <span>{opt.label}</span>

@@ -22,12 +22,12 @@ export const ToastContainer: React.FC = () => {
   return (
     <div
       aria-live="polite"
-      className="fixed bottom-24 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"
+      className="fixed bottom-28 right-4 sm:right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"
     >
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className="pointer-events-auto flex items-start gap-3 p-3.5 rounded-2xl bg-[var(--app-surface)] border border-[var(--app-border)] shadow-2xl backdrop-blur-md animate-slideLeft transition-all"
+          className="pointer-events-auto flex items-start gap-3 p-3.5 rounded-2xl liquid-glass-elevated border border-[var(--liquid-glass-border)] shadow-2xl animate-slideLeft transition-all"
         >
           <div className="pt-0.5">{renderIcon(toast.type)}</div>
           <div className="flex-1 min-w-0 pr-1">
@@ -42,7 +42,7 @@ export const ToastContainer: React.FC = () => {
           </div>
           <button
             onClick={() => removeToast(toast.id)}
-            className="p-1 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
+            className="p-1 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
             title="Cerrar notificación"
           >
             <X size={14} />

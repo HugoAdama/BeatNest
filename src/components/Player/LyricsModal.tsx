@@ -150,7 +150,7 @@ export const LyricsModal: React.FC = () => {
       <div className="flex-1 overflow-hidden relative flex flex-col items-center justify-center p-6 z-10">
         {isEditing ? (
           /* Editor Mode */
-          <div className="w-full max-w-xl flex flex-col h-full max-h-[500px] bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl p-5 shadow-2xl">
+          <div className="w-full max-w-xl flex flex-col h-full max-h-[500px] liquid-glass-elevated border border-[var(--liquid-glass-border)] rounded-3xl p-5 shadow-2xl">
             <h4 className="text-sm font-semibold mb-2 text-[var(--app-text)]">
               Pegar letra en formato LRC o texto plano
             </h4>
@@ -161,18 +161,18 @@ export const LyricsModal: React.FC = () => {
               value={lyricsInputText}
               onChange={(e) => setLyricsInputText(e.target.value)}
               placeholder="[00:12.50] Primera línea de la canción...&#10;[00:18.20] Segunda línea..."
-              className="flex-1 w-full p-3.5 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-xs font-mono text-[var(--app-text)] placeholder-[var(--app-text-muted)]/40 focus:outline-none focus:border-[#7C5CFF] resize-none"
+              className="flex-1 w-full p-3.5 rounded-xl liquid-glass-subtle text-xs font-mono text-[var(--app-text)] placeholder-[var(--app-text-muted)]/40 focus:outline-none focus:border-[#7C5CFF] resize-none"
             />
             <div className="flex justify-end gap-2.5 mt-4">
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 rounded-xl text-xs text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]"
+                className="px-4 py-2 rounded-xl text-xs text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSavePasted}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#7C5CFF] text-white hover:bg-[#6D48F7] shadow-[0_0_12px_rgba(124,92,255,0.3)]"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm border border-white/20"
               >
                 <Check size={14} />
                 <span>Guardar letra</span>
@@ -186,7 +186,7 @@ export const LyricsModal: React.FC = () => {
           </div>
         ) : parsedLyrics.length === 0 ? (
           /* Empty Lyrics state */
-          <div className="max-w-md text-center p-8 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-xl">
+          <div className="max-w-md text-center p-8 liquid-glass-elevated border border-[var(--liquid-glass-border)] rounded-3xl shadow-xl">
             <div className="w-16 h-16 rounded-2xl bg-[#7C5CFF]/15 border border-[#7C5CFF]/30 flex items-center justify-center mx-auto mb-4 text-[#7C5CFF]">
               <AlignLeft size={28} />
             </div>

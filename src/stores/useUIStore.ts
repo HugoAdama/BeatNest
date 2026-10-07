@@ -12,6 +12,7 @@ interface UIStore {
   isCommandPaletteOpen: boolean;
   isStatsOpen: boolean;
   isShareTrackOpen: boolean;
+  isMobileSidebarOpen: boolean;
 
   // Actions
   toggleVisualizer: (open?: boolean) => void;
@@ -23,6 +24,7 @@ interface UIStore {
   toggleCommandPalette: (open?: boolean) => void;
   toggleStats: (open?: boolean) => void;
   toggleShareTrack: (open?: boolean) => void;
+  toggleMobileSidebar: (open?: boolean) => void;
   setEditingTrack: (track: Track | null) => void;
   closeAllModals: () => void;
 }
@@ -38,6 +40,7 @@ export const useUIStore = create<UIStore>((set) => ({
   isCommandPaletteOpen: false,
   isStatsOpen: false,
   isShareTrackOpen: false,
+  isMobileSidebarOpen: false,
 
   toggleVisualizer: (open?: boolean) =>
     set((state) => ({
@@ -82,6 +85,11 @@ export const useUIStore = create<UIStore>((set) => ({
       isShareTrackOpen: open !== undefined ? open : !state.isShareTrackOpen,
     })),
 
+  toggleMobileSidebar: (open?: boolean) =>
+    set((state) => ({
+      isMobileSidebarOpen: open !== undefined ? open : !state.isMobileSidebarOpen,
+    })),
+
   setEditingTrack: (track: Track | null) =>
     set({ editingTrack: track }),
 
@@ -95,5 +103,6 @@ export const useUIStore = create<UIStore>((set) => ({
       isCommandPaletteOpen: false,
       isStatsOpen: false,
       isShareTrackOpen: false,
+      isMobileSidebarOpen: false,
     }),
 }));
