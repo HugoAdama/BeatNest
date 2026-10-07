@@ -15,6 +15,7 @@ import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { formatDuration } from '../../lib/metadata';
 import { AddToPlaylistMenu } from '../Playlists/AddToPlaylistMenu';
+import { PlayingIndicator } from '../Common/PlayingIndicator';
 
 interface TrackRowProps {
   track: Track;
@@ -45,22 +46,37 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
   return (
     <div
-      className={`group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all select-none ${
+      className={`group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all select-none hover-lift ${
         isCurrent
-          ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/30 text-[var(--app-text)]'
+          ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/35 text-[var(--app-text)] shadow-sm'
           : 'hover:bg-[var(--app-surface-hover)] border border-transparent text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
       }`}
     >
-      {/* Index number or Play icon */}
+      {/* Index number or Live Equalizer / Play icon */}
       <div className="w-8 flex items-center justify-center shrink-0">
         <button
           onClick={handleRowClick}
-          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all group-hover:bg-[#7C5CFF] group-hover:text-white"
+          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+            isCurrent
+              ? 'bg-[#7C5CFF]/20 group-hover:bg-[#7C5CFF] group-hover:text-white'
+              : 'group-hover:bg-[#7C5CFF] group-hover:text-white'
+          }`}
+          title={isRowPlaying ? 'Pausar' : 'Reproducir'}
         >
           {isRowPlaying ? (
-            <Pause size={14} className="text-[#4FD1C5]" />
+            <>
+              <div className="group-hover:hidden flex items-center justify-center">
+                <PlayingIndicator isPlaying={true} color="accent" size="sm" />
+              </div>
+              <Pause size={13} className="hidden group-hover:block text-white" />
+            </>
           ) : isCurrent ? (
-            <Play size={14} className="text-[#4FD1C5]" fill="currentColor" />
+            <>
+              <div className="group-hover:hidden flex items-center justify-center">
+                <PlayingIndicator isPlaying={false} color="accent" size="sm" />
+              </div>
+              <Play size={13} className="hidden group-hover:block text-white" fill="currentColor" />
+            </>
           ) : (
             <>
               <span className="text-xs font-mono group-hover:hidden text-[var(--app-text-muted)]">
@@ -77,15 +93,26 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         onClick={handleRowClick}
         className="flex items-center gap-3 min-w-0 flex-1 md:w-5/12 cursor-pointer"
       >
-        <div className="w-10 h-10 rounded-lg overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--app-border)] shrink-0 flex items-center justify-center">
+        <div
+          className={`relative w-10 h-10 rounded-lg overflow-hidden bg-[var(--app-surface-elevated)] border shrink-0 flex items-center justify-center transition-all ${
+            isCurrent
+              ? 'border-[#7C5CFF]/50 shadow-[0_0_12px_rgba(124,92,255,0.25)] ring-1 ring-[#7C5CFF]/30'
+              : 'border-[var(--app-border)] group-hover:border-[#7C5CFF]/30'
+          }`}
+        >
           {track.coverUrl ? (
             <img
               src={track.coverUrl}
               alt={track.title}
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover transition-transform duration-300 ${
+                isRowPlaying ? 'scale-105' : 'group-hover:scale-105'
+              }`}
             />
           ) : (
-            <Music size={16} className="text-[#7C5CFF]" />
+            <Music
+              size={16}
+              className={isCurrent ? 'text-[var(--app-accent)]' : 'text-[#7C5CFF]'}
+            />
           )}
         </div>
 
@@ -155,7 +182,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
           {showMenu && (
             <div
-              className="absolute right-0 top-8 z-40 w-48 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-2xl p-1 animate-fadeIn text-xs"
+              className="absolute right-0 top-8 z-40 w-48 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-2xl p-1 animate-fadeScale text-xs"
               onClick={(e) => e.stopPropagation()}
             >
               <button

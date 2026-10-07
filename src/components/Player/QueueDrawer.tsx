@@ -4,13 +4,13 @@ import {
   Trash2,
   X,
   Play,
-  Volume2,
   ChevronUp,
   ChevronDown,
   Music,
 } from 'lucide-react';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { formatDuration } from '../../lib/metadata';
+import { PlayingIndicator } from '../Common/PlayingIndicator';
 
 interface QueueDrawerProps {
   isOpen: boolean;
@@ -21,6 +21,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
   const {
     queue,
     queueIndex,
+    isPlaying,
     playTrack,
     removeFromQueue,
     clearQueue,
@@ -30,96 +31,103 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-96 z-40 bg-[var(--app-surface)] border-l border-[var(--app-border)] shadow-2xl flex flex-col animate-slideLeft transition-colors">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[var(--app-border)]">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-[#7C5CFF]/15 text-[#7C5CFF]">
-            <ListMusic size={18} />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-[var(--app-text)]">
-              Cola de reproducción
-            </h3>
-            <span className="text-xs text-[var(--app-text-muted)]">
-              {queue.length} {queue.length === 1 ? 'pista' : 'pistas'} en cola
-            </span>
-          </div>
-        </div>
+    <>
+      {/* Backdrop overlay */}
+      <div
+        onClick={onClose}
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs animate-fadeIn"
+      />
 
-        <div className="flex items-center gap-1.5">
-          {queue.length > 0 && (
-            <button
-              onClick={clearQueue}
-              className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors"
-              title="Vaciar cola"
-            >
-              <Trash2 size={16} />
-            </button>
-          )}
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
-            title="Cerrar cola"
-          >
-            <X size={18} />
-          </button>
-        </div>
-      </div>
-
-      {/* Queue items list */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-        {queue.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center p-6 text-center text-[var(--app-text-muted)]">
-            <div className="w-12 h-12 rounded-2xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] flex items-center justify-center mb-3">
-              <ListMusic size={22} />
+      <div className="fixed inset-y-0 right-0 w-full sm:w-96 z-40 bg-[var(--app-surface)] border-l border-[var(--app-border)] shadow-2xl flex flex-col animate-slideLeft transition-colors">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-[var(--app-border)]">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-[#7C5CFF]/15 text-[#7C5CFF]">
+              <ListMusic size={18} />
             </div>
-            <p className="text-sm font-medium text-[var(--app-text)] mb-1">
-              La cola está vacía
-            </p>
-            <p className="text-xs max-w-xs">
-              Añade canciones desde tu biblioteca seleccionando «Añadir a la cola» o «Reproducir siguiente».
-            </p>
+            <div>
+              <h3 className="text-sm font-semibold text-[var(--app-text)]">
+                Cola de reproducción
+              </h3>
+              <span className="text-xs text-[var(--app-text-muted)]">
+                {queue.length} {queue.length === 1 ? 'pista' : 'pistas'} en cola
+              </span>
+            </div>
           </div>
-        ) : (
-          queue.map((track, idx) => {
-            const isCurrent = idx === queueIndex;
-            return (
-              <div
-                key={`${track.id}-${idx}`}
-                className={`group flex items-center gap-3 p-2 rounded-xl transition-all ${
-                  isCurrent
-                    ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/30 text-[var(--app-text)]'
-                    : 'bg-[var(--app-surface-elevated)]/60 hover:bg-[var(--app-surface-elevated)] border border-transparent text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
-                }`}
-              >
-                {/* Thumbnail / Status */}
-                <div
-                  onClick={() => playTrack(track)}
-                  className="relative w-10 h-10 rounded-lg overflow-hidden bg-[var(--app-surface-elevated)] shrink-0 cursor-pointer flex items-center justify-center border border-[var(--app-border)]"
-                >
-                  {track.coverUrl ? (
-                    <img
-                      src={track.coverUrl}
-                      alt={track.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <Music size={16} className="text-[var(--app-text-muted)]" />
-                  )}
 
+          <div className="flex items-center gap-1.5">
+            {queue.length > 0 && (
+              <button
+                onClick={clearQueue}
+                className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                title="Vaciar cola"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
+              title="Cerrar cola"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Queue items list */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+          {queue.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center p-6 text-center text-[var(--app-text-muted)]">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] flex items-center justify-center mb-3">
+                <ListMusic size={22} />
+              </div>
+              <p className="text-sm font-medium text-[var(--app-text)] mb-1">
+                La cola está vacía
+              </p>
+              <p className="text-xs max-w-xs">
+                Añade canciones desde tu biblioteca seleccionando «Añadir a la cola» o «Reproducir siguiente».
+              </p>
+            </div>
+          ) : (
+            queue.map((track, idx) => {
+              const isCurrent = idx === queueIndex;
+              return (
+                <div
+                  key={`${track.id}-${idx}`}
+                  className={`group flex items-center gap-3 p-2 rounded-xl transition-all ${
+                    isCurrent
+                      ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/30 text-[var(--app-text)]'
+                      : 'bg-[var(--app-surface-elevated)]/60 hover:bg-[var(--app-surface-elevated)] border border-transparent text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
+                  }`}
+                >
+                  {/* Thumbnail / Status */}
                   <div
-                    className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${
-                      isCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                    }`}
+                    onClick={() => playTrack(track)}
+                    className="relative w-10 h-10 rounded-lg overflow-hidden bg-[var(--app-surface-elevated)] shrink-0 cursor-pointer flex items-center justify-center border border-[var(--app-border)]"
                   >
-                    {isCurrent ? (
-                      <Volume2 size={16} className="text-[#4FD1C5] animate-pulse" />
+                    {track.coverUrl ? (
+                      <img
+                        src={track.coverUrl}
+                        alt={track.title}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <Play size={14} className="text-white" fill="white" />
+                      <Music size={16} className="text-[var(--app-text-muted)]" />
                     )}
+
+                    <div
+                      className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity ${
+                        isCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                      }`}
+                    >
+                      {isCurrent ? (
+                        <PlayingIndicator isPlaying={isPlaying} color="accent" size="xs" />
+                      ) : (
+                        <Play size={14} className="text-white" fill="white" />
+                      )}
+                    </div>
                   </div>
-                </div>
 
                 {/* Track details */}
                 <div
@@ -177,5 +185,6 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
         )}
       </div>
     </div>
+    </>
   );
 };

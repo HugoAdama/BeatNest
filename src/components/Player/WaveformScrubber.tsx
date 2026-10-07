@@ -97,7 +97,7 @@ export const WaveformScrubber: React.FC<WaveformScrubberProps> = ({
         {/* Hover timestamp tooltip */}
         {hoverPosition !== null && (
           <div
-            className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded bg-[var(--app-surface)] border border-[var(--app-border)] text-[11px] font-mono text-[var(--app-accent)] shadow-lg pointer-events-none z-20 whitespace-nowrap font-bold"
+            className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded bg-[var(--app-surface)] border border-[var(--app-border)] text-[11px] font-mono text-[var(--app-accent)] shadow-lg pointer-events-none z-20 whitespace-nowrap font-bold animate-fadeScale"
             style={{ left: `${hoverPosition * 100}%` }}
           >
             {formatDuration(hoverTime)}

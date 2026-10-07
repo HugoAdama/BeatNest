@@ -5,6 +5,7 @@ import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { formatDuration } from '../../lib/metadata';
 import { AddToPlaylistMenu } from '../Playlists/AddToPlaylistMenu';
+import { PlayingIndicator } from '../Common/PlayingIndicator';
 
 interface TrackCardProps {
   track: Track;
@@ -36,7 +37,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
       onClick={handleCardClick}
       className={`group relative p-3.5 rounded-2xl bg-[var(--app-surface)] border transition-all cursor-pointer select-none hover:shadow-xl hover:-translate-y-1 shadow-sm ${
         isCurrent
-          ? 'border-[#7C5CFF]/60 shadow-[0_4px_20px_rgba(124,92,255,0.2)] ring-1 ring-[#7C5CFF]/30'
+          ? 'border-[#7C5CFF]/70 shadow-[0_4px_25px_rgba(124,92,255,0.25)] ring-1 ring-[#7C5CFF]/40 animate-pulse-glow'
           : 'border-[var(--app-border)] hover:border-[#7C5CFF]/50'
       }`}
     >
@@ -46,10 +47,22 @@ export const TrackCard: React.FC<TrackCardProps> = ({
           <img
             src={track.coverUrl}
             alt={track.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className={`w-full h-full object-cover transition-transform duration-500 ${
+              isCardPlaying ? 'scale-105' : 'group-hover:scale-105'
+            }`}
           />
         ) : (
           <Music size={36} className="text-[#7C5CFF]" />
+        )}
+
+        {/* Live Audio Equalizer Pill if Current */}
+        {isCurrent && (
+          <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/75 backdrop-blur-md flex items-center gap-1.5 shadow-md z-10">
+            <PlayingIndicator isPlaying={isCardPlaying} color="accent" size="xs" />
+            <span className="text-[10px] font-mono text-[#4FD1C5] font-semibold tracking-wider">
+              {isCardPlaying ? 'EN VIVO' : 'PAUSA'}
+            </span>
+          </div>
         )}
 
         {/* Duration pill badge */}
@@ -63,7 +76,11 @@ export const TrackCard: React.FC<TrackCardProps> = ({
             isCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
         >
-          <div className="w-12 h-12 rounded-2xl bg-[#7C5CFF] text-white flex items-center justify-center shadow-lg transform group-hover:scale-105 transition-transform">
+          <div
+            className={`w-12 h-12 rounded-2xl bg-[#7C5CFF] text-white flex items-center justify-center shadow-xl transform transition-transform duration-200 ${
+              isCardPlaying ? 'scale-105 shadow-[0_0_20px_rgba(124,92,255,0.6)]' : 'group-hover:scale-105'
+            }`}
+          >
             {isCardPlaying ? (
               <Pause size={20} className="text-[#4FD1C5]" />
             ) : (
@@ -101,7 +118,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
 
           {showMenu && (
             <div
-              className="absolute right-0 top-8 z-40 w-44 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-2xl p-1 animate-fadeIn text-xs"
+              className="absolute right-0 top-8 z-40 w-44 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-2xl p-1 animate-fadeScale text-xs"
               onClick={(e) => e.stopPropagation()}
             >
               <button

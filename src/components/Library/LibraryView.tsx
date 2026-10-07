@@ -243,8 +243,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
       }`}
     >
       {/* Ambient background glows */}
-      <div className="pointer-events-none absolute -top-24 right-10 w-96 h-96 rounded-full bg-[#7C5CFF]/10 blur-3xl" />
-      <div className="pointer-events-none absolute top-40 left-10 w-80 h-80 rounded-full bg-[#4FD1C5]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 right-10 w-96 h-96 rounded-full bg-[#7C5CFF]/15 blur-3xl animate-float-1" />
+      <div className="pointer-events-none absolute top-40 left-10 w-80 h-80 rounded-full bg-[#4FD1C5]/15 blur-3xl animate-float-2" />
 
       {/* Header Banner */}
       <div className="px-8 pt-8 pb-4 relative z-10">

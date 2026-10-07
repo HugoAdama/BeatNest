@@ -26,7 +26,7 @@ export const PlaylistModal: React.FC<PlaylistModalProps> = ({ isOpen, onClose })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-2xl p-6 text-[var(--app-text)] transition-colors">
+      <div className="relative w-full max-w-md bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-2xl p-6 text-[var(--app-text)] transition-colors animate-fadeScale">
         <div className="flex items-center justify-between pb-4 border-b border-[var(--app-border)]">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-[#7C5CFF]/15 text-[#7C5CFF]">

@@ -24,6 +24,7 @@ import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { WaveformScrubber } from './WaveformScrubber';
 import { QueueDrawer } from './QueueDrawer';
+import { PlayingIndicator } from '../Common/PlayingIndicator';
 
 export const BottomPlayer: React.FC = () => {
   const {
@@ -82,15 +83,33 @@ export const BottomPlayer: React.FC = () => {
           {/* Left: Track Info & Favorite */}
           <div className="flex items-center gap-3 w-full md:w-1/4 min-w-0 justify-between md:justify-start">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--app-border)] shrink-0 flex items-center justify-center shadow-md">
+              <div
+                className={`relative w-12 h-12 rounded-xl overflow-hidden bg-[var(--app-surface-elevated)] border shrink-0 flex items-center justify-center shadow-md transition-all ${
+                  isPlaying
+                    ? 'border-[#7C5CFF]/70 shadow-[0_0_16px_rgba(124,92,255,0.35)] ring-1 ring-[#7C5CFF]/40'
+                    : 'border-[var(--app-border)]'
+                }`}
+              >
                 {currentTrack?.coverUrl ? (
                   <img
                     src={currentTrack.coverUrl}
                     alt={currentTrack.title}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full object-cover transition-transform duration-700 ${
+                      isPlaying ? 'scale-105' : ''
+                    }`}
                   />
                 ) : (
-                  <Music size={20} className="text-[#7C5CFF]" />
+                  <Music
+                    size={20}
+                    className={isPlaying ? 'text-[#4FD1C5]' : 'text-[#7C5CFF]'}
+                  />
+                )}
+
+                {/* Live Playing Indicator */}
+                {currentTrack && (
+                  <div className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/80 backdrop-blur-sm flex items-center shadow-md">
+                    <PlayingIndicator isPlaying={isPlaying} color="accent" size="xs" />
+                  </div>
                 )}
               </div>
 
@@ -109,7 +128,7 @@ export const BottomPlayer: React.FC = () => {
             {currentTrack && (
               <button
                 onClick={() => toggleFavorite(currentTrack.id)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-2 rounded-lg transition-all hover:scale-105 active:scale-95 ${
                   isFavorite
                     ? 'text-red-500 bg-red-500/10'
                     : 'text-[var(--app-text-muted)] hover:text-red-500 hover:bg-[var(--app-surface-elevated)]'
@@ -128,7 +147,7 @@ export const BottomPlayer: React.FC = () => {
               {/* Shuffle button */}
               <button
                 onClick={toggleShuffle}
-                className={`p-2 rounded-lg transition-all ${
+                className={`p-2 rounded-lg transition-all hover:scale-105 active:scale-95 ${
                   isShuffled
                     ? 'text-[var(--app-accent)] bg-[var(--app-accent)]/15 font-bold'
                     : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
@@ -142,7 +161,7 @@ export const BottomPlayer: React.FC = () => {
               <button
                 onClick={prevTrack}
                 disabled={!currentTrack}
-                className="p-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] disabled:opacity-30 transition-colors"
+                className="p-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] disabled:opacity-30 transition-all hover:scale-105 active:scale-95"
                 title="Pista anterior"
               >
                 <SkipBack size={18} />
@@ -152,7 +171,9 @@ export const BottomPlayer: React.FC = () => {
               <button
                 onClick={togglePlay}
                 disabled={!currentTrack && queue.length === 0}
-                className="p-3 rounded-2xl bg-[#7C5CFF] text-white hover:bg-[#6D48F7] active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] disabled:opacity-30 disabled:hover:bg-[#7C5CFF]"
+                className={`p-3 rounded-2xl bg-[#7C5CFF] text-white hover:bg-[#6D48F7] active:scale-90 hover:scale-105 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] disabled:opacity-30 disabled:hover:bg-[#7C5CFF] ${
+                  isPlaying ? 'ring-2 ring-[#7C5CFF]/50 shadow-[0_0_22px_rgba(124,92,255,0.6)]' : ''
+                }`}
                 title={isPlaying ? 'Pausar' : 'Reproducir'}
               >
                 {isPlaying ? (
@@ -166,7 +187,7 @@ export const BottomPlayer: React.FC = () => {
               <button
                 onClick={() => nextTrack(true)}
                 disabled={!currentTrack && queue.length === 0}
-                className="p-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] disabled:opacity-30 transition-colors"
+                className="p-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] disabled:opacity-30 transition-all hover:scale-105 active:scale-95"
                 title="Siguiente pista"
               >
                 <SkipForward size={18} />
@@ -218,7 +239,7 @@ export const BottomPlayer: React.FC = () => {
               </button>
 
               {showSpeedMenu && (
-                <div className="absolute bottom-11 right-0 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-xl p-1 z-50 flex flex-col min-w-20">
+                <div className="absolute bottom-11 right-0 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-xl p-1 z-50 flex flex-col min-w-20 animate-fadeScale">
                   {speedOptions.map((speed) => (
                     <button
                       key={speed}
@@ -258,7 +279,7 @@ export const BottomPlayer: React.FC = () => {
               </button>
 
               {showCrossfadeMenu && (
-                <div className="absolute bottom-11 right-0 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-xl p-1.5 z-50 flex flex-col min-w-36 text-xs">
+                <div className="absolute bottom-11 right-0 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-xl p-1.5 z-50 flex flex-col min-w-36 text-xs animate-fadeScale">
                   <div className="px-2.5 py-1 text-[10px] uppercase font-bold text-[var(--app-text-muted)] border-b border-[var(--app-border)] mb-1">
                     Crossfade entre pistas
                   </div>

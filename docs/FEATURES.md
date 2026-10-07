@@ -125,3 +125,13 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 | **T** | Abrir / Cerrar letras sincronizadas |
 | **?** | Abrir ventana de atajos de teclado |
 | **Esc** | Cerrar cualquier ventana o modal activo |
+
+---
+
+## 11. Animaciones y Microinteracciones
+
+- **Indicador de Ecualizador en Vivo**: Barras animadas dinámicas que reflejan la actividad sonora de la pista en curso en vistas de lista, tarjetas de cuadrícula y cola de reproducción.
+- **Transiciones Modales y Paneles**: Animaciones `fadeScale` y `slideLeft` con curvas cúbicas suaves para modales, menús contextuales y el panel deslizante de cola.
+- **Fondo Ambiental Flotante**: Halos de gradiente orgánico `floatAmbient` que aportan profundidad visual sin impacto en el rendimiento de renderizado a 60 FPS.
+- **Microinteracciones en Controles**: Rebotes elásticos al presionar botones principales, resaltado y zoom sutil en carátulas activas, y seguimiento suave en el depurador de ondas de audio.
+

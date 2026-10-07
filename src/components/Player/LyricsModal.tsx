@@ -141,8 +141,12 @@ export const LyricsModal: React.FC = () => {
         </div>
       </div>
 
+      {/* Ambient background glows */}
+      <div className="pointer-events-none absolute -top-20 -left-20 w-96 h-96 rounded-full bg-[#7C5CFF]/15 blur-3xl animate-float-1" />
+      <div className="pointer-events-none absolute -bottom-20 -right-20 w-96 h-96 rounded-full bg-[#4FD1C5]/15 blur-3xl animate-float-2" />
+
       {/* Main Content Area */}
-      <div className="flex-1 overflow-hidden relative flex flex-col items-center justify-center p-6">
+      <div className="flex-1 overflow-hidden relative flex flex-col items-center justify-center p-6 z-10">
         {isEditing ? (
           /* Editor Mode */
           <div className="w-full max-w-xl flex flex-col h-full max-h-[500px] bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl p-5 shadow-2xl">
@@ -227,12 +231,12 @@ export const LyricsModal: React.FC = () => {
                       seek(line.time);
                     }
                   }}
-                  className={`cursor-pointer transition-all duration-300 py-1.5 px-4 rounded-xl ${
+                  className={`cursor-pointer transition-all duration-300 py-2 px-5 rounded-2xl ${
                     isActive
-                      ? 'text-[#4FD1C5] font-bold text-xl sm:text-2xl scale-105 drop-shadow-[0_0_12px_rgba(79,209,197,0.35)]'
+                      ? 'text-[#4FD1C5] font-extrabold text-xl sm:text-2xl scale-105 bg-[#4FD1C5]/10 border border-[#4FD1C5]/30 shadow-[0_0_24px_rgba(79,209,197,0.25)]'
                       : isPast
-                      ? 'text-[#A0A0AB]/50 text-base sm:text-lg hover:text-[#A0A0AB]'
-                      : 'text-[#A0A0AB]/80 text-base sm:text-lg hover:text-[#F5F5F7]'
+                      ? 'text-[var(--app-text-muted)]/50 text-base sm:text-lg hover:text-[var(--app-text-muted)]'
+                      : 'text-[var(--app-text-muted)]/80 text-base sm:text-lg hover:text-[var(--app-text)]'
                   }`}
                 >
                   {line.text}
