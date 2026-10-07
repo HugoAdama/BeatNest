@@ -14,9 +14,14 @@ import { EditTrackModal } from './components/Library/EditTrackModal';
 import { CommandPaletteModal } from './components/CommandPalette/CommandPaletteModal';
 import { StatsModal } from './components/Library/StatsModal';
 import { ShareTrackModal } from './components/Player/ShareTrackModal';
+import { PlayerPreferencesModal } from './components/Player/PlayerPreferencesModal';
+import { AppearanceModal } from './components/Layout/AppearanceModal';
+import { DashboardPreferencesModal } from './components/Library/DashboardPreferencesModal';
+import { DisplayPreferencesModal } from './components/Library/DisplayPreferencesModal';
 import { ToastContainer } from './components/Common/ToastContainer';
 import { useLibraryStore } from './stores/useLibraryStore';
 import { usePlayerStore } from './stores/usePlayerStore';
+import { useHomeDashboardStore } from './stores/useHomeDashboardStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import {
   extractPaletteFromImageUrl,
@@ -27,6 +32,7 @@ import {
 export const App: React.FC = () => {
   const { loadFromDatabase } = useLibraryStore();
   const syncNavigationFromLocation = useLibraryStore((state) => state.syncNavigationFromLocation);
+  const navigateTo = useLibraryStore((state) => state.navigateTo);
   const { initAudioListeners, currentTrack } = usePlayerStore();
   const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
 
@@ -39,15 +45,22 @@ export const App: React.FC = () => {
   }, [initAudioListeners, loadFromDatabase]);
 
   useEffect(() => {
+    const initialLanding = useHomeDashboardStore.getState().landingView;
+    const currentHash = window.location.hash;
+    const isRootLibraryRoute = !currentHash || /^#\/?(?:home|tracks|favorites)?$/.test(currentHash);
+    if (initialLanding !== 'last' && isRootLibraryRoute) {
+      navigateTo(initialLanding);
+    } else {
+      syncNavigationFromLocation();
+    }
     const syncNavigation = () => syncNavigationFromLocation();
-    syncNavigation();
     window.addEventListener('popstate', syncNavigation);
     window.addEventListener('hashchange', syncNavigation);
     return () => {
       window.removeEventListener('popstate', syncNavigation);
       window.removeEventListener('hashchange', syncNavigation);
     };
-  }, [syncNavigationFromLocation]);
+  }, [navigateTo, syncNavigationFromLocation]);
 
   // Adaptive ambient glow effect based on active track cover artwork
   useEffect(() => {
@@ -63,7 +76,7 @@ export const App: React.FC = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[var(--app-bg)] text-[var(--app-text)] font-sans antialiased relative selection:bg-[#7C5CFF]/30">
       {/* Ambient Liquid Plasma Mesh Layer */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0 select-none">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0 select-none" style={{ opacity: 'var(--ambient-glow-opacity, 1)' }}>
         {/* Blob 1: Vibrant Purple / Violet Sphere */}
         <div className="absolute -top-32 -left-32 w-96 md:w-[36rem] h-96 md:h-[36rem] rounded-full bg-gradient-to-br from-[#7C5CFF]/25 via-[#6366F1]/15 to-transparent blur-[80px] animate-liquid-mesh-1" />
         
@@ -100,6 +113,10 @@ export const App: React.FC = () => {
       <CommandPaletteModal />
       <StatsModal />
       <ShareTrackModal />
+      <PlayerPreferencesModal />
+      <AppearanceModal />
+      <DashboardPreferencesModal />
+      <DisplayPreferencesModal />
       <PlaylistModal
         isOpen={isCreatePlaylistOpen}
         onClose={() => setIsCreatePlaylistOpen(false)}

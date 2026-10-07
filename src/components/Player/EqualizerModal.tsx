@@ -4,6 +4,7 @@ import { useAudioSettingsStore } from '../../stores/useAudioSettingsStore';
 import { useUIStore } from '../../stores/useUIStore';
 import { EQ_LABELS, DEFAULT_PRESETS } from '../../lib/audioEngine';
 import type { ReverbMode } from '../../types/music';
+import { AudioProfileManager } from './AudioProfileManager';
 
 export const EqualizerModal: React.FC = () => {
   const {
@@ -325,6 +326,8 @@ export const EqualizerModal: React.FC = () => {
             })}
           </div>
         </div>
+
+        <AudioProfileManager />
 
         {/* Footer controls */}
         <div className="mt-4 flex items-center justify-between text-xs">

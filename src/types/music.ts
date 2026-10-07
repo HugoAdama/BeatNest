@@ -43,6 +43,30 @@ export interface EqualizerPreset {
   gains: [number, number, number, number, number]; // 60Hz, 250Hz, 1kHz, 4kHz, 16kHz
 }
 
+export interface AudioProfile {
+  id: string;
+  name: string;
+  eqGains: [number, number, number, number, number];
+  eqEnabled: boolean;
+  reverbMode: ReverbMode;
+  preampGain: number;
+  autoGainEnabled: boolean;
+  createdAt: number;
+}
+
+export type AudioProfileTargetType = 'genre' | 'playlist';
+
+export interface AudioProfileBinding {
+  targetType: AudioProfileTargetType;
+  targetId: string;
+  profileId: string;
+}
+
+export interface PlaybackCollectionContext {
+  playlistId?: string;
+  playlistTrackIds?: string[];
+}
+
 export interface PlaybackState {
   currentTrack: Track | null;
   isPlaying: boolean;

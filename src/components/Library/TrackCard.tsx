@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Play, Pause, Heart, Music, MoreVertical, PlaySquare, ListPlus, FolderPlus, Trash2, Edit3, Image as ImageIcon } from 'lucide-react';
-import type { Track } from '../../types/music';
+import type { PlaybackCollectionContext, Track } from '../../types/music';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { useUIStore } from '../../stores/useUIStore';
+import { useLibraryDisplayPreferencesStore } from '../../stores/useLibraryDisplayPreferencesStore';
 import { formatDuration } from '../../lib/metadata';
 import { AddToPlaylistMenu } from '../Playlists/AddToPlaylistMenu';
 import { PlayingIndicator } from '../Common/PlayingIndicator';
@@ -11,14 +12,17 @@ import { PlayingIndicator } from '../Common/PlayingIndicator';
 interface TrackCardProps {
   track: Track;
   onOpenCreatePlaylistModal: () => void;
+  playbackContext?: PlaybackCollectionContext | null;
 }
 
 export const TrackCard: React.FC<TrackCardProps> = ({
   track,
   onOpenCreatePlaylistModal,
+  playbackContext,
 }) => {
-  const { currentTrack, isPlaying, playTrack, togglePlay, addToQueue, playNextInQueue } = usePlayerStore();
+  const { currentTrack, isPlaying, playTrack, togglePlay, addToQueue, playNextInQueue, setPlaybackContextForCurrentTrack } = usePlayerStore();
   const { toggleFavorite, deleteTrack, tracks } = useLibraryStore();
+  const density = useLibraryDisplayPreferencesStore((state) => state.density);
   const [showMenu, setShowMenu] = useState(false);
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
 
@@ -27,16 +31,22 @@ export const TrackCard: React.FC<TrackCardProps> = ({
 
   const handleCardClick = () => {
     if (isCurrent) {
+      setPlaybackContextForCurrentTrack(playbackContext ?? null);
       togglePlay();
     } else {
-      playTrack(track, tracks);
+      const playbackQueue = playbackContext?.playlistTrackIds
+        ? playbackContext.playlistTrackIds
+            .map((trackId) => tracks.find((item) => item.id === trackId))
+            .filter((item): item is Track => !!item)
+        : tracks;
+      playTrack(track, playbackQueue, undefined, playbackContext);
     }
   };
 
   return (
     <div
       onClick={handleCardClick}
-      className={`group relative p-3 sm:p-3.5 rounded-2xl liquid-card cursor-pointer select-none ${
+      className={`group relative ${density === 'compact' ? 'p-2 sm:p-2.5' : 'p-3 sm:p-3.5'} rounded-2xl liquid-card cursor-pointer select-none ${
         isCurrent
           ? 'border-[#7C5CFF]/70 shadow-[0_4px_25px_rgba(124,92,255,0.3)] ring-1 ring-[#7C5CFF]/40 animate-pulse-glow'
           : 'hover:border-[#7C5CFF]/50'

@@ -6,6 +6,7 @@ interface VolumeControlProps {
   isMuted: boolean;
   onVolumeChange: (val: number) => void;
   onToggleMute: () => void;
+  compact?: boolean;
 }
 
 export const VolumeControl: React.FC<VolumeControlProps> = ({
@@ -13,9 +14,10 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
   isMuted,
   onVolumeChange,
   onToggleMute,
+  compact = false,
 }) => {
   return (
-    <div className="hidden sm:flex items-center gap-1.5 pl-1 shrink-0">
+    <div className={`${compact ? 'flex' : 'hidden sm:flex'} items-center gap-1.5 pl-1 shrink-0`}>
       <button
         onClick={onToggleMute}
         className="p-1.5 text-[var(--app-text-muted)] hover:text-[var(--app-text)] transition-colors"
@@ -36,7 +38,7 @@ export const VolumeControl: React.FC<VolumeControlProps> = ({
         step="0.01"
         value={isMuted ? 0 : volume}
         onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-        className="w-16 lg:w-20 h-1.5 bg-[var(--liquid-glass-border)] rounded-lg cursor-pointer accent-[#7C5CFF]"
+        className={`${compact ? 'w-20' : 'w-16 lg:w-20'} h-1.5 bg-[var(--liquid-glass-border)] rounded-lg cursor-pointer accent-[#7C5CFF]`}
       />
     </div>
   );

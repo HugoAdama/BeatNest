@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { applyAppearanceSettings, loadAppearanceSettings } from '../lib/appearance';
 
 export type ThemeMode = 'dark' | 'light';
 
@@ -26,6 +27,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => {
       document.documentElement.classList.remove('dark');
       document.documentElement.classList.add('light');
     }
+    applyAppearanceSettings(loadAppearanceSettings(), initial);
   }
 
   return {
@@ -43,6 +45,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => {
         document.documentElement.classList.remove('dark');
         document.documentElement.classList.add('light');
       }
+      applyAppearanceSettings(loadAppearanceSettings(), theme);
       set({ theme });
     },
   };

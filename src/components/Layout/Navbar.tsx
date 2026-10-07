@@ -11,6 +11,8 @@ import {
   Sun,
   Moon,
   Menu,
+  Palette,
+  Rows3,
 } from 'lucide-react';
 import { useLibraryStore, type SortField } from '../../stores/useLibraryStore';
 import { useAudioSettingsStore } from '../../stores/useAudioSettingsStore';
@@ -37,7 +39,13 @@ export const Navbar: React.FC = () => {
 
   const { eqEnabled } = useAudioSettingsStore();
   const { theme, toggleTheme } = useThemeStore();
-  const { toggleMobileSidebar, toggleVisualizer, toggleEqualizer } = useUIStore();
+  const {
+    toggleMobileSidebar,
+    toggleVisualizer,
+    toggleEqualizer,
+    toggleAppearance,
+    toggleDisplayPreferences,
+  } = useUIStore();
 
   const sortOptions: { field: SortField; label: string }[] = [
     { field: 'title', label: 'Título' },
@@ -164,6 +172,18 @@ export const Navbar: React.FC = () => {
           </button>
         </div>}
 
+        {canChangeView && (
+          <button
+            type="button"
+            onClick={() => toggleDisplayPreferences(true)}
+            className="hidden sm:inline-flex p-2 rounded-xl liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-accent)] hover:border-[var(--app-accent)]/50 transition-colors shadow-sm"
+            title="Personalizar vista de biblioteca"
+            aria-label="Personalizar vista de biblioteca"
+          >
+            <Rows3 size={16} />
+          </button>
+        )}
+
         {/* Equalizer button */}
         <button
           onClick={() => toggleEqualizer(true)}
@@ -193,6 +213,16 @@ export const Navbar: React.FC = () => {
           title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
         >
           {theme === 'dark' ? <Sun size={16} className="text-amber-400" /> : <Moon size={16} className="text-[#7C5CFF]" />}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => toggleAppearance(true)}
+          className="p-2 rounded-xl liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-accent)] hover:border-[var(--app-accent)]/50 transition-colors shadow-sm"
+          title="Personalizar apariencia"
+          aria-label="Personalizar apariencia"
+        >
+          <Palette size={16} />
         </button>
       </div>
     </header>

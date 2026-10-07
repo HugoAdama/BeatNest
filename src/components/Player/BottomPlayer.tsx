@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Sliders,
   Heart,
   ListMusic,
   Music,
   AlignLeft,
+  Settings2,
   Play,
   Pause,
   SkipForward,
@@ -20,6 +21,7 @@ import { PlayingIndicator } from '../Common/PlayingIndicator';
 import { PlaybackControls } from './PlaybackControls';
 import { VolumeControl } from './VolumeControl';
 import { PlayerMenus } from './PlayerMenus';
+import { usePlayerPreferencesStore } from '../../stores/usePlayerPreferencesStore';
 
 export const BottomPlayer: React.FC = () => {
   const {
@@ -48,6 +50,8 @@ export const BottomPlayer: React.FC = () => {
   } = usePlayerStore();
 
   const { eqEnabled } = useAudioSettingsStore();
+  const { layout, controls } = usePlayerPreferencesStore();
+  const isCompact = layout === 'compact';
 
   const {
     isLyricsOpen,
@@ -56,11 +60,16 @@ export const BottomPlayer: React.FC = () => {
     toggleEqualizer,
     toggleMiniPlayer,
     toggleLyrics,
+    togglePlayerPreferences,
   } = useUIStore();
 
   const { toggleFavorite } = useLibraryStore();
   const { activeOption: sleepTimerOption, toggleModal: toggleSleepTimerModal } = useSleepTimerStore();
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+
+  useEffect(() => {
+    if (!controls.queue) setIsQueueOpen(false);
+  }, [controls.queue]);
 
   if (isMiniPlayer) return null;
 
@@ -68,12 +77,12 @@ export const BottomPlayer: React.FC = () => {
 
   return (
     <>
-      <footer className="absolute bottom-2.5 sm:bottom-3.5 left-2.5 right-2.5 sm:left-4 sm:right-4 md:left-6 md:right-6 max-w-6xl mx-auto z-30 liquid-dock rounded-2xl sm:rounded-3xl p-2.5 sm:px-4 md:px-5 sm:py-2.5 md:py-3 select-none transition-all">
+      <footer className={`absolute bottom-2.5 sm:bottom-3.5 left-2.5 right-2.5 sm:left-4 sm:right-4 md:left-6 md:right-6 max-w-6xl mx-auto z-30 liquid-dock rounded-2xl sm:rounded-3xl select-none transition-all ${isCompact ? 'p-2 sm:px-3 sm:py-1.5' : 'p-2.5 sm:px-4 md:px-5 sm:py-2.5 md:py-3'}`}>
         {/* Desktop & Tablet Layout (>= md) */}
         <div className="hidden md:grid md:grid-cols-12 items-center gap-3 lg:gap-5 w-full">
           {/* Left: Track Info & Favorite (Cols 1-3) */}
           <div className="col-span-3 flex items-center gap-3 min-w-0">
-            <div className="relative w-12 h-12 lg:w-13 lg:h-13 rounded-2xl overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--liquid-glass-border)] shrink-0 flex items-center justify-center shadow-lg transition-all">
+            <div className={`relative rounded-2xl overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--liquid-glass-border)] shrink-0 flex items-center justify-center shadow-lg transition-all ${isCompact ? 'w-9 h-9' : 'w-12 h-12 lg:w-13 lg:h-13'}`}>
               {currentTrack?.coverUrl ? (
                 <img
                   src={currentTrack.coverUrl}
@@ -103,12 +112,12 @@ export const BottomPlayer: React.FC = () => {
               </p>
               <p className="text-xs lg:text-sm text-[var(--app-text-muted)] truncate mt-0.5">
                 {currentTrack
-                  ? `${currentTrack.artist} • ${currentTrack.album}`
+                  ? (isCompact ? currentTrack.artist : `${currentTrack.artist} • ${currentTrack.album}`)
                   : 'Selecciona una pista para reproducir'}
               </p>
             </div>
 
-            {currentTrack && (
+            {controls.favorite && currentTrack && (
               <button
                 onClick={() => toggleFavorite(currentTrack.id)}
                 className={`p-1.5 lg:p-2 rounded-xl transition-all hover:scale-110 active:scale-95 shrink-0 ${
@@ -140,20 +149,20 @@ export const BottomPlayer: React.FC = () => {
             />
 
             {/* Wide Waveform Scrubber */}
-            <div className="w-full">
+            {!isCompact && <div className="w-full">
               <WaveformScrubber
                 currentTime={currentTime}
                 duration={duration}
                 onSeek={seek}
                 isPlaying={isPlaying}
               />
-            </div>
+            </div>}
           </div>
 
           {/* Right: Tools & Volume (Cols 10-12) */}
           <div className="col-span-3 flex items-center gap-1.5 lg:gap-2 justify-end shrink-0">
             {/* Lyrics trigger */}
-            <button
+            {controls.lyrics && <button
               onClick={() => toggleLyrics(true)}
               className={`p-2 rounded-xl transition-all relative ${
                 isLyricsOpen
@@ -168,10 +177,10 @@ export const BottomPlayer: React.FC = () => {
               {currentTrack?.lyrics && (
                 <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[var(--app-accent)]" />
               )}
-            </button>
+            </button>}
 
             {/* Equalizer trigger */}
-            <button
+            {controls.equalizer && <button
               onClick={() => toggleEqualizer(true)}
               className={`p-2 rounded-xl transition-all relative ${
                 eqEnabled
@@ -184,10 +193,10 @@ export const BottomPlayer: React.FC = () => {
               {eqEnabled && (
                 <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#7C5CFF]" />
               )}
-            </button>
+            </button>}
 
             {/* Queue trigger */}
-            <button
+            {controls.queue && <button
               onClick={() => setIsQueueOpen(!isQueueOpen)}
               className={`p-2 rounded-xl transition-all relative ${
                 isQueueOpen
@@ -202,10 +211,10 @@ export const BottomPlayer: React.FC = () => {
                   {queue.length}
                 </span>
               )}
-            </button>
+            </button>}
 
             {/* Unified Quick Audio Tools Popover */}
-            <PlayerMenus
+            {controls.tools && <PlayerMenus
               playbackRate={playbackRate}
               crossfadeDuration={crossfadeDuration}
               onSelectPlaybackRate={setPlaybackRate}
@@ -216,17 +225,27 @@ export const BottomPlayer: React.FC = () => {
               onOpenMiniPlayer={() => toggleMiniPlayer(true)}
               onOpenShareTrack={currentTrack ? () => useUIStore.getState().toggleShareTrack(true) : undefined}
               hasTrack={!!currentTrack}
-            />
+            />}
 
             {/* Volume Control */}
-            <div className="pl-1 sm:pl-2 border-l border-[var(--liquid-glass-border-subtle)]">
+            {controls.volume && <div className="pl-1 sm:pl-2 border-l border-[var(--liquid-glass-border-subtle)]">
               <VolumeControl
                 volume={volume}
                 isMuted={isMuted}
                 onVolumeChange={setVolume}
                 onToggleMute={toggleMute}
               />
-            </div>
+            </div>}
+
+            <button
+              type="button"
+              onClick={() => togglePlayerPreferences(true)}
+              className="rounded-xl p-2 text-[var(--app-text-muted)] transition-colors hover:bg-[var(--app-surface-hover)] hover:text-[var(--app-accent)]"
+              title="Personalizar reproductor"
+              aria-label="Personalizar reproductor"
+            >
+              <Settings2 size={16} />
+            </button>
           </div>
         </div>
 
@@ -235,7 +254,7 @@ export const BottomPlayer: React.FC = () => {
           {/* Top row: Track Info & Primary Controls */}
           <div className="flex items-center justify-between gap-2.5">
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <div className="w-10 h-10 rounded-xl overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--liquid-glass-border)] shrink-0 flex items-center justify-center">
+              <div className={`rounded-xl overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--liquid-glass-border)] shrink-0 flex items-center justify-center ${isCompact ? 'w-8 h-8' : 'w-10 h-10'}`}>
                 {currentTrack?.coverUrl ? (
                   <img
                     src={currentTrack.coverUrl}
@@ -259,7 +278,7 @@ export const BottomPlayer: React.FC = () => {
 
             {/* Primary Mobile Action Buttons */}
             <div className="flex items-center gap-1 shrink-0">
-              {currentTrack && (
+              {controls.favorite && currentTrack && (
                 <button
                   onClick={() => toggleFavorite(currentTrack.id)}
                   className={`p-1.5 rounded-lg transition-colors ${
@@ -288,7 +307,7 @@ export const BottomPlayer: React.FC = () => {
                 <SkipForward size={17} />
               </button>
 
-              <button
+              {controls.queue && <button
                 onClick={() => setIsQueueOpen(!isQueueOpen)}
                 className={`p-1.5 rounded-lg transition-colors relative ${
                   isQueueOpen ? 'text-[#7C5CFF]' : 'text-[var(--app-text-muted)]'
@@ -299,24 +318,85 @@ export const BottomPlayer: React.FC = () => {
                 {queue.length > 0 && (
                   <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[var(--app-accent)]" />
                 )}
+              </button>}
+
+              <button
+                type="button"
+                onClick={() => togglePlayerPreferences(true)}
+                className="rounded-lg p-1.5 text-[var(--app-text-muted)] transition-colors hover:text-[var(--app-accent)]"
+                title="Personalizar reproductor"
+                aria-label="Personalizar reproductor"
+              >
+                <Settings2 size={16} />
               </button>
             </div>
           </div>
 
           {/* Mobile Waveform Scrubber */}
-          <div className="px-1">
+          {!isCompact && <div className="px-1">
             <WaveformScrubber
               currentTime={currentTime}
               duration={duration}
               onSeek={seek}
               isPlaying={isPlaying}
             />
-          </div>
+          </div>}
+
+          {(controls.lyrics || controls.equalizer || controls.tools || controls.volume) && (
+            <div className="flex items-center justify-end gap-2 border-t border-[var(--liquid-glass-border-subtle)] pt-1.5">
+              {controls.lyrics && (
+                <button
+                  type="button"
+                  onClick={() => toggleLyrics(true)}
+                  title="Letras sincronizadas"
+                  aria-label="Abrir letras"
+                  className={`relative rounded-lg p-1.5 ${isLyricsOpen ? 'text-[var(--app-accent)]' : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)]'}`}
+                >
+                  <AlignLeft size={15} />
+                  {currentTrack?.lyrics && <span className="absolute right-1 top-1 h-1 w-1 rounded-full bg-[var(--app-accent)]" />}
+                </button>
+              )}
+              {controls.equalizer && (
+                <button
+                  type="button"
+                  onClick={() => toggleEqualizer(true)}
+                  title="Ecualizador"
+                  aria-label="Abrir ecualizador"
+                  className={`rounded-lg p-1.5 ${eqEnabled ? 'text-[#7C5CFF]' : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)]'}`}
+                >
+                  <Sliders size={15} />
+                </button>
+              )}
+              {controls.tools && (
+                <PlayerMenus
+                  playbackRate={playbackRate}
+                  crossfadeDuration={crossfadeDuration}
+                  onSelectPlaybackRate={setPlaybackRate}
+                  onSelectCrossfadeDuration={setCrossfadeDuration}
+                  sleepTimerActive={sleepTimerOption !== null}
+                  onOpenSleepTimer={() => toggleSleepTimerModal(true)}
+                  onOpenVisualizer={() => toggleVisualizer(true)}
+                  onOpenMiniPlayer={() => toggleMiniPlayer(true)}
+                  onOpenShareTrack={currentTrack ? () => useUIStore.getState().toggleShareTrack(true) : undefined}
+                  hasTrack={!!currentTrack}
+                />
+              )}
+              {controls.volume && (
+                <VolumeControl
+                  compact
+                  volume={volume}
+                  isMuted={isMuted}
+                  onVolumeChange={setVolume}
+                  onToggleMute={toggleMute}
+                />
+              )}
+            </div>
+          )}
         </div>
       </footer>
 
       {/* Slide-out Queue Drawer */}
-      <QueueDrawer isOpen={isQueueOpen} onClose={() => setIsQueueOpen(false)} />
+      <QueueDrawer isOpen={controls.queue && isQueueOpen} onClose={() => setIsQueueOpen(false)} />
     </>
   );
 };

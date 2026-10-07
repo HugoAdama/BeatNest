@@ -28,6 +28,7 @@ export class AudioEngine {
   private analyser: AnalyserNode | null = null;
   private eqFilters: BiquadFilterNode[] = [];
   private eqEnabled: boolean = true;
+  private currentEqGains: [number, number, number, number, number] = [0, 0, 0, 0, 0];
   private convolver: ConvolverNode | null = null;
   private dryGain: GainNode | null = null;
   private wetGain: GainNode | null = null;
@@ -120,7 +121,7 @@ export class AudioEngine {
           filter.Q.value = 1.0;
         }
         filter.frequency.value = freq;
-        filter.gain.value = 0;
+        filter.gain.value = this.eqEnabled ? this.currentEqGains[index] : 0;
         return filter;
       });
 
@@ -158,6 +159,7 @@ export class AudioEngine {
       this.analyser.connect(this.ctx.destination);
 
       this.isInitialized = true;
+      this.setSpatialReverb(this.reverbMode);
     } catch (err) {
       console.warn('Web Audio API context could not be fully initialized:', err);
     }
@@ -265,10 +267,11 @@ export class AudioEngine {
   }
 
   public setEqGain(bandIndex: number, gainValue: number): void {
-    if (bandIndex >= 0 && bandIndex < this.eqFilters.length) {
-      const clamped = Math.max(-12, Math.min(12, gainValue));
-      this.eqFilters[bandIndex].gain.value = this.eqEnabled ? clamped : 0;
-    }
+    if (bandIndex < 0 || bandIndex >= this.currentEqGains.length) return;
+    const clamped = Math.max(-12, Math.min(12, gainValue));
+    this.currentEqGains[bandIndex] = clamped;
+    const filter = this.eqFilters[bandIndex];
+    if (filter) filter.gain.value = this.eqEnabled ? clamped : 0;
   }
 
   public applyPreset(presetGains: [number, number, number, number, number]): void {

@@ -157,12 +157,16 @@ Para garantizar un mantenimiento óptimo y escalable, el código se estructura e
 
 1. **Gestión de Estado Especializada (`src/stores/`)**:
    - `usePlayerStore`: Controla reproducción, progreso, cola, historial y velocidad/crossfade.
-   - `useAudioSettingsStore`: Mantiene el ecualizador, presets, reverberación, preamplificador y nivelación automática.
+   - `useAudioSettingsStore`: Mantiene el ecualizador, presets, perfiles automáticos y asignaciones por género/playlist, reverberación, preamplificador y nivelación automática.
    - `useSleepTimerStore`: Gestiona el temporizador de apagado en segundo plano con desvanecimiento de volumen progresivo en los últimos 45 segundos.
    - `useUIStore`: Administra de manera aislada la visibilidad de modales y paneles (Visualizador, Ecualizador, Letras, Mini Reproductor, Atajos, Editor ID3, Paleta de Comandos, Estadísticas, Tarjeta para compartir).
    - `useLibraryStore`: Mantiene la biblioteca, playlists y estado de navegación; delega la importación de archivos al servicio `libraryImport.ts`.
    - `useToastStore`: Sistema unificado de avisos y notificaciones flotantes con auto-cierre temporizado.
    - `useThemeStore`: Controla el modo claro y modo oscuro.
+   - `usePlayerPreferencesStore`: Persiste la densidad del reproductor y la visibilidad de sus controles opcionales en `localStorage`.
+   - `useAppearanceStore`: Guarda la paleta de acento y los ajustes Liquid Glass; delega la aplicación de variables CSS a `lib/appearance.ts`.
+   - `useHomeDashboardStore`: Persiste el orden y visibilidad de secciones, el límite de elementos y la página inicial preferida.
+   - `useLibraryDisplayPreferencesStore`: Persiste la densidad y el número de columnas para vistas de biblioteca.
 
 2. **Capa de Servicios y Utilidades (`src/lib/`)**:
    - `audioEngine.ts`: Manejo de Web Audio API, nodos de ganancia con crossfade dual, preamplificador, reverberación convolutiva sintética, compresor dinámico y análisis espectral.
@@ -188,3 +192,16 @@ Para garantizar un mantenimiento óptimo y escalable, el código se estructura e
 - `App` escucha los cambios del historial y sincroniza la URL con el store. `navigateTo` crea una entrada al cambiar de sección; filtros y búsqueda reemplazan la entrada actual para evitar un paso del historial por cada tecla.
 - Los parámetros de búsqueda, género y formato acompañan a la vista en el hash y se restauran al volver a ella.
 - `LibraryHomeView` compone los accesos a la escucha reciente, incorporaciones, favoritos de escucha y playlists. `LibraryHeader` y las vistas de artista/álbum implementan el detalle y el retorno a la colección.
+
+### 2.8 Preferencias del Reproductor y Perfiles de Audio
+- `PlayerPreferencesModal` cambia entre las vistas compacta y completa y controla qué accesos secundarios muestra `BottomPlayer`. `usePlayerPreferencesStore` persiste esas decisiones en `beatnest_player_preferences`.
+- `AudioProfileManager`, dentro del ecualizador, captura y administra perfiles que incluyen ganancias EQ, activación de EQ, reverberación, preamplificador y nivelación automática.
+- `useAudioSettingsStore` persiste perfiles (`beatnest_audio_profiles`) y asignaciones (`beatnest_audio_profile_bindings`) por separado. Al comenzar una pista, la playlist de origen tiene prioridad; si no hay una asignación aplicable, se busca una por género.
+- `usePlayerStore` transporta el contexto de playlist mientras avanza o retrocede dentro de la cola. Solo se aplica el perfil de playlist si la pista está incluida en esa colección; las demás pistas pueden recibir el perfil de su género.
+
+### 2.9 Preferencias de Apariencia, Inicio y Biblioteca
+- `AppearanceModal` edita una copia temporal de las preferencias para previsualizar la paleta, transparencia, desenfoque, reflejos y resplandor. Aplicar persiste el estado; cancelar o Escape vuelve a los valores guardados.
+- `useAppearanceStore` almacena preferencias en `beatnest_appearance`. `useThemeStore` reaplica los mismos valores al cambiar entre tema claro y oscuro; `lib/appearance.ts` mantiene la conversión de preferencias a variables CSS.
+- `DashboardPreferencesModal` configura página inicial, orden y visibilidad de secciones y cantidad de elementos. `useHomeDashboardStore` conserva estos datos en `beatnest_home_dashboard`. En el arranque, una preferencia de página inicial solo sustituye una ruta base; los enlaces a detalles y rutas con parámetros se mantienen.
+- `DisplayPreferencesModal` configura densidad y columnas mediante `useLibraryDisplayPreferencesStore` (`beatnest_library_display`). La cuadrícula se adapta en móvil y usa el valor elegido en pantallas grandes; filas y tarjetas reducen su espaciado en densidad compacta.
+- Las tarjetas de playlist en Inicio reutilizan las portadas de las pistas relacionadas para componer un mosaico 2x2 cuando no hay una imagen personalizada.

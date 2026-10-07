@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import type { Track, RepeatMode } from '../types/music';
+import type { Track, RepeatMode, PlaybackCollectionContext } from '../types/music';
 import { audioEngine } from '../lib/audioEngine';
 import { db } from '../db';
 import { showToast } from './useToastStore';
 import { generateDemoArpeggioTrack } from '../lib/audioGenerator';
+import { useAudioSettingsStore } from './useAudioSettingsStore';
 
 interface PlayerStore {
   currentTrack: Track | null;
@@ -19,9 +20,11 @@ interface PlayerStore {
   queue: Track[];
   queueIndex: number;
   recentTracks: Track[];
+  playbackContext: PlaybackCollectionContext | null;
   // Actions
   initAudioListeners: () => void;
-  playTrack: (track: Track, newQueue?: Track[], useCrossfade?: boolean) => Promise<void>;
+  playTrack: (track: Track, newQueue?: Track[], useCrossfade?: boolean, context?: PlaybackCollectionContext | null) => Promise<void>;
+  setPlaybackContextForCurrentTrack: (context: PlaybackCollectionContext | null) => void;
   play: () => void;
   pause: () => void;
   togglePlay: () => void;
@@ -70,6 +73,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   queue: [],
   queueIndex: -1,
   recentTracks: [],
+  playbackContext: null,
 
   initAudioListeners: () => {
     const bindAudioEvents = (audio: HTMLAudioElement) => {
@@ -148,7 +152,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     audioEngine.setVolume(get().volume);
   },
 
-  playTrack: async (track: Track, newQueue?: Track[], useCrossfade?: boolean) => {
+  playTrack: async (track: Track, newQueue?: Track[], useCrossfade?: boolean, context?: PlaybackCollectionContext | null) => {
     if (!useCrossfade) {
       lastCrossfadedTrackId = null;
     }
@@ -196,12 +200,15 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const filteredRecent = get().recentTracks.filter((t) => t.id !== track.id);
     set({
       currentTrack: track,
+      playbackContext: context ?? null,
       queue,
       queueIndex,
       recentTracks: [track, ...filteredRecent].slice(0, 50),
       currentTime: 0,
       duration: track.duration || 0,
     });
+
+    useAudioSettingsStore.getState().applyAutomaticAudioProfile(track, context);
 
     const isAlreadyPlaying = get().isPlaying && !!audioEngine.getAudioElement().src;
     const shouldCrossfade = useCrossfade !== undefined
@@ -237,6 +244,14 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
           get().seek(details.seekTime);
         }
       });
+    }
+  },
+
+  setPlaybackContextForCurrentTrack: (context) => {
+    const currentTrack = get().currentTrack;
+    set({ playbackContext: context });
+    if (currentTrack) {
+      useAudioSettingsStore.getState().applyAutomaticAudioProfile(currentTrack, context);
     }
   },
 
@@ -288,7 +303,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
     const nextTrk = queue[nextIndex];
     if (nextTrk) {
-      get().playTrack(nextTrk, undefined, useCrossfade);
+      const context = get().playbackContext;
+      get().playTrack(nextTrk, undefined, useCrossfade, context);
     }
   },
 
@@ -316,7 +332,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
     const prevTrk = queue[prevIndex];
     if (prevTrk) {
-      get().playTrack(prevTrk);
+      get().playTrack(prevTrk, undefined, undefined, get().playbackContext);
     }
   },
 

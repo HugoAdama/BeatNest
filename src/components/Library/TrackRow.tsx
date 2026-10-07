@@ -14,10 +14,11 @@ import {
   ArrowDown,
   Image as ImageIcon,
 } from 'lucide-react';
-import type { Track } from '../../types/music';
+import type { PlaybackCollectionContext, Track } from '../../types/music';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { useUIStore } from '../../stores/useUIStore';
+import { useLibraryDisplayPreferencesStore } from '../../stores/useLibraryDisplayPreferencesStore';
 import { formatDuration } from '../../lib/metadata';
 import { AddToPlaylistMenu } from '../Playlists/AddToPlaylistMenu';
 import { PlayingIndicator } from '../Common/PlayingIndicator';
@@ -28,6 +29,7 @@ interface TrackRowProps {
   onOpenCreatePlaylistModal: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
+  playbackContext?: PlaybackCollectionContext | null;
 }
 
 export const TrackRow: React.FC<TrackRowProps> = ({
@@ -36,9 +38,11 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   onOpenCreatePlaylistModal,
   onMoveUp,
   onMoveDown,
+  playbackContext,
 }) => {
-  const { currentTrack, isPlaying, playTrack, togglePlay, addToQueue, playNextInQueue } = usePlayerStore();
+  const { currentTrack, isPlaying, playTrack, togglePlay, addToQueue, playNextInQueue, setPlaybackContextForCurrentTrack } = usePlayerStore();
   const { toggleFavorite, deleteTrack, tracks } = useLibraryStore();
+  const density = useLibraryDisplayPreferencesStore((state) => state.density);
   const [showMenu, setShowMenu] = useState(false);
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
 
@@ -47,15 +51,21 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
   const handleRowClick = () => {
     if (isCurrent) {
+      setPlaybackContextForCurrentTrack(playbackContext ?? null);
       togglePlay();
     } else {
-      playTrack(track, tracks);
+      const playbackQueue = playbackContext?.playlistTrackIds
+        ? playbackContext.playlistTrackIds
+            .map((trackId) => tracks.find((item) => item.id === trackId))
+            .filter((item): item is Track => !!item)
+        : tracks;
+      playTrack(track, playbackQueue, undefined, playbackContext);
     }
   };
 
   return (
     <div
-      className={`group relative flex items-center gap-3 px-3 sm:px-3.5 py-3 sm:py-3.5 rounded-xl transition-all select-none hover-lift ${
+      className={`group relative flex items-center gap-3 px-3 ${density === 'compact' ? 'py-2' : 'sm:px-3.5 py-3 sm:py-3.5'} rounded-xl transition-all select-none hover-lift ${
         isCurrent
           ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/40 text-[var(--app-text)] shadow-sm backdrop-blur-md'
           : 'hover:bg-white/40 dark:hover:bg-white/5 border border-transparent hover:border-[var(--liquid-glass-border-subtle)] text-[var(--app-text-muted)] hover:text-[var(--app-text)]'

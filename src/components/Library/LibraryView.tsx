@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Music, Plus } from 'lucide-react';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
+import { useUIStore } from '../../stores/useUIStore';
+import { useLibraryDisplayPreferencesStore } from '../../stores/useLibraryDisplayPreferencesStore';
 import { TrackRow } from './TrackRow';
 import { TrackCard } from './TrackCard';
 import { LibraryStatsBanner } from './LibraryStatsBanner';
@@ -13,6 +15,7 @@ import { useLibraryViewModel } from './useLibraryViewModel';
 import { LibraryHeader } from './LibraryHeader';
 import { LibraryFilters } from './LibraryFilters';
 import { LibraryHomeView } from './LibraryHomeView';
+import type { PlaybackCollectionContext } from '../../types/music';
 
 interface LibraryViewProps {
   onOpenCreatePlaylistModal: () => void;
@@ -45,6 +48,9 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
   } = useLibraryStore();
 
   const { playTrack, recentTracks, currentTrack, isPlaying, togglePlay } = usePlayerStore();
+  const toggleDashboardPreferences = useUIStore((state) => state.toggleDashboardPreferences);
+  const { gridColumns } = useLibraryDisplayPreferencesStore();
+  const gridStyle = { '--library-grid-columns': gridColumns } as React.CSSProperties;
   const [isDragOver, setIsDragOver] = useState(false);
 
   const {
@@ -72,6 +78,10 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     sortOrder,
   });
 
+  const playlistPlaybackContext: PlaybackCollectionContext | null = currentPlaylist
+    ? { playlistId: currentPlaylist.id, playlistTrackIds: currentPlaylist.trackIds }
+    : null;
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -93,7 +103,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
   // Play whole list in order
   const handlePlayAll = () => {
     if (displayedTracks.length > 0) {
-      playTrack(displayedTracks[0], displayedTracks, false);
+      playTrack(displayedTracks[0], displayedTracks, false, playlistPlaybackContext);
       showToast('Reproduciendo', `Iniciada lista de ${displayedTracks.length} canciones en orden`, 'info');
     }
   };
@@ -102,7 +112,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
   const handleShuffleAll = () => {
     if (displayedTracks.length > 0) {
       const shuffled = [...displayedTracks].sort(() => Math.random() - 0.5);
-      playTrack(shuffled[0], shuffled, false);
+      playTrack(shuffled[0], shuffled, false, playlistPlaybackContext);
       showToast('Modo aleatorio', `Reproduciendo ${displayedTracks.length} canciones en orden aleatorio`, 'info');
     }
   };
@@ -191,6 +201,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             onTogglePlayback={togglePlay}
             onNavigate={(tab) => navigateTo(tab)}
             onOpenPlaylist={(playlistId) => navigateTo('playlists', { playlistId })}
+            onOpenDashboardSettings={() => toggleDashboardPreferences(true)}
           />
         ) : activeTab === 'playlists' && selectedPlaylistId && !currentPlaylist ? null : activeTab !== 'playlists' && displayedTracks.length === 0 ? null : activeTab === 'playlists' && !selectedPlaylistId ? null : activeTab === 'artists' && !selectedArtistName ? (
           <ArtistsGridView
@@ -221,6 +232,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
                   track={track}
                   index={idx}
                   onOpenCreatePlaylistModal={onOpenCreatePlaylistModal}
+                  playbackContext={playlistPlaybackContext}
                   onMoveUp={
                     activeTab === 'playlists' && selectedPlaylistId && idx > 0
                       ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx - 1)
@@ -236,12 +248,13 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-4">
+          <div className="library-responsive-grid gap-3.5 sm:gap-4" style={gridStyle}>
             {displayedTracks.map((track) => (
               <TrackCard
                 key={track.id}
                 track={track}
                 onOpenCreatePlaylistModal={onOpenCreatePlaylistModal}
+                playbackContext={playlistPlaybackContext}
               />
             ))}
           </div>

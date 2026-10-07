@@ -346,3 +346,44 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 - **Búsqueda por sección**: Buscar desde Inicio abre resultados de canciones; desde Artistas y Álbumes filtra tarjetas por sus metadatos y canciones. La paleta `Ctrl + K` / `Cmd + K` también permite abrir artistas y álbumes.
 - **Filtros visibles**: Texto, formato y género activos se muestran como chips y pueden quitarse individualmente o limpiarse juntos. Los filtros se conservan en la URL.
 - **Controles contextuales**: Orden y modo de vista se muestran únicamente en secciones donde tienen efecto. En móvil, seleccionar un destino cierra el panel lateral.
+
+---
+
+## 38. Reproductor Personalizable
+
+- **Vista Compacta o Completa**: La vista compacta reduce el tamaño del dock y oculta la forma de onda; la completa conserva el control de búsqueda de posición.
+- **Accesos configurables**: Se pueden mostrar u ocultar favoritos, letras, ecualizador, cola, herramientas de audio y control de volumen. Los controles principales de reproducción permanecen disponibles.
+- **Diseño adaptable**: Las preferencias se reflejan en el dock de escritorio y en los controles secundarios del dock móvil.
+- **Persistencia local**: La distribución y los controles se guardan en el almacenamiento del navegador del dispositivo.
+
+## 39. Perfiles de Audio por Género y Playlist
+
+- **Captura de configuración**: Guarda como perfil una instantánea del ecualizador de cinco bandas, su estado de activación, la reverberación, el preamplificador y la normalización de volumen.
+- **Aplicación automática**: Asigna un perfil a un género o a una playlist. Se aplica al iniciar cada pista; la asignación de playlist tiene prioridad sobre la de género.
+- **Gestión**: Los perfiles se pueden aplicar manualmente o eliminar; al eliminar un perfil también se quitan sus asignaciones.
+- **Persistencia local**: Los perfiles y asociaciones se almacenan en el navegador. La biblioteca musical y los archivos de audio no se modifican.
+
+---
+
+## 40. Personalización de Apariencia Liquid Glass
+
+- **Paletas de acento**: Selección entre cinco combinaciones de color que actualizan los controles y resaltados de la interfaz.
+- **Material Liquid Glass**: Ajustes de opacidad, desenfoque y reflejos para paneles, tarjetas y dock.
+- **Resplandor ambiental**: Se puede desactivar y graduar su intensidad.
+- **Previsualización segura**: Los cambios se ven antes de guardarlos; «Cancelar» y Escape restauran la apariencia aplicada.
+- **Persistencia local**: Preferencias guardadas en `beatnest_appearance` y aplicadas tanto al modo claro como al oscuro.
+
+## 41. Inicio Configurable
+
+- **Secciones personalizables**: Mostrar, ocultar y reordenar «Escuchado recientemente», «Añadido recientemente», «Más reproducido» y playlists.
+- **Cantidad de tarjetas**: Elegir entre 3, 6 o 9 elementos por sección.
+- **Página de inicio**: Restaurar la última sección o iniciar en Inicio, Todas las pistas o Favoritos.
+- **Acceso contextual**: El botón «Personalizar Inicio» abre los ajustes directamente desde el panel Inicio.
+- **Collage de playlists**: Las tarjetas muestran una portada propia, un collage automático de las carátulas de sus pistas o un icono de respaldo.
+- **Persistencia local**: El diseño se almacena en `beatnest_home_dashboard`.
+
+## 42. Densidad y Cuadrícula de Biblioteca
+
+- **Densidad**: Alternar entre filas y tarjetas cómodas o compactas.
+- **Columnas configurables**: En pantallas grandes se pueden elegir entre 2 y 6 columnas; en pantallas pequeñas la cuadrícula se adapta al ancho.
+- **Persistencia local**: Las preferencias se guardan en `beatnest_library_display`.

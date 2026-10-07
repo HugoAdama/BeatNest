@@ -13,6 +13,10 @@ interface UIStore {
   isStatsOpen: boolean;
   isShareTrackOpen: boolean;
   isMobileSidebarOpen: boolean;
+  isPlayerPreferencesOpen: boolean;
+  isAppearanceOpen: boolean;
+  isDashboardPreferencesOpen: boolean;
+  isDisplayPreferencesOpen: boolean;
 
   // Actions
   toggleVisualizer: (open?: boolean) => void;
@@ -25,6 +29,10 @@ interface UIStore {
   toggleStats: (open?: boolean) => void;
   toggleShareTrack: (open?: boolean) => void;
   toggleMobileSidebar: (open?: boolean) => void;
+  togglePlayerPreferences: (open?: boolean) => void;
+  toggleAppearance: (open?: boolean) => void;
+  toggleDashboardPreferences: (open?: boolean) => void;
+  toggleDisplayPreferences: (open?: boolean) => void;
   setEditingTrack: (track: Track | null) => void;
   closeAllModals: () => void;
 }
@@ -41,6 +49,10 @@ export const useUIStore = create<UIStore>((set) => ({
   isStatsOpen: false,
   isShareTrackOpen: false,
   isMobileSidebarOpen: false,
+  isPlayerPreferencesOpen: false,
+  isAppearanceOpen: false,
+  isDashboardPreferencesOpen: false,
+  isDisplayPreferencesOpen: false,
 
   toggleVisualizer: (open?: boolean) =>
     set((state) => ({
@@ -90,6 +102,26 @@ export const useUIStore = create<UIStore>((set) => ({
       isMobileSidebarOpen: open !== undefined ? open : !state.isMobileSidebarOpen,
     })),
 
+  togglePlayerPreferences: (open?: boolean) =>
+    set((state) => ({
+      isPlayerPreferencesOpen: open !== undefined ? open : !state.isPlayerPreferencesOpen,
+    })),
+
+  toggleAppearance: (open?: boolean) =>
+    set((state) => ({
+      isAppearanceOpen: open !== undefined ? open : !state.isAppearanceOpen,
+    })),
+
+  toggleDashboardPreferences: (open?: boolean) =>
+    set((state) => ({
+      isDashboardPreferencesOpen: open !== undefined ? open : !state.isDashboardPreferencesOpen,
+    })),
+
+  toggleDisplayPreferences: (open?: boolean) =>
+    set((state) => ({
+      isDisplayPreferencesOpen: open !== undefined ? open : !state.isDisplayPreferencesOpen,
+    })),
+
   setEditingTrack: (track: Track | null) =>
     set({ editingTrack: track }),
 
@@ -104,5 +136,9 @@ export const useUIStore = create<UIStore>((set) => ({
       isStatsOpen: false,
       isShareTrackOpen: false,
       isMobileSidebarOpen: false,
+      isPlayerPreferencesOpen: false,
+      isAppearanceOpen: false,
+      isDashboardPreferencesOpen: false,
+      isDisplayPreferencesOpen: false,
     }),
 }));
