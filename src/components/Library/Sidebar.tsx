@@ -16,11 +16,16 @@ import {
   Upload,
   BarChart3,
   X,
+  Sparkles,
+  Clock,
+  Timer,
+  FileDown,
 } from 'lucide-react';
 import { useLibraryStore, type LibraryTab } from '../../stores/useLibraryStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useUIStore } from '../../stores/useUIStore';
 import { exportLibraryBackup, importLibraryBackup } from '../../lib/backup';
+import { exportPlaylistAsM3U } from '../../lib/playlistExport';
 import { showToast } from '../../stores/useToastStore';
 
 interface SidebarProps {
@@ -77,12 +82,44 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
     }
   };
 
+  const handleExportPlaylistM3U = (pl: (typeof playlists)[0], e: React.MouseEvent) => {
+    e.stopPropagation();
+    const plTracks = tracks.filter((t) => pl.trackIds.includes(t.id));
+    if (plTracks.length === 0) {
+      showToast('Playlist vacía', 'No hay pistas para exportar en esta lista', 'warning');
+      return;
+    }
+    exportPlaylistAsM3U(pl.name, plTracks);
+    showToast('Exportación M3U', `Descargado archivo .m3u para «${pl.name}»`);
+  };
+
   const navItems: { id: LibraryTab; label: string; icon: React.ReactNode; count?: number }[] = [
     { id: 'tracks', label: 'Todas las pistas', icon: <Music size={17} />, count: tracks.length },
     { id: 'favorites', label: 'Favoritos', icon: <Heart size={17} />, count: favoriteCount },
     { id: 'artists', label: 'Artistas', icon: <Mic2 size={17} /> },
     { id: 'albums', label: 'Álbumes', icon: <Disc size={17} /> },
     { id: 'history', label: 'Historial reciente', icon: <History size={17} />, count: recentTracks.length },
+  ];
+
+  const smartItems: { id: LibraryTab; label: string; icon: React.ReactNode; count?: number }[] = [
+    {
+      id: 'smart-top',
+      label: 'Más reproducidas',
+      icon: <Sparkles size={16} className="text-amber-400" />,
+      count: tracks.filter((t) => (t.playCount || 0) > 0).length,
+    },
+    {
+      id: 'smart-recent',
+      label: 'Añadidas recientemente',
+      icon: <Clock size={16} className="text-[#4FD1C5]" />,
+      count: tracks.length,
+    },
+    {
+      id: 'smart-long',
+      label: 'Pistas largas (+5m)',
+      icon: <Timer size={16} className="text-[#7C5CFF]" />,
+      count: tracks.filter((t) => t.duration >= 300).length,
+    },
   ];
 
   const handleSelectTab = (tab: LibraryTab) => {
@@ -206,6 +243,39 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
             </div>
           </div>
 
+          {/* Smart Playlists Section */}
+          <div>
+            <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--app-text-muted)] block mb-1.5 opacity-80">
+              Listas Inteligentes
+            </span>
+            <div className="space-y-0.5">
+              {smartItems.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSelectTab(item.id)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-[#4FD1C5]/15 text-[#4FD1C5] border border-[#4FD1C5]/40 font-semibold shadow-sm backdrop-blur-md'
+                        : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </div>
+                    {item.count !== undefined && (
+                      <span className="text-[11px] font-mono text-[var(--app-text-muted)] tabular-nums">
+                        {item.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Playlists Section */}
           <div>
             <div className="flex items-center justify-between px-3 mb-1.5">
@@ -250,6 +320,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
                         <span className="text-[10px] font-mono text-[var(--app-text-muted)] group-hover:hidden">
                           {pl.trackIds.length}
                         </span>
+                        <button
+                          onClick={(e) => handleExportPlaylistM3U(pl, e)}
+                          className="hidden group-hover:block p-1 text-[var(--app-text-muted)] hover:text-[#4FD1C5] transition-colors"
+                          title="Descargar playlist (.m3u)"
+                        >
+                          <FileDown size={13} />
+                        </button>
                         <button
                           onClick={() => deletePlaylist(pl.id)}
                           className="hidden group-hover:block p-1 text-[var(--app-text-muted)] hover:text-red-400 transition-colors"

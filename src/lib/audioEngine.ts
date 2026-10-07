@@ -41,6 +41,7 @@ export class AudioEngine {
   private activeUrlA: string | null = null;
   private activeUrlB: string | null = null;
   private isCrossfading: boolean = false;
+  private targetVolume: number = 0.85;
 
   private constructor() {
     this.audioA = new Audio();
@@ -372,12 +373,38 @@ export class AudioEngine {
           console.warn('AudioContext resume failed:', err);
         }
       }
+
+      // Smooth micro-fade in to eliminate clicks
+      if (this.masterGain && this.ctx) {
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.setValueAtTime(0.001, now);
+        this.masterGain.gain.linearRampToValueAtTime(this.targetVolume, now + 0.04);
+      }
+
       return this.getAudioElement().play();
     }
 
     public pause(): void {
-      this.audioA.pause();
-      this.audioB.pause();
+      // Smooth micro-fade out over 35ms then pause elements
+      if (this.masterGain && this.ctx) {
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
+        this.masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.035);
+        setTimeout(() => {
+          this.audioA.pause();
+          this.audioB.pause();
+          if (this.masterGain && this.ctx) {
+            const resetNow = this.ctx.currentTime;
+            this.masterGain.gain.cancelScheduledValues(resetNow);
+            this.masterGain.gain.setValueAtTime(this.targetVolume, resetNow);
+          }
+        }, 36);
+      } else {
+        this.audioA.pause();
+        this.audioB.pause();
+      }
     }
 
     public seek(seconds: number): void {
@@ -388,6 +415,7 @@ export class AudioEngine {
 
     public setVolume(vol: number): void {
       const clamped = Math.max(0, Math.min(1, vol));
+      this.targetVolume = clamped;
       if (this.masterGain && this.ctx) {
         const now = this.ctx.currentTime;
         this.masterGain.gain.cancelScheduledValues(now);

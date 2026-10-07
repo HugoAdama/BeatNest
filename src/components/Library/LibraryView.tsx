@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Play, Heart, ListMusic, History, Tag } from 'lucide-react';
+import { Play, Heart, ListMusic, History, Tag, Sparkles, Clock, Timer, FileDown, Layers } from 'lucide-react';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { TrackRow } from './TrackRow';
@@ -10,6 +10,8 @@ import { ArtistsGridView } from './ArtistsGridView';
 import { AlbumsGridView } from './AlbumsGridView';
 import { formatDuration } from '../../lib/metadata';
 import { generateDemoArpeggioTrack } from '../../lib/audioGenerator';
+import { exportPlaylistAsM3U } from '../../lib/playlistExport';
+import { showToast } from '../../stores/useToastStore';
 
 interface LibraryViewProps {
   onOpenCreatePlaylistModal: () => void;
@@ -34,6 +36,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
 
   const { playTrack, recentTracks } = usePlayerStore();
   const [isDragOver, setIsDragOver] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
 
   // Extract unique genres across entire library
   const uniqueGenres = useMemo(() => {
@@ -50,7 +53,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
   const displayedTracks = useMemo(() => {
     let list = activeTab === 'history' ? [...recentTracks] : [...tracks];
 
-    // Filter by Playlist or Favorites
+    // Filter by Playlist, Favorites, or Smart Playlists
     if (activeTab === 'playlists' && selectedPlaylistId) {
       const pl = playlists.find((p) => p.id === selectedPlaylistId);
       if (pl) {
@@ -61,6 +64,20 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
       }
     } else if (activeTab === 'favorites') {
       list = list.filter((t) => t.isFavorite);
+    } else if (activeTab === 'smart-top') {
+      list = list.filter((t) => (t.playCount || 0) > 0);
+    } else if (activeTab === 'smart-recent') {
+      list = [...tracks];
+    } else if (activeTab === 'smart-long') {
+      list = list.filter((t) => t.duration >= 300);
+    }
+
+    // Filter by Audio Format
+    if (selectedFormat) {
+      list = list.filter((t) => {
+        const ext = t.fileName.split('.').pop()?.toUpperCase() || '';
+        return ext === selectedFormat;
+      });
     }
 
     // Filter by Genre
@@ -109,6 +126,10 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             valA = a.dateAdded;
             valB = b.dateAdded;
             break;
+          case 'playCount':
+            valA = a.playCount || 0;
+            valB = b.playCount || 0;
+            break;
         }
 
         if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
@@ -118,7 +139,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     }
 
     return list;
-  }, [tracks, recentTracks, playlists, activeTab, selectedPlaylistId, selectedGenre, searchQuery, sortBy, sortOrder]);
+  }, [tracks, recentTracks, playlists, activeTab, selectedPlaylistId, selectedGenre, selectedFormat, searchQuery, sortBy, sortOrder]);
 
   // Groupings for Artists and Albums view
   const groupedArtists = useMemo(() => {
@@ -206,28 +227,53 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
       {/* Header Banner */}
       <div className="px-4 sm:px-8 pt-5 sm:pt-8 pb-4 relative z-10">
         {activeTab === 'playlists' && currentPlaylist ? (
-          <div className="flex flex-col sm:flex-row sm:items-end gap-5 mb-6">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-[#7C5CFF] to-[#4FD1C5] flex items-center justify-center shadow-xl shrink-0 border border-white/20">
-              <ListMusic size={44} className="text-white" />
-            </div>
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--app-accent)]">
-                Playlist
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--app-text)] tracking-tight mt-0.5 mb-1.5">
-                {currentPlaylist.name}
-              </h2>
-              {currentPlaylist.description && (
-                <p className="text-xs text-[var(--app-text-muted)] mb-2">
-                  {currentPlaylist.description}
-                </p>
-              )}
-              <div className="flex items-center gap-2.5 text-xs text-[var(--app-text-muted)]">
-                <span>{displayedTracks.length} pistas</span>
-                <span>•</span>
-                <span>{formatDuration(totalDuration)} tiempo total</span>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-5">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-[#7C5CFF] to-[#4FD1C5] flex items-center justify-center shadow-xl shrink-0 border border-white/20">
+                <ListMusic size={44} className="text-white" />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--app-accent)]">
+                  Playlist
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--app-text)] tracking-tight mt-0.5 mb-1.5">
+                  {currentPlaylist.name}
+                </h2>
+                {currentPlaylist.description && (
+                  <p className="text-xs text-[var(--app-text-muted)] mb-2">
+                    {currentPlaylist.description}
+                  </p>
+                )}
+                <div className="flex items-center gap-2.5 text-xs text-[var(--app-text-muted)]">
+                  <span>{displayedTracks.length} pistas</span>
+                  <span>•</span>
+                  <span>{formatDuration(totalDuration)} tiempo total</span>
+                </div>
               </div>
             </div>
+
+            {displayedTracks.length > 0 && (
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  onClick={() => {
+                    exportPlaylistAsM3U(currentPlaylist.name, displayedTracks);
+                    showToast('Exportación M3U', `Descargado archivo .m3u para «${currentPlaylist.name}»`);
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl liquid-glass-subtle text-xs font-semibold text-[var(--app-text)] hover:text-[#4FD1C5] hover:border-[#4FD1C5]/40 transition-colors"
+                  title="Exportar archivo de lista de reproducción M3U"
+                >
+                  <FileDown size={14} />
+                  <span>Exportar .M3U</span>
+                </button>
+                <button
+                  onClick={handlePlayAll}
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] border border-white/20"
+                >
+                  <Play size={14} fill="currentColor" />
+                  <span>Reproducir</span>
+                </button>
+              </div>
+            )}
           </div>
         ) : activeTab === 'favorites' ? (
           <div className="flex items-center gap-4 mb-4">
@@ -252,6 +298,75 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
                 {displayedTracks.length} {displayedTracks.length === 1 ? 'pista reproducida' : 'pistas reproducidas'} recientemente
               </p>
             </div>
+          </div>
+        ) : activeTab === 'smart-top' ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-md">
+                <Sparkles size={26} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-[var(--app-text)]">Más reproducidas</h2>
+                <p className="text-xs text-[var(--app-text-muted)]">
+                  {displayedTracks.length} pistas con mayor actividad de escucha
+                </p>
+              </div>
+            </div>
+            {displayedTracks.length > 0 && (
+              <button
+                onClick={handlePlayAll}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] border border-white/20 self-start sm:self-auto"
+              >
+                <Play size={15} fill="currentColor" />
+                <span>Reproducir todo</span>
+              </button>
+            )}
+          </div>
+        ) : activeTab === 'smart-recent' ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-[#4FD1C5]/15 border border-[#4FD1C5]/30 flex items-center justify-center text-[#4FD1C5] shadow-md">
+                <Clock size={26} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-[var(--app-text)]">Añadidas recientemente</h2>
+                <p className="text-xs text-[var(--app-text-muted)]">
+                  {displayedTracks.length} pistas en tu biblioteca local
+                </p>
+              </div>
+            </div>
+            {displayedTracks.length > 0 && (
+              <button
+                onClick={handlePlayAll}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] border border-white/20 self-start sm:self-auto"
+              >
+                <Play size={15} fill="currentColor" />
+                <span>Reproducir todo</span>
+              </button>
+            )}
+          </div>
+        ) : activeTab === 'smart-long' ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-[#7C5CFF]/15 border border-[#7C5CFF]/30 flex items-center justify-center text-[#7C5CFF] shadow-md">
+                <Timer size={26} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-[var(--app-text)]">Pistas largas (+5 min)</h2>
+                <p className="text-xs text-[var(--app-text-muted)]">
+                  {displayedTracks.length} pistas y sesiones extensas registradas
+                </p>
+              </div>
+            </div>
+            {displayedTracks.length > 0 && (
+              <button
+                onClick={handlePlayAll}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] border border-white/20 self-start sm:self-auto"
+              >
+                <Play size={15} fill="currentColor" />
+                <span>Reproducir todo</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -290,39 +405,68 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
           />
         )}
 
-        {/* Interactive Genre filter chips */}
-        {uniqueGenres.length > 0 && activeTab !== 'artists' && activeTab !== 'albums' && (
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 mt-1">
-            <span className="text-[11px] font-semibold text-[var(--app-text-muted)] uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1 opacity-80">
-              <Tag size={12} />
-              <span>Género:</span>
-            </span>
-            <button
-              onClick={() => setSelectedGenre(null)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 ${
-                selectedGenre === null
-                  ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm shadow-[#7C5CFF]/30 border border-white/20'
-                  : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/40'
-              }`}
-            >
-              Todos
-            </button>
-            {uniqueGenres.map((genre) => {
-              const isSelected = selectedGenre?.toLowerCase() === genre.toLowerCase();
-              return (
+        {/* Interactive Genre & Format filter chips */}
+        {activeTab !== 'artists' && activeTab !== 'albums' && (
+          <div className="flex flex-col gap-2 mt-1">
+            {/* Format Filter */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+              <span className="text-[11px] font-semibold text-[var(--app-text-muted)] uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1 opacity-80">
+                <Layers size={12} />
+                <span>Formato:</span>
+              </span>
+              {['ALL', 'MP3', 'FLAC', 'WAV', 'OGG', 'M4A'].map((fmt) => {
+                const isSelected = (fmt === 'ALL' && selectedFormat === null) || selectedFormat === fmt;
+                return (
+                  <button
+                    key={fmt}
+                    onClick={() => setSelectedFormat(fmt === 'ALL' ? null : fmt)}
+                    className={`px-2.5 py-0.5 rounded-lg text-[11px] font-mono font-medium transition-all shrink-0 ${
+                      isSelected
+                        ? 'bg-[#4FD1C5]/20 text-[#4FD1C5] border border-[#4FD1C5]/40 shadow-sm'
+                        : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#4FD1C5]/30'
+                    }`}
+                  >
+                    {fmt}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Genre Filter */}
+            {uniqueGenres.length > 0 && (
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                <span className="text-[11px] font-semibold text-[var(--app-text-muted)] uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1 opacity-80">
+                  <Tag size={12} />
+                  <span>Género:</span>
+                </span>
                 <button
-                  key={genre}
-                  onClick={() => setSelectedGenre(isSelected ? null : genre)}
+                  onClick={() => setSelectedGenre(null)}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 ${
-                    isSelected
+                    selectedGenre === null
                       ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm shadow-[#7C5CFF]/30 border border-white/20'
                       : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/40'
                   }`}
                 >
-                  {genre}
+                  Todos
                 </button>
-              );
-            })}
+                {uniqueGenres.map((genre) => {
+                  const isSelected = selectedGenre?.toLowerCase() === genre.toLowerCase();
+                  return (
+                    <button
+                      key={genre}
+                      onClick={() => setSelectedGenre(isSelected ? null : genre)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm shadow-[#7C5CFF]/30 border border-white/20'
+                          : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/40'
+                      }`}
+                    >
+                      {genre}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

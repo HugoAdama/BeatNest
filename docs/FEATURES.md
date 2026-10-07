@@ -240,5 +240,59 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 
 - Opciones de «Subir posición» y «Bajar posición» en el menú contextual de filas para personalizar el orden de las canciones en cualquier lista, persistiendo la nueva disposición de forma inmediata en IndexedDB.
 
+---
+
+## 25. Micro-Fade al Pausar y Reanudar (Zero-Click Audio)
+
+- **Eliminación de Transitorios Digitales**: Al pausar o reanudar, el motor de audio aplica una rampa exponencial y lineal de ganancia ultra-rápida (35 a 40 ms) en el nodo maestro antes de invocar la pausa o reproducción del elemento HTML.
+- **Experiencia Acústica Suave**: Previene chasquidos o ruidos bruscos en auriculares y altavoces provocados por la interrupción abrupta de la forma de onda en amplitudes no nulas.
+
+---
+
+## 26. Presets de Ecualizador Personalizados
+
+- **Creación en Caliente**: Guarda cualquier configuración de las 5 bandas paramétricas con un nombre personalizado mediante el botón «Guardar actual».
+- **Gestión Completa**: Visualización de presets de usuario en una sección dedicada «Mis Presets» con activación rápida y eliminación en un clic.
+- **Persistencia Local**: Almacenamiento automático y seguro en el almacenamiento del navegador.
+
+---
+
+## 27. Gestión Avanzada de la Cola de Reproducción
+
+- **Guardar Cola como Playlist**: Botón integrado en la cabecera de la cola que permite convertir todas las pistas en cola en una nueva lista de reproducción permanente.
+- **Limpieza Selectiva de Cola**: Opciones para vaciar toda la cola o descartar únicamente las pistas siguientes (*Limpiar siguientes*) conservando la pista en reproducción activa.
+- **Reordenamiento Rápido**: Flechas de subir/bajar posición por cada pista en la cola.
+
+---
+
+## 28. Listas de Reproducción Inteligentes (Smart Playlists)
+
+- **Más reproducidas**: Pistas filtradas automáticamente por mayor actividad de reproducción (`playCount > 0`).
+- **Añadidas recientemente**: Pistas ordenadas por fecha de importación en la biblioteca.
+- **Pistas largas (+5 min)**: Selección automática de temas épicos, sesiones y pistas con duración mayor o igual a 300 segundos.
+- **Acceso Directo en Barra Lateral**: Sección dedicada «Listas Inteligentes» con insignias de conteo numérico en tiempo real.
+
+---
+
+## 29. Filtrado por Formato de Audio y Ordenamiento Multicriterio
+
+- **Selector Rápido de Formatos**: Chips interactivos para filtrar la vista activa por contenedor: `ALL`, `MP3`, `FLAC`, `WAV`, `OGG`, `M4A`.
+- **Ordenamiento Ampliado**: Selección directa en la barra de navegación entre Título, Artista, Álbum, Duración, Fecha de adición y «Más reproducidas» con alternancia ascendente/descendente.
+
+---
+
+## 30. Exportación de Listas de Reproducción (.M3U)
+
+- **Compatibilidad con Reproductores Externos**: Descarga de archivos estándar de lista de reproducción `.m3u` con directivas `#EXTM3U` y metadatos `#EXTINF` (duración, artista, título y nombre de archivo).
+- **Exportación en 1 Clic**: Disponible directamente en la fila de cada lista en la barra lateral y en la cabecera de la vista de playlist.
+
+---
+
+## 31. Persistencia de Binarios de Audio en IndexedDB
+
+- **Almacenamiento Local de Datos de Audio**: Guardado del blob binario de cada pista importada en IndexedDB (`StoredTrack.audioData`), permitiendo rehidratar pistas y reproducirlas entre sesiones sin perder la fuente original de audio.
+- **Gestión de Cuota de Disco**: Manejo transparente de cuota para priorizar metadatos y portadas en caso de límites de almacenamiento en navegadores estrictos.
+
+
 
 

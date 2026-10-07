@@ -19,15 +19,18 @@ Todo se procesa en el cliente utilizando APIs nativas del navegador web: **File 
 - **Privacidad Absoluta**: Cero llamadas de subida a servidores. Los archivos nunca salen de tu ordenador.
 - **Acceso a Archivos Locales**: Selección de carpetas directas con la File System Access API y fallback automático de entrada HTML5 para compatibilidad multiplataforma (Chrome, Edge, Firefox, Safari, Brave).
 - **Extracción de Metadatos Completa**: Extracción automática de ID3v1, ID3v2, FLAC Vorbis Comments y contenedores MP4 con `music-metadata-browser`, además de cálculo de duración y obtención de carátulas en alta resolución.
-- **Transición Suave (Crossfade)**: Arquitectura de doble canal con nodos `GainNode` para fundir suavemente canciones entre 2s y 8s sin cortes abruptos.
+- **Transición Suave (Crossfade) y Zero-Click Audio**: Arquitectura de doble canal con nodos `GainNode` para fundir suavemente canciones sin cortes abruptos y micro-fade analógico de 35-40ms al pausar o dar play.
 - **Letras Sincronizadas (.LRC)**: Analizador integrado con resaltado interactivo estilo karaoke, desplazamiento centrado automático (*auto-scroll*) y salto temporal al hacer clic sobre cualquier verso.
-- **Ecualizador Paramétrico de 5 Bandas**: Filtros Web Audio Biquad a 60 Hz, 250 Hz, 1 kHz, 4 kHz y 16 kHz con rango de ganancia de -12 dB a +12 dB y presets integrados (*Plano, Bass Boost, Rock, Pop, Voces, Electrónica, Jazz*).
+- **Ecualizador Paramétrico de 5 Bandas**: Filtros Web Audio Biquad a 60 Hz, 250 Hz, 1 kHz, 4 kHz y 16 kHz con rango de ganancia de -12 dB a +12 dB, presets integrados y capacidad de guardar **presets personalizados** del usuario.
 - **Visualizador de Audio en Tiempo Real (Canvas 60fps)**: 4 modos de visualización reactiva (*Barras de frecuencia, Osciloscopio, Radial 360° y Pulso reactivo*), con soporte para pantalla completa.
 - **Waveform Scrubber Interactivo**: Barra de progreso con silueta de onda de audio, previsualización de tiempo al pasar el cursor y búsqueda de posición suave.
-- **Persistencia Local con IndexedDB**: Almacenamiento local mediante Dexie.js para biblioteca, canciones favoritas y listas de reproducción.
-- **Cola de Reproducción Flexible**: Panel lateral deslizable para ordenar, añadir y gestionar las pistas siguientes.
+- **Persistencia Completa en IndexedDB**: Almacenamiento local mediante Dexie.js para biblioteca, pistas de audio (blobs), favoritos, metadatos y listas de reproducción.
+- **Listas Inteligentes Dinámicas**: Acceso instantáneo a listas autocalculadas: «Más reproducidas», «Añadidas recientemente» y «Pistas largas (+5 min)».
+- **Cola de Reproducción Avanzada**: Panel lateral deslizable para ordenar, guardar la cola directamente como una nueva lista de reproducción permanente o limpiar pistas siguientes.
+- **Exportación Estándar .M3U**: Descarga de listas de reproducción en formato `.m3u` con metadatos extendidos para interoperabilidad con reproductores externos como VLC.
+- **Filtros por Formato y Género**: Filtrado instantáneo por contenedor de audio (MP3, FLAC, WAV, OGG, M4A) y chips de género interactivos.
 - **Mini Reproductor Flotante**: Modo compacto para mantener el control de la música mientras trabajas en otras pestañas.
-- **Atajos de Teclado Globales**: Control inmediato de reproducción, volumen, silenciamiento, favoritos, visualizador, letras y ecualizador.
+- **Atajos de Teclado Globales y Paleta de Comandos**: Control inmediato mediante teclado y paleta universal accesible con `Ctrl + K`.
 - **PWA Lista para Instalación**: Soporte sin conexión a internet y manifiesto web.
 
 ---

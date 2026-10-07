@@ -40,6 +40,7 @@ export const Navbar: React.FC = () => {
     { field: 'album', label: 'Álbum' },
     { field: 'duration', label: 'Duración' },
     { field: 'dateAdded', label: 'Fecha' },
+    { field: 'playCount', label: 'Más reproducidas' },
   ];
 
   return (

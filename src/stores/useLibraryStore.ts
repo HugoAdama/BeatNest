@@ -4,8 +4,18 @@ import { db, type StoredTrack } from '../db';
 import { extractMetadata } from '../lib/metadata';
 import { usePlayerStore } from './usePlayerStore';
 
-export type LibraryTab = 'tracks' | 'artists' | 'albums' | 'favorites' | 'playlists' | 'history';
-export type SortField = 'title' | 'artist' | 'album' | 'duration' | 'dateAdded';
+export type LibraryTab =
+  | 'tracks'
+  | 'artists'
+  | 'albums'
+  | 'favorites'
+  | 'playlists'
+  | 'history'
+  | 'smart-top'
+  | 'smart-recent'
+  | 'smart-long';
+
+export type SortField = 'title' | 'artist' | 'album' | 'duration' | 'dateAdded' | 'playCount';
 export type SortOrder = 'asc' | 'desc';
 
 interface LibraryStore {
@@ -27,7 +37,7 @@ interface LibraryStore {
   importDirectoryWithPicker: () => Promise<void>;
   toggleFavorite: (trackId: string) => Promise<void>;
   deleteTrack: (trackId: string) => Promise<void>;
-  createPlaylist: (name: string, description?: string) => Promise<string>;
+  createPlaylist: (name: string, description?: string, initialTrackIds?: string[]) => Promise<string>;
   deletePlaylist: (playlistId: string) => Promise<void>;
   addTrackToPlaylist: (playlistId: string, trackId: string) => Promise<void>;
   removeTrackFromPlaylist: (playlistId: string, trackId: string) => Promise<void>;
@@ -269,13 +279,13 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
     }));
   },
 
-  createPlaylist: async (name: string, description: string = '') => {
+  createPlaylist: async (name: string, description: string = '', initialTrackIds: string[] = []) => {
     const id = `pl-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const newPlaylist: Playlist = {
       id,
       name,
       description,
-      trackIds: [],
+      trackIds: initialTrackIds,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };

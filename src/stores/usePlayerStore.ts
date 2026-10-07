@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Track, RepeatMode, VisualizerMode, ReverbMode } from '../types/music';
+import type { Track, RepeatMode, VisualizerMode, ReverbMode, EqualizerPreset } from '../types/music';
 import { audioEngine, DEFAULT_PRESETS } from '../lib/audioEngine';
 import { db } from '../db';
 import { useUIStore } from './useUIStore';
@@ -28,6 +28,7 @@ interface PlayerStore {
   eqEnabled: boolean;
   eqGains: [number, number, number, number, number];
   activePresetId: string;
+  customPresets: EqualizerPreset[];
   preampGain: number;
   autoGainEnabled: boolean;
   isShortcutModalOpen: boolean;
@@ -53,9 +54,12 @@ interface PlayerStore {
   playNextInQueue: (track: Track) => void;
   removeFromQueue: (index: number) => void;
   clearQueue: () => void;
+  clearQueueUpcoming: () => void;
   reorderQueue: (startIndex: number, endIndex: number) => void;
   setEqGain: (bandIndex: number, gain: number) => void;
   setEqPreset: (presetId: string) => void;
+  saveCustomPreset: (name: string) => void;
+  deleteCustomPreset: (id: string) => void;
   toggleEq: (enabled?: boolean) => void;
   setVisualizerMode: (mode: VisualizerMode) => void;
   toggleVisualizer: (open?: boolean) => void;
@@ -66,6 +70,15 @@ interface PlayerStore {
   setTrackLyrics: (trackId: string, lyricsText: string) => Promise<void>;
   updateTrackInPlayer: (trackId: string, updates: Partial<Track>) => void;
 }
+
+const loadSavedCustomPresets = (): EqualizerPreset[] => {
+  try {
+    const raw = localStorage.getItem('beatnest_custom_eq_presets');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
 
 let hasTriggeredAutoCrossfade = false;
 
@@ -91,6 +104,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   eqEnabled: true,
   eqGains: [0, 0, 0, 0, 0],
   activePresetId: 'flat',
+  customPresets: loadSavedCustomPresets(),
   preampGain: 0,
   autoGainEnabled: false,
   isShortcutModalOpen: false,
@@ -374,6 +388,15 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     set({ queue: [], queueIndex: -1 });
   },
 
+  clearQueueUpcoming: () => {
+    const { queue, queueIndex } = get();
+    if (queueIndex >= 0 && queueIndex < queue.length) {
+      set({ queue: [queue[queueIndex]], queueIndex: 0 });
+    } else {
+      set({ queue: [], queueIndex: -1 });
+    }
+  },
+
   reorderQueue: (startIndex: number, endIndex: number) => {
     set((state) => {
       const newQueue = [...state.queue];
@@ -401,10 +424,42 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   setEqPreset: (presetId: string) => {
-    const preset = DEFAULT_PRESETS.find((p) => p.id === presetId);
+    const preset =
+      DEFAULT_PRESETS.find((p) => p.id === presetId) ||
+      get().customPresets.find((p) => p.id === presetId);
     if (preset) {
       audioEngine.applyPreset(preset.gains);
       set({ eqGains: [...preset.gains] as [number, number, number, number, number], activePresetId: presetId });
+    }
+  },
+
+  saveCustomPreset: (name: string) => {
+    if (!name.trim()) return;
+    const newPreset: EqualizerPreset = {
+      id: `custom_${Date.now()}`,
+      name: name.trim(),
+      gains: [...get().eqGains],
+    };
+    const updated = [...get().customPresets, newPreset];
+    try {
+      localStorage.setItem('beatnest_custom_eq_presets', JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Could not save custom EQ preset:', e);
+    }
+    set({ customPresets: updated, activePresetId: newPreset.id });
+  },
+
+  deleteCustomPreset: (id: string) => {
+    const updated = get().customPresets.filter((p) => p.id !== id);
+    try {
+      localStorage.setItem('beatnest_custom_eq_presets', JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Could not delete custom EQ preset:', e);
+    }
+    const nextActive = get().activePresetId === id ? 'flat' : get().activePresetId;
+    set({ customPresets: updated, activePresetId: nextActive });
+    if (nextActive === 'flat') {
+      get().setEqPreset('flat');
     }
   },
 
