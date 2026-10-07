@@ -20,7 +20,7 @@ BeatNest es un reproductor de audio local que se ejecuta íntegramente en el nav
 [Capa de Persistencia] (Dexie.js + IndexedDB)
    │
    ▼
-[Gestor de Estado] (Zustand: PlayerStore + LibraryStore)
+[Gestor de Estado] (Zustand: PlayerStore + AudioSettingsStore + UIStore + LibraryStore)
    │
    ▼
 [Motor de Audio Web Audio API]
@@ -156,10 +156,11 @@ Sincronización bidireccional con el sistema operativo:
 Para garantizar un mantenimiento óptimo y escalable, el código se estructura en módulos desacoplados:
 
 1. **Gestión de Estado Especializada (`src/stores/`)**:
-   - `usePlayerStore`: Controla exclusivamente la reproducción de audio, progreso, cola, historial de 50 canciones, preamplificador y parámetros del ecualizador.
+   - `usePlayerStore`: Controla reproducción, progreso, cola, historial y velocidad/crossfade.
+   - `useAudioSettingsStore`: Mantiene el ecualizador, presets, reverberación, preamplificador y nivelación automática.
    - `useSleepTimerStore`: Gestiona el temporizador de apagado en segundo plano con desvanecimiento de volumen progresivo en los últimos 45 segundos.
    - `useUIStore`: Administra de manera aislada la visibilidad de modales y paneles (Visualizador, Ecualizador, Letras, Mini Reproductor, Atajos, Editor ID3, Paleta de Comandos, Estadísticas, Tarjeta para compartir).
-   - `useLibraryStore`: Gestiona la biblioteca musical, playlists con reordenamiento manual, filtros de género y persistencia en IndexedDB.
+   - `useLibraryStore`: Mantiene la biblioteca, playlists y estado de navegación; delega la importación de archivos al servicio `libraryImport.ts`.
    - `useToastStore`: Sistema unificado de avisos y notificaciones flotantes con auto-cierre temporizado.
    - `useThemeStore`: Controla el modo claro y modo oscuro.
 
@@ -168,6 +169,7 @@ Para garantizar un mantenimiento óptimo y escalable, el código se estructura e
    - `colorExtractor.ts`: Extracción de paleta cromática dominante a partir de la carátula para alimentar los fondos dinámicos reactivos.
    - `audioGenerator.ts`: Síntesis de ondas armónicas en memoria y codificación binaria WAV (`audioBufferToWav`).
    - `backup.ts`: Exportación e importación segura en formato JSON con validación de esquema y resincronización de IndexedDB.
+   - `libraryImport.ts`: Filtra archivos, extrae metadatos, asocia letras y persiste audio con control de cuota; el store conserva el progreso y las notificaciones.
    - `lyrics.ts`: Procesamiento y emparejamiento de letras en formato LRC.
    - `metadata.ts`: Extracción de metadatos ID3 y formateo de duración.
 
@@ -175,5 +177,7 @@ Para garantizar un mantenimiento óptimo y escalable, el código se estructura e
    - Manifiesto web para instalación como aplicación autónoma en escritorio y móviles.
    - Service Worker que implementa almacenamiento en caché estático sin interferir en peticiones de datos de audio locales.
 
-
-
+4. **Composición de la interfaz (`src/components/Library/`)**:
+   - `LibraryView` compone la vista de biblioteca y delega cabecera, filtros y cálculos de presentación en módulos especializados.
+   - `Sidebar` conserva la navegación y playlists; `LibrarySidebarActions` concentra respaldo/restauración y acciones auxiliares.
+   - `EditTrackModal` coordina los metadatos; `TrackCoverEditor` administra selección, generación y previsualización de carátulas.

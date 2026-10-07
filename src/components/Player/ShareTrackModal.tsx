@@ -78,7 +78,7 @@ export const ShareTrackModal: React.FC = () => {
         ctx.roundRect(coverX, coverY, coverSize, coverSize, 28);
         ctx.fill();
         ctx.fillStyle = '#7C5CFF';
-        ctx.font = 'bold 36px Inter, sans-serif';
+      ctx.font = 'bold 36px system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('BeatNest', coverX + coverSize / 2, coverY + coverSize / 2);
       }
@@ -93,12 +93,12 @@ export const ShareTrackModal: React.FC = () => {
       ctx.roundRect(textX, 140, 150, 36, 10);
       ctx.fill();
       ctx.fillStyle = '#4FD1C5';
-      ctx.font = 'bold 15px Inter, sans-serif';
+      ctx.font = 'bold 15px system-ui, sans-serif';
       ctx.fillText('REPRODUCIENDO', textX + 16, 164);
 
       // Title
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 52px Inter, sans-serif';
+      ctx.font = 'bold 52px system-ui, sans-serif';
       const truncatedTitle =
         currentTrack.title.length > 24
           ? currentTrack.title.substring(0, 24) + '...'
@@ -107,7 +107,7 @@ export const ShareTrackModal: React.FC = () => {
 
       // Artist
       ctx.fillStyle = '#C0BEE0';
-      ctx.font = '600 32px Inter, sans-serif';
+      ctx.font = '600 32px system-ui, sans-serif';
       const truncatedArtist =
         currentTrack.artist.length > 30
           ? currentTrack.artist.substring(0, 30) + '...'
@@ -116,7 +116,7 @@ export const ShareTrackModal: React.FC = () => {
 
       // Album & Duration
       ctx.fillStyle = '#8381A5';
-      ctx.font = '400 24px Inter, sans-serif';
+      ctx.font = '400 24px system-ui, sans-serif';
       const durText = formatDuration(currentTrack.duration || duration);
       const albumText = currentTrack.album ? `${currentTrack.album} • ` : '';
       ctx.fillText(`${albumText}${durText}`, textX, 340);
@@ -151,7 +151,7 @@ export const ShareTrackModal: React.FC = () => {
 
       // Footer branding
       ctx.fillStyle = '#8381A5';
-      ctx.font = '500 18px Inter, sans-serif';
+      ctx.font = '500 18px system-ui, sans-serif';
       ctx.fillText('BeatNest • Reproductor de audio local 100% privado', textX, 500);
 
       setPreviewUrl(canvas.toDataURL('image/png'));

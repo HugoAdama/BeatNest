@@ -10,6 +10,7 @@ import {
   SkipForward,
 } from 'lucide-react';
 import { usePlayerStore } from '../../stores/usePlayerStore';
+import { useAudioSettingsStore } from '../../stores/useAudioSettingsStore';
 import { useUIStore } from '../../stores/useUIStore';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { useSleepTimerStore } from '../../stores/useSleepTimerStore';
@@ -33,6 +34,7 @@ export const BottomPlayer: React.FC = () => {
     playbackRate,
     crossfadeDuration,
     queue,
+    queueIndex,
     togglePlay,
     nextTrack,
     prevTrack,
@@ -43,8 +45,9 @@ export const BottomPlayer: React.FC = () => {
     cycleRepeat,
     setPlaybackRate,
     setCrossfadeDuration,
-    eqEnabled,
   } = usePlayerStore();
+
+  const { eqEnabled } = useAudioSettingsStore();
 
   const {
     isLyricsOpen,
@@ -98,7 +101,7 @@ export const BottomPlayer: React.FC = () => {
               <p className="text-xs lg:text-sm font-semibold text-[var(--app-text)] truncate leading-snug">
                 {currentTrack ? currentTrack.title : 'BeatNest'}
               </p>
-              <p className="text-[11px] lg:text-xs text-[var(--app-text-muted)] truncate mt-0.5">
+              <p className="text-xs lg:text-sm text-[var(--app-text-muted)] truncate mt-0.5">
                 {currentTrack
                   ? `${currentTrack.artist} • ${currentTrack.album}`
                   : 'Selecciona una pista para reproducir'}
@@ -127,7 +130,8 @@ export const BottomPlayer: React.FC = () => {
               isShuffled={isShuffled}
               repeatMode={repeatMode}
               canPlay={!!currentTrack || queue.length > 0}
-              hasTrack={!!currentTrack}
+              canPrev={!!currentTrack}
+              canNext={queue.length > 0 && (queueIndex < queue.length - 1 || repeatMode === 'all')}
               onTogglePlay={togglePlay}
               onPrevTrack={prevTrack}
               onNextTrack={() => nextTrack(true)}
@@ -247,7 +251,7 @@ export const BottomPlayer: React.FC = () => {
                 <p className="text-xs font-semibold text-[var(--app-text)] truncate">
                   {currentTrack ? currentTrack.title : 'BeatNest'}
                 </p>
-                <p className="text-[11px] text-[var(--app-text-muted)] truncate">
+                <p className="text-xs text-[var(--app-text-muted)] truncate">
                   {currentTrack ? currentTrack.artist : 'Sin reproducción'}
                 </p>
               </div>
@@ -277,7 +281,7 @@ export const BottomPlayer: React.FC = () => {
 
               <button
                 onClick={() => nextTrack(true)}
-                disabled={!currentTrack}
+                disabled={queueIndex >= queue.length - 1 && repeatMode !== 'all'}
                 className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] disabled:opacity-40"
                 title="Siguiente pista"
               >

@@ -86,18 +86,25 @@ Gestionado con Zustand. Expone el estado reactivo del reproductor:
 | `isShuffled` | `boolean` | Modo aleatorio |
 | `queue` | `Track[]` | Lista de reproducción en cola |
 | `queueIndex` | `number` | Índice de la pista en curso en la cola |
-| `visualizerMode` | `VisualizerMode` | Modo de visualización (`bars`, `wave`, `circle`, `pulse`) |
-| `eqGains` | `[number, ...]` | Valores actuales en dB de las 5 bandas |
 | `playTrack(track, queue?)` | `Promise<void>` | Reproduce una pista e inicializa cola |
 | `togglePlay()` | `void` | Alterna reproducción y pausa |
 | `nextTrack()` / `prevTrack()` | `void` | Salto de pista |
 | `seek(seconds)` | `void` | Búsqueda temporal |
 
+## 4. Ajustes de audio (`src/stores/useAudioSettingsStore.ts`)
+
+Mantiene por separado los parámetros de procesamiento del motor:
+
+- `eqGains`, `eqEnabled`, `activePresetId` y `customPresets` para ecualización.
+- `reverbMode`, `preampGain` y `autoGainEnabled` para efectos y nivelación.
+- Acciones para aplicar/guardar presets y ajustar esos parámetros en `AudioEngine`.
+- Los estados de apertura del ecualizador y visualizador permanecen en `useUIStore`.
+
 ---
 
-## 4. Almacén de Biblioteca (`src/stores/useLibraryStore.ts`)
+## 5. Almacén de Biblioteca (`src/stores/useLibraryStore.ts`)
 
-Administra las colecciones de pistas, persistencia con Dexie y filtros de búsqueda:
+Administra colecciones, playlists y controles de navegación. La extracción y escritura de archivos se delega en `src/lib/libraryImport.ts`; los cálculos de filtros, agrupaciones y listas visibles están en `src/components/Library/useLibraryViewModel.ts`.
 
 | Método | Descripción |
 | :--- | :--- |
@@ -114,3 +121,10 @@ Administra las colecciones de pistas, persistencia con Dexie y filtros de búsqu
 | `loadDemoPack()` | Sintetiza e inserta 3 pistas demo de estudio con carátulas procedurales y genera una playlist temática inicial |
 | `setSearchQuery(query)` | Aplica filtro de búsqueda en tiempo real |
 | `setSort(field, order)` | Modifica el criterio y dirección de ordenación |
+
+## 6. Componentes de biblioteca
+
+- `src/components/Library/LibraryView.tsx`: compone la vista de biblioteca y conecta el estado con los controles de presentación.
+- `LibraryHeader.tsx`, `LibraryFilters.tsx` y `useLibraryViewModel.ts`: presentan cabeceras y filtros, y calculan las colecciones visibles sin mezclar esos cálculos con el store.
+- `Sidebar.tsx` mantiene navegación y playlists; `LibrarySidebarActions.tsx` encapsula respaldo/restauración y accesos a estadísticas y atajos.
+- `EditTrackModal.tsx` guarda metadatos y coordina la edición; `TrackCoverEditor.tsx` gestiona por separado la selección, generación y previsualización de carátulas.

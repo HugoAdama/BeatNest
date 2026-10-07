@@ -36,7 +36,7 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
           Tu música, sin nube
         </h2>
         <p className="text-sm text-[var(--app-text-muted)] mb-8 leading-relaxed max-w-md">
-          BeatNest reproduce tus canciones directamente desde tu dispositivo sin subirlas a ningún servidor. Privado, instantáneo y 100% offline.
+          BeatNest reproduce tus canciones directamente desde tu dispositivo sin subirlas a ningún servidor. Después de cargar la app, puedes seguir usando la biblioteca sin conexión.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center mb-6">

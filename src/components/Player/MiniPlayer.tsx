@@ -14,6 +14,9 @@ import { PlayingIndicator } from '../Common/PlayingIndicator';
 export const MiniPlayer: React.FC = () => {
   const {
     currentTrack,
+    queue,
+    queueIndex,
+    repeatMode,
     isPlaying,
     currentTime,
     duration,
@@ -73,7 +76,8 @@ export const MiniPlayer: React.FC = () => {
         <div className="flex items-center gap-1">
           <button
             onClick={prevTrack}
-            className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-all hover:scale-105 active:scale-95"
+            disabled={!currentTrack}
+            className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] disabled:opacity-30 disabled:pointer-events-none transition-all hover:scale-105 active:scale-95"
             title="Anterior"
           >
             <SkipBack size={15} />
@@ -89,7 +93,8 @@ export const MiniPlayer: React.FC = () => {
           </button>
           <button
             onClick={() => nextTrack(true)}
-            className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
+            disabled={queueIndex >= queue.length - 1 && repeatMode !== 'all'}
+            className="p-1.5 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] disabled:opacity-30 disabled:pointer-events-none transition-colors"
           >
             <SkipForward size={15} />
           </button>

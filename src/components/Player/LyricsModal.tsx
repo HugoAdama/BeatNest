@@ -30,10 +30,8 @@ export const LyricsModal: React.FC = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const parsedLyrics = useMemo(() => {
-    if (!currentTrack?.lyrics) return [];
-    return parseLRC(currentTrack.lyrics);
-  }, [currentTrack?.lyrics]);
+  const lyrics = currentTrack?.lyrics ?? '';
+  const parsedLyrics = useMemo(() => (lyrics ? parseLRC(lyrics) : []), [lyrics]);
 
   const activeIndex = useMemo(() => {
     return getActiveLyricIndex(parsedLyrics, currentTime);

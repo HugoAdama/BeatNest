@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   Search,
   Play,
@@ -30,7 +30,7 @@ interface CommandAction {
   title: string;
   category: 'Acción' | 'Pista' | 'Playlist';
   icon: React.ReactNode;
-  perform: () => void;
+  perform?: () => void;
 }
 
 export const CommandPaletteModal: React.FC = () => {
@@ -54,12 +54,17 @@ export const CommandPaletteModal: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const closeCommandPalette = useCallback(() => {
+    setQuery('');
+    setSelectedIndex(0);
+    toggleCommandPalette(false);
+  }, [toggleCommandPalette]);
+
   useEffect(() => {
-    if (isCommandPaletteOpen) {
-      setQuery('');
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
+    if (!isCommandPaletteOpen) return;
+
+    const focusFrame = requestAnimationFrame(() => inputRef.current?.focus());
+    return () => cancelAnimationFrame(focusFrame);
   }, [isCommandPaletteOpen]);
 
   // Global key combination to open Command Palette
@@ -67,33 +72,53 @@ export const CommandPaletteModal: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        toggleCommandPalette();
+        if (isCommandPaletteOpen) {
+          closeCommandPalette();
+        } else {
+          toggleCommandPalette(true);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleCommandPalette]);
+  }, [isCommandPaletteOpen, toggleCommandPalette, closeCommandPalette]);
 
-  const handleExport = async () => {
-    toggleCommandPalette(false);
+  const handleExport = useCallback(async () => {
     try {
       await exportLibraryBackup();
-      showToast('Respaldo generado', 'Archivo JSON descargado exitosamente');
+      showToast('Respaldo generado', 'JSON de metadatos descargado. Los archivos de audio no se incluyen.');
     } catch {
       showToast('Error al respaldar', 'No se pudo generar el archivo', 'warning');
     }
-  };
+  }, []);
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const count = await importLibraryBackup(file);
-      showToast('Restauración completa', `${count} listas de reproducción sincronizadas`);
-    } catch {
-      showToast('Error de importación', 'El archivo no tiene un formato válido', 'warning');
+      const result = await importLibraryBackup(file);
+      showToast('Restauración completa', `${result.playlistsRestored} listas y ${result.favoritesRestored} favoritos sincronizados. Importa primero el audio para enlazar las pistas.`);
+    } catch (err) {
+      showToast('Error de importación', err instanceof Error ? err.message : 'El archivo no tiene un formato válido', 'warning');
+    } finally {
+      e.target.value = '';
+      closeCommandPalette();
     }
-    if (e.target) e.target.value = '';
+  };
+
+  const handleSearchChange = (value: string) => {
+    setQuery(value);
+    setSelectedIndex(0);
+  };
+
+  const handleAction = (item: CommandAction) => {
+    if (item.id === 'restore-library') {
+      fileInputRef.current?.click();
+      return;
+    }
+
+    item.perform?.();
+    closeCommandPalette();
   };
 
   const allItems: CommandAction[] = useMemo(() => {
@@ -142,7 +167,7 @@ export const CommandPaletteModal: React.FC = () => {
       },
       {
         id: 'backup-library',
-        title: 'Exportar respaldo completo de la biblioteca (JSON)',
+        title: 'Exportar respaldo de metadatos y listas (JSON; sin audio)',
         category: 'Acción',
         icon: <Download size={16} className="text-[var(--app-text-muted)]" />,
         perform: handleExport,
@@ -152,7 +177,6 @@ export const CommandPaletteModal: React.FC = () => {
         title: 'Restaurar biblioteca desde archivo JSON',
         category: 'Acción',
         icon: <Upload size={16} className="text-[var(--app-text-muted)]" />,
-        perform: () => fileInputRef.current?.click(),
       },
       {
         id: 'toggle-theme',
@@ -227,15 +251,12 @@ export const CommandPaletteModal: React.FC = () => {
     toggleLyrics,
     toggleStats,
     toggleTheme,
-    toggleShortcutModal,
-    playTrack,
-    setActiveTab,
-    setSelectedPlaylistId,
+      toggleShortcutModal,
+      playTrack,
+      setActiveTab,
+      setSelectedPlaylistId,
+      handleExport,
   ]);
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
 
   const handleKeyDownInDialog = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
@@ -247,11 +268,10 @@ export const CommandPaletteModal: React.FC = () => {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (allItems[selectedIndex]) {
-        allItems[selectedIndex].perform();
-        toggleCommandPalette(false);
+        handleAction(allItems[selectedIndex]);
       }
     } else if (e.key === 'Escape') {
-      toggleCommandPalette(false);
+      closeCommandPalette();
     }
   };
 
@@ -262,7 +282,7 @@ export const CommandPaletteModal: React.FC = () => {
       role="dialog"
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
-      onClick={() => toggleCommandPalette(false)}
+      onClick={closeCommandPalette}
       onKeyDown={handleKeyDownInDialog}
     >
       <input
@@ -270,6 +290,7 @@ export const CommandPaletteModal: React.FC = () => {
         type="file"
         accept="application/json,.json"
         className="hidden"
+        onClick={(e) => e.stopPropagation()}
         onChange={handleImportFile}
       />
 
@@ -284,7 +305,7 @@ export const CommandPaletteModal: React.FC = () => {
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Buscar pista, álbum, playlist o comando..."
             className="w-full bg-transparent text-sm text-[var(--app-text)] placeholder-[var(--app-text-muted)] focus:outline-none"
           />
@@ -292,7 +313,7 @@ export const CommandPaletteModal: React.FC = () => {
             ESC
           </kbd>
           <button
-            onClick={() => toggleCommandPalette(false)}
+            onClick={closeCommandPalette}
             className="p-1 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] transition-colors sm:hidden"
           >
             <X size={18} />
@@ -312,8 +333,7 @@ export const CommandPaletteModal: React.FC = () => {
                 <div
                   key={item.id}
                   onClick={() => {
-                    item.perform();
-                    toggleCommandPalette(false);
+                    handleAction(item);
                   }}
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl cursor-pointer text-xs transition-all ${

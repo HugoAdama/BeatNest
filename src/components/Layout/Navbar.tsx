@@ -13,7 +13,7 @@ import {
   Menu,
 } from 'lucide-react';
 import { useLibraryStore, type SortField } from '../../stores/useLibraryStore';
-import { usePlayerStore } from '../../stores/usePlayerStore';
+import { useAudioSettingsStore } from '../../stores/useAudioSettingsStore';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { useUIStore } from '../../stores/useUIStore';
 
@@ -30,9 +30,9 @@ export const Navbar: React.FC = () => {
     scanProgress,
   } = useLibraryStore();
 
-  const { toggleVisualizer, toggleEqualizer, eqEnabled } = usePlayerStore();
+  const { eqEnabled } = useAudioSettingsStore();
   const { theme, toggleTheme } = useThemeStore();
-  const { toggleMobileSidebar } = useUIStore();
+  const { toggleMobileSidebar, toggleVisualizer, toggleEqualizer } = useUIStore();
 
   const sortOptions: { field: SortField; label: string }[] = [
     { field: 'title', label: 'Título' },
@@ -44,7 +44,7 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="h-16 px-4 sm:px-6 flex items-center justify-between gap-3 liquid-glass border-b border-[var(--liquid-glass-border-subtle)] sticky top-0 z-20 transition-all">
+    <header className="h-[4.25rem] px-4 sm:px-6 flex items-center justify-between gap-3 liquid-glass border-b border-[var(--liquid-glass-border-subtle)] sticky top-0 z-20 transition-all">
       {/* Mobile Menu Hamburger Toggle */}
       <button
         onClick={() => toggleMobileSidebar(true)}
@@ -64,7 +64,7 @@ export const Navbar: React.FC = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Buscar canciones, artistas o álbumes..."
-          className="w-full pl-10 pr-16 sm:pr-20 py-2 rounded-xl liquid-glass-subtle text-xs text-[var(--app-text)] placeholder-[var(--app-text-muted)] focus:outline-none focus:border-[#7C5CFF] focus:ring-1 focus:ring-[#7C5CFF]/60 transition-all shadow-sm"
+          className="w-full pl-10 pr-16 sm:pr-20 py-2.5 rounded-xl liquid-glass-subtle text-sm text-[var(--app-text)] placeholder-[var(--app-text-muted)] focus:outline-none focus:border-[#7C5CFF] focus:ring-1 focus:ring-[#7C5CFF]/60 transition-all shadow-sm"
         />
         <div className="absolute inset-y-0 right-2 flex items-center gap-1.5">
           {searchQuery ? (
@@ -78,7 +78,7 @@ export const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={() => useUIStore.getState().toggleCommandPalette(true)}
-              className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-[var(--app-text-muted)] liquid-glass-subtle rounded hover:text-[var(--app-text)] hover:border-[#7C5CFF]/60 transition-colors"
+              className="hidden sm:inline-flex items-center px-2 py-1 text-xs font-mono text-[var(--app-text-muted)] liquid-glass-subtle rounded hover:text-[var(--app-text)] hover:border-[#7C5CFF]/60 transition-colors"
               title="Abrir paleta de comandos (Ctrl+K)"
             >
               Ctrl+K
@@ -94,7 +94,7 @@ export const Navbar: React.FC = () => {
           <span className="font-medium text-[#4FD1C5]">
             Escaneando ({scanProgress.current}/{scanProgress.total}):
           </span>
-          <span className="text-[var(--app-text-muted)] truncate max-w-36 font-mono text-[11px]">
+          <span className="text-[var(--app-text-muted)] truncate max-w-36 font-mono text-xs">
             {scanProgress.filename}
           </span>
         </div>

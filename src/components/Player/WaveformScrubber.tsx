@@ -39,44 +39,58 @@ export const WaveformScrubber: React.FC<WaveformScrubberProps> = ({
   const progress = duration > 0 ? Math.min(1, Math.max(0, currentTime / duration)) : 0;
   const hoverTime = hoverPosition !== null && duration > 0 ? hoverPosition * duration : 0;
 
-  const calculatePositionFromEvent = (e: React.MouseEvent<HTMLDivElement>) => {
+  const calculatePositionFromX = (clientX: number) => {
     if (!containerRef.current) return 0;
     const rect = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
+    const x = clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, x / rect.width));
     return ratio;
   };
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const ratio = calculatePositionFromEvent(e);
-    if (duration > 0) {
-      onSeek(ratio * duration);
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const ratio = calculatePositionFromEvent(e);
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const ratio = calculatePositionFromX(e.clientX);
     setHoverPosition(ratio);
     if (isDragging && duration > 0) {
       onSeek(ratio * duration);
     }
   };
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (duration <= 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
     setIsDragging(true);
-    const ratio = calculatePositionFromEvent(e);
-    if (duration > 0) {
-      onSeek(ratio * duration);
+    const ratio = calculatePositionFromX(e.clientX);
+    setHoverPosition(ratio);
+    onSeek(ratio * duration);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    setIsDragging(false);
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
     }
+    if (e.pointerType !== 'mouse') setHoverPosition(null);
   };
 
-  const handleMouseUp = () => {
+  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
     setIsDragging(false);
-  };
-
-  const handleMouseLeave = () => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
     setHoverPosition(null);
-    setIsDragging(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (duration <= 0) return;
+    let nextTime: number | null = null;
+    if (e.key === 'ArrowLeft') nextTime = currentTime - 5;
+    if (e.key === 'ArrowRight') nextTime = currentTime + 5;
+    if (e.key === 'Home') nextTime = 0;
+    if (e.key === 'End') nextTime = duration;
+    if (nextTime !== null) {
+      e.preventDefault();
+      onSeek(Math.max(0, Math.min(duration, nextTime)));
+    }
   };
 
   return (
@@ -87,12 +101,22 @@ export const WaveformScrubber: React.FC<WaveformScrubberProps> = ({
 
       <div
         ref={containerRef}
-        onClick={handleClick}
-        onMouseMove={handleMouseMove}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        className="relative flex-1 h-9 flex items-center cursor-pointer group py-1"
+        role="slider"
+        aria-label="Posición de reproducción"
+        aria-valuemin={0}
+        aria-valuemax={duration}
+        aria-valuenow={Math.min(duration, Math.max(0, currentTime))}
+        aria-valuetext={`${formatDuration(currentTime)} de ${formatDuration(duration)}`}
+        tabIndex={duration > 0 ? 0 : -1}
+        onKeyDown={handleKeyDown}
+        onPointerMove={handlePointerMove}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+        onPointerLeave={() => {
+          if (!isDragging) setHoverPosition(null);
+        }}
+        className="relative flex-1 h-9 flex items-center cursor-pointer group py-1 touch-none"
       >
         {/* Hover timestamp tooltip */}
         {hoverPosition !== null && (
@@ -119,13 +143,6 @@ export const WaveformScrubber: React.FC<WaveformScrubberProps> = ({
             const isPlayed = barFraction <= progress;
             const isHovered = hoverPosition !== null && barFraction <= hoverPosition;
 
-            // Height with subtle pulse when playing
-            const dynamicScale = isPlaying && isPlayed
-              ? 1 + Math.sin(Date.now() * 0.005 + idx * 0.3) * 0.1
-              : 1;
-
-            const finalHeight = `${Math.min(100, barHeight * 100 * dynamicScale)}%`;
-
             let bgColor = 'var(--app-waveform-unplayed)';
             if (isPlayed) {
               bgColor = '#7C5CFF';
@@ -136,10 +153,12 @@ export const WaveformScrubber: React.FC<WaveformScrubberProps> = ({
             return (
               <div
                 key={idx}
-                className="flex-1 rounded-full transition-colors duration-150 relative"
+                className={`flex-1 rounded-full transition-colors duration-150 relative ${isPlaying && isPlayed ? 'waveform-playing' : ''}`}
                 style={{
-                  height: finalHeight,
+                  height: `${barHeight * 100}%`,
                   backgroundColor: isPlayed ? undefined : bgColor,
+                  animationDelay: `${idx * 24}ms`,
+                  animationDuration: `${700 + (idx % 5) * 80}ms`,
                 }}
               >
                 {isPlayed && (

@@ -16,7 +16,7 @@ Todo se procesa en el cliente utilizando APIs nativas del navegador web: **File 
 
 ## Características Principales
 
-- **Privacidad Absoluta**: Cero llamadas de subida a servidores. Los archivos nunca salen de tu ordenador.
+- **Privacidad Local**: No se envían archivos ni datos de escucha a servidores. La interfaz usa fuentes del sistema y el modo offline solo almacena recursos del propio BeatNest.
 - **Acceso a Archivos Locales**: Selección de carpetas directas con la File System Access API y fallback automático de entrada HTML5 para compatibilidad multiplataforma (Chrome, Edge, Firefox, Safari, Brave).
 - **Extracción de Metadatos Completa**: Extracción automática de ID3v1, ID3v2, FLAC Vorbis Comments y contenedores MP4 con `music-metadata-browser`, además de cálculo de duración y obtención de carátulas en alta resolución.
 - **Transición Suave (Crossfade) y Zero-Click Audio**: Arquitectura de doble canal con nodos `GainNode` para fundir suavemente canciones sin cortes abruptos, protección anticascada y micro-fade analógico de 35-40ms al pausar o dar play.
@@ -29,6 +29,7 @@ Todo se procesa en el cliente utilizando APIs nativas del navegador web: **File 
 - **Visualizador de Audio en Tiempo Real (Canvas 60fps)**: 4 modos de visualización reactiva (*Barras de frecuencia, Osciloscopio, Radial 360° y Pulso reactivo*), con soporte para pantalla completa.
 - **Waveform Scrubber Interactivo**: Barra de progreso con silueta de onda de audio, previsualización de tiempo al pasar el cursor y búsqueda de posición suave.
 - **Persistencia Completa en IndexedDB**: Almacenamiento local mediante Dexie.js para biblioteca, pistas de audio (blobs), favoritos, metadatos y listas de reproducción.
+- **Respaldo JSON de metadatos**: Exporta playlists, favoritos, letras y metadatos. El archivo no incluye audio; para restaurar la reproducción hay que volver a importar los archivos locales.
 - **Listas Inteligentes Dinámicas**: Acceso instantáneo a listas autocalculadas: «Más reproducidas», «Añadidas recientemente» y «Pistas largas (+5 min)».
 - **Cola de Reproducción Avanzada**: Panel lateral deslizable para ordenar, guardar la cola directamente como una nueva lista de reproducción permanente o limpiar pistas siguientes.
 - **Exportación Estándar .M3U**: Descarga de listas de reproducción en formato `.m3u` con metadatos extendidos para interoperabilidad con reproductores externos como VLC.
@@ -60,11 +61,11 @@ Todo se procesa en el cliente utilizando APIs nativas del navegador web: **File 
 
 Para profundizar en el diseño técnico, la API interna y las funcionalidades, consulta los documentos de la carpeta `docs/`:
 
-- [docs/APRENDIZAJES_Y_TECNOLOGIAS.md](file:///e:/BeatNest/docs/APRENDIZAJES_Y_TECNOLOGIAS.md): Justificación técnica exhaustiva de cada herramienta del stack y desafíos de ingeniería superados (Web Audio API, Canvas a 60fps, IndexedDB, etc.).
-- [docs/ARCHITECTURE.md](file:///e:/BeatNest/docs/ARCHITECTURE.md): Diagrama de flujo, pipeline de audio, nodos Web Audio y modelo de persistencia.
-- [docs/FEATURES.md](file:///e:/BeatNest/docs/FEATURES.md): Detalle exhaustivo de cada funcionalidad, bandas del ecualizador, crossfade, letras y atajos de teclado.
-- [docs/API_REFERENCE.md](file:///e:/BeatNest/docs/API_REFERENCE.md): Modelos de datos (`Track`, `Playlist`), singleton `AudioEngine` y almacenes de Zustand.
-- [docs/DEVELOPMENT.md](file:///e:/BeatNest/docs/DEVELOPMENT.md): Configuración de desarrollo local, estándares de código y convenciones de diseño.
+- [docs/APRENDIZAJES_Y_TECNOLOGIAS.md](docs/APRENDIZAJES_Y_TECNOLOGIAS.md): Justificación técnica exhaustiva de cada herramienta del stack y desafíos de ingeniería superados (Web Audio API, Canvas a 60fps, IndexedDB, etc.).
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): Diagrama de flujo, separación de stores, servicios de dominio, composición de la biblioteca, pipeline de audio y modelo de persistencia.
+- [docs/FEATURES.md](docs/FEATURES.md): Detalle exhaustivo de cada funcionalidad, bandas del ecualizador, crossfade, letras y atajos de teclado.
+- [docs/API_REFERENCE.md](docs/API_REFERENCE.md): Modelos de datos (`Track`, `Playlist`), singleton `AudioEngine`, stores y componentes de biblioteca.
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md): Configuración de desarrollo local, responsabilidades de módulos y convenciones de diseño.
 
 ---
 

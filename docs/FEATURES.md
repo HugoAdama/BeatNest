@@ -185,7 +185,7 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 ## 17. Modo Aplicación Web Progresiva (PWA y Soporte Offline)
 
 - **Instalable como Aplicación de Escritorio/Móvil**: Manifiesto web configurado con modo de visualización autónomo (*standalone*) y soporte de temas visuales.
-- **Service Worker Local**: Estrategia de caché de recursos estáticos (*network-first* con respaldo en caché) que permite abrir y utilizar BeatNest incluso sin conexión a Internet.
+- **Service Worker Local**: Estrategia *network-first* con respaldo en caché limitada al mismo origen y al ámbito de BeatNest. No intercepta ni almacena solicitudes a servicios de terceros.
 - **Respeto a Recursos Locales**: El Service Worker omite intercepciones de streams de audio `blob:` y URLs en memoria para mantener el rendimiento nativo del decodificador del navegador.
 
 ---

@@ -55,7 +55,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
   return (
     <div
-      className={`group relative flex items-center gap-3 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl transition-all select-none hover-lift ${
+      className={`group relative flex items-center gap-3 px-3 sm:px-3.5 py-3 sm:py-3.5 rounded-xl transition-all select-none hover-lift ${
         isCurrent
           ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/40 text-[var(--app-text)] shadow-sm backdrop-blur-md'
           : 'hover:bg-white/40 dark:hover:bg-white/5 border border-transparent hover:border-[var(--liquid-glass-border-subtle)] text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
@@ -135,7 +135,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               {track.title}
             </p>
             {track.fileName && (
-              <span className="hidden sm:inline-block text-[9px] font-mono uppercase px-1.5 py-0.2 rounded-md bg-[var(--app-surface-hover)] text-[var(--app-text-muted)] border border-[var(--liquid-glass-border-subtle)] shrink-0 font-bold opacity-75">
+              <span className="hidden sm:inline-block text-[10px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-[var(--app-surface-hover)] text-[var(--app-text-muted)] border border-[var(--liquid-glass-border-subtle)] shrink-0 font-bold">
                 {track.fileName.split('.').pop()?.toUpperCase()}
               </span>
             )}

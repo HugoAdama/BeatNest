@@ -98,9 +98,9 @@ Los reproductores modernos suelen exigir cuentas de usuario, suscripciones o sub
 - **El Desafío**: Los identificadores generados por `URL.createObjectURL(blob)` tienen un ciclo de vida atado a la pestaña del navegador. Si se guardaban esas URLs en la base de datos, al recargar la página quedaban rotas e inservibles.
 - **El Aprendizaje**: La base de datos guarda el objeto binario puro `Blob` en la tabla `tracks`. Al iniciar la aplicación en [useLibraryStore.ts](file:///e:/BeatNest/src/stores/useLibraryStore.ts), el proceso de hidratación genera URLs vivas en memoria a partir de los Blobs recuperados, garantizando persistencia permanente entre sesiones sin dependencias externas.
 
-### 3.6 Desacoplamiento de Estado de Dominio vs Estado de Interfaz
-- **El Desafío**: Inicialmente, agrupar las propiedades del motor de audio junto con la visibilidad de los modales en un único store provocaba que componentes suscritos se re-evaluaran innecesariamente con las actualizaciones frecuentes del reloj de audio (`currentTime`). Asimismo, concentrar la síntesis de audio y múltiples vistas dentro del componente de biblioteca generaba archivos monolíticos difíciles de mantener.
-- **El Aprendizaje**: Aislar el estado de la interfaz en `useUIStore`, modularizar los controles del reproductor en subcomponentes atómicos (`PlaybackControls`, `VolumeControl`, `PlayerMenus`) y extraer la síntesis de audio a un módulo de servicio independiente (`audioGenerator.ts`) garantiza un rendimiento óptimo de renderizado y facilita el mantenimiento a largo plazo con componentes de menos de 150 líneas.
+### 3.6 Desacoplamiento de Estado y Componentes de Interfaz
+- **El Desafío**: Agrupar reproducción, efectos de audio y visibilidad de modales en el mismo store mezclaba cambios de distinta frecuencia y responsabilidad. La importación, navegación y presentación de colecciones también estaban concentradas en módulos grandes.
+- **El Aprendizaje**: BeatNest mantiene la reproducción en `usePlayerStore`, los efectos en `useAudioSettingsStore` y la visibilidad en `useUIStore`. En la biblioteca, el store delega el pipeline de importación a `libraryImport.ts`, mientras `LibraryView` compone cabecera, filtros y datos derivados. El panel lateral y la edición de carátulas también separan sus acciones y controles en `LibrarySidebarActions` y `TrackCoverEditor`. El criterio de división es la cohesión de cada responsabilidad y sus dependencias, no un límite rígido de líneas.
 
 ### 3.7 Acústica Espacial con ConvolverNode y Respuestas al Impulso Sintéticas
 - **El Desafío**: La reverberación convolutiva tradicional en Web Audio API requiere cargar archivos de audio `.wav` con respuestas al impulso grabadas en recintos físicos. Esto añadiría peso al empaquetado y requeriría conectividad de red o almacenamiento en disco adicional.
@@ -139,5 +139,4 @@ Los reproductores modernos suelen exigir cuentas de usuario, suscripciones o sub
 ## 4. Conclusión
 
 BeatNest demuestra que las aplicaciones web modernas pueden competir en rendimiento, capacidades de procesamiento de audio en tiempo real y fidelidad visual con aplicaciones de escritorio tradicionales, manteniendo al mismo tiempo las ventajas de portabilidad, instalación PWA y garantía de privacidad absoluta.
-
 

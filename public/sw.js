@@ -1,69 +1,54 @@
-// BeatNest Service Worker for offline PWA support
-const CACHE_NAME = 'beatnest-cache-v1';
+// Offline cache for BeatNest's own files only. Third-party requests pass through untouched.
+const CACHE_PREFIX = 'beatnest-cache-';
+const CACHE_NAME = `${CACHE_PREFIX}v2`;
+const APP_SCOPE_PATH = new URL(self.registration.scope).pathname;
 
-const PRECACHE_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './favicon.svg',
-];
+const PRECACHE_ASSETS = ['./', './index.html', './manifest.json', './favicon.svg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('Pre-cache error (non-fatal):', err);
-      });
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_ASSETS))
   );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then((cacheNames) => Promise.all(
+      cacheNames
+        .filter((cacheName) => cacheName.startsWith(CACHE_PREFIX) && cacheName !== CACHE_NAME)
+        .map((cacheName) => caches.delete(cacheName))
+    )).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
+  const requestUrl = new URL(request.url);
 
-  // Only handle HTTP/HTTPS GET requests; do not intercept blob:, data: or POST
-  if (request.method !== 'GET' || !request.url.startsWith('http')) {
+  // Keep external services and non-GET requests outside the app's offline cache.
+  if (
+    request.method !== 'GET' ||
+    requestUrl.origin !== self.location.origin ||
+    !requestUrl.pathname.startsWith(APP_SCOPE_PATH)
+  ) {
     return;
   }
 
-  // Network first with fallback to cache for HTML and dynamic scripts
-  event.respondWith(
-    fetch(request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
-          });
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          if (request.mode === 'navigate') {
-            return caches.match('./index.html');
-          }
-          return new Response('Offline', { status: 503, statusText: 'Offline' });
-        });
-      })
-  );
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse.ok) await cache.put(request, networkResponse.clone());
+      return networkResponse;
+    } catch {
+      const cachedResponse = await cache.match(request);
+      if (cachedResponse) return cachedResponse;
+      if (request.mode === 'navigate') {
+        return (await cache.match(new URL('./index.html', self.registration.scope).href))
+          ?? new Response('Offline', { status: 503, statusText: 'Offline' });
+      }
+      return new Response('Offline', { status: 503, statusText: 'Offline' });
+    }
+  })());
 });

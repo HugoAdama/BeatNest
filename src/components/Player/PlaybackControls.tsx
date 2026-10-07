@@ -7,7 +7,8 @@ interface PlaybackControlsProps {
   isShuffled: boolean;
   repeatMode: RepeatMode;
   canPlay: boolean;
-  hasTrack: boolean;
+  canPrev: boolean;
+  canNext: boolean;
   onTogglePlay: () => void;
   onPrevTrack: () => void;
   onNextTrack: () => void;
@@ -20,7 +21,8 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
   isShuffled,
   repeatMode,
   canPlay,
-  hasTrack,
+  canPrev,
+  canNext,
   onTogglePlay,
   onPrevTrack,
   onNextTrack,
@@ -45,7 +47,7 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
       {/* Prev button */}
       <button
         onClick={onPrevTrack}
-        disabled={!hasTrack}
+        disabled={!canPrev}
         className="p-1.5 sm:p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] disabled:opacity-30 transition-all hover:scale-105 active:scale-95"
         title="Pista anterior"
       >
@@ -71,7 +73,7 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
       {/* Next button */}
       <button
         onClick={onNextTrack}
-        disabled={!canPlay}
+        disabled={!canNext}
         className="p-1.5 sm:p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] disabled:opacity-30 transition-all hover:scale-105 active:scale-95"
         title="Siguiente pista"
       >

@@ -1,8 +1,7 @@
 import { create } from 'zustand';
-import type { Track, RepeatMode, VisualizerMode, ReverbMode, EqualizerPreset } from '../types/music';
-import { audioEngine, DEFAULT_PRESETS } from '../lib/audioEngine';
+import type { Track, RepeatMode } from '../types/music';
+import { audioEngine } from '../lib/audioEngine';
 import { db } from '../db';
-import { useUIStore } from './useUIStore';
 import { showToast } from './useToastStore';
 import { generateDemoArpeggioTrack } from '../lib/audioGenerator';
 
@@ -20,23 +19,11 @@ interface PlayerStore {
   queue: Track[];
   queueIndex: number;
   recentTracks: Track[];
-  reverbMode: ReverbMode;
-  isMiniPlayer: boolean;
-  isVisualizerOpen: boolean;
-  visualizerMode: VisualizerMode;
-  isEqualizerOpen: boolean;
-  eqEnabled: boolean;
-  eqGains: [number, number, number, number, number];
-  activePresetId: string;
-  customPresets: EqualizerPreset[];
-  preampGain: number;
-  autoGainEnabled: boolean;
-  isShortcutModalOpen: boolean;
-  isLyricsOpen: boolean;
-
   // Actions
   initAudioListeners: () => void;
   playTrack: (track: Track, newQueue?: Track[], useCrossfade?: boolean) => Promise<void>;
+  play: () => void;
+  pause: () => void;
   togglePlay: () => void;
   nextTrack: (useCrossfade?: boolean) => void;
   prevTrack: () => void;
@@ -47,38 +34,15 @@ interface PlayerStore {
   cycleRepeat: () => void;
   setPlaybackRate: (rate: number) => void;
   setCrossfadeDuration: (sec: number) => void;
-  setReverbMode: (mode: ReverbMode) => void;
-  setPreampGain: (gainDb: number) => void;
-  toggleAutoGain: (enabled?: boolean) => void;
   addToQueue: (track: Track) => void;
   playNextInQueue: (track: Track) => void;
   removeFromQueue: (index: number) => void;
   clearQueue: () => void;
   clearQueueUpcoming: () => void;
   reorderQueue: (startIndex: number, endIndex: number) => void;
-  setEqGain: (bandIndex: number, gain: number) => void;
-  setEqPreset: (presetId: string) => void;
-  saveCustomPreset: (name: string) => void;
-  deleteCustomPreset: (id: string) => void;
-  toggleEq: (enabled?: boolean) => void;
-  setVisualizerMode: (mode: VisualizerMode) => void;
-  toggleVisualizer: (open?: boolean) => void;
-  toggleMiniPlayer: (open?: boolean) => void;
-  toggleEqualizer: (open?: boolean) => void;
-  toggleShortcutModal: (open?: boolean) => void;
-  toggleLyrics: (open?: boolean) => void;
   setTrackLyrics: (trackId: string, lyricsText: string) => Promise<void>;
   updateTrackInPlayer: (trackId: string, updates: Partial<Track>) => void;
 }
-
-const loadSavedCustomPresets = (): EqualizerPreset[] => {
-  try {
-    const raw = localStorage.getItem('beatnest_custom_eq_presets');
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
 
 const loadSavedCrossfade = (): number => {
   if (typeof window === 'undefined') return 3;
@@ -106,19 +70,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   queue: [],
   queueIndex: -1,
   recentTracks: [],
-  reverbMode: 'off',
-  isMiniPlayer: false,
-  isVisualizerOpen: false,
-  visualizerMode: 'bars',
-  isEqualizerOpen: false,
-  eqEnabled: true,
-  eqGains: [0, 0, 0, 0, 0],
-  activePresetId: 'flat',
-  customPresets: loadSavedCustomPresets(),
-  preampGain: 0,
-  autoGainEnabled: false,
-  isShortcutModalOpen: false,
-  isLyricsOpen: false,
 
   initAudioListeners: () => {
     const bindAudioEvents = (audio: HTMLAudioElement) => {
@@ -157,10 +108,15 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         // Only the current active audio ending triggers nextTrack.
         // Outgoing audio from a crossfade is silenced and ignored.
         if (audio === activeAudio) {
-          const { repeatMode, nextTrack } = get();
+          const { repeatMode, queue, nextTrack } = get();
           if (repeatMode === 'one') {
             activeAudio.currentTime = 0;
             activeAudio.play().catch(console.warn);
+          } else if (queue.length === 0 && repeatMode === 'all') {
+            activeAudio.currentTime = 0;
+            activeAudio.play().catch(console.warn);
+          } else if (queue.length === 0) {
+            set({ isPlaying: false, currentTime: 0 });
           } else {
             nextTrack(false);
           }
@@ -272,8 +228,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
           : [],
       });
 
-      navigator.mediaSession.setActionHandler('play', () => get().togglePlay());
-      navigator.mediaSession.setActionHandler('pause', () => get().togglePlay());
+      navigator.mediaSession.setActionHandler('play', () => get().play());
+      navigator.mediaSession.setActionHandler('pause', () => get().pause());
       navigator.mediaSession.setActionHandler('previoustrack', () => get().prevTrack());
       navigator.mediaSession.setActionHandler('nexttrack', () => get().nextTrack());
       navigator.mediaSession.setActionHandler('seekto', (details) => {
@@ -284,35 +240,43 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
   },
 
-  togglePlay: () => {
+  play: () => {
     const { isPlaying, currentTrack, queue } = get();
+    if (isPlaying) return;
     if (!currentTrack && queue.length > 0) {
       get().playTrack(queue[0]);
       return;
     }
     if (!currentTrack) return;
 
-    if (isPlaying) {
-      audioEngine.pause();
+    set({ isPlaying: true });
+    audioEngine.play().catch((err) => {
       set({ isPlaying: false });
+      console.warn('Playback could not be resumed:', err);
+    });
+  },
+
+  pause: () => {
+    if (!get().isPlaying) return;
+    audioEngine.pause();
+    set({ isPlaying: false });
+  },
+
+  togglePlay: () => {
+    if (get().isPlaying) {
+      get().pause();
     } else {
-      audioEngine.play().then(() => {
-        set({ isPlaying: true });
-      }).catch(console.warn);
+      get().play();
     }
   },
 
   nextTrack: (useCrossfade?: boolean) => {
-    const { queue, queueIndex, repeatMode, isShuffled } = get();
+    const { queue, queueIndex, repeatMode } = get();
     if (queue.length === 0) return;
 
     let nextIndex = queueIndex + 1;
 
-    if (isShuffled && queue.length > 1) {
-      do {
-        nextIndex = Math.floor(Math.random() * queue.length);
-      } while (nextIndex === queueIndex && queue.length > 1);
-    } else if (nextIndex >= queue.length) {
+    if (nextIndex >= queue.length) {
       if (repeatMode === 'all') {
         nextIndex = 0;
       } else {
@@ -329,17 +293,25 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   prevTrack: () => {
-    const { queue, queueIndex, currentTime } = get();
-    if (queue.length === 0) return;
-
+    const { queue, queueIndex, currentTime, repeatMode, currentTrack } = get();
     if (currentTime > 3) {
       get().seek(0);
       return;
     }
 
+    if (queue.length === 0 || queueIndex < 0) {
+      if (currentTrack) get().seek(0);
+      return;
+    }
+
     let prevIndex = queueIndex - 1;
     if (prevIndex < 0) {
-      prevIndex = queue.length - 1;
+      if (repeatMode === 'all') {
+        prevIndex = queue.length - 1;
+      } else {
+        if (currentTrack) get().seek(0);
+        return;
+      }
     }
 
     const prevTrk = queue[prevIndex];
@@ -356,6 +328,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   setVolume: (volume: number) => {
     const clamped = Math.max(0, Math.min(1, volume));
     audioEngine.setVolume(clamped);
+    audioEngine.setMuted(clamped === 0);
     set({ volume: clamped, isMuted: clamped === 0 });
   },
 
@@ -370,7 +343,19 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   toggleShuffle: () => {
-    set((state) => ({ isShuffled: !state.isShuffled }));
+    const { isShuffled, queue, queueIndex } = get();
+    if (isShuffled) {
+      set({ isShuffled: false });
+      return;
+    }
+
+    const prefixEnd = Math.max(0, Math.min(queue.length, queueIndex + 1));
+    const upcoming = queue.slice(prefixEnd);
+    for (let index = upcoming.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [upcoming[index], upcoming[swapIndex]] = [upcoming[swapIndex], upcoming[index]];
+    }
+    set({ queue: [...queue.slice(0, prefixEnd), ...upcoming], isShuffled: true });
   },
 
   cycleRepeat: () => {
@@ -413,17 +398,19 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
   removeFromQueue: (index: number) => {
     set((state) => {
+      if (index < 0 || index >= state.queue.length) return state;
       const newQueue = state.queue.filter((_, i) => i !== index);
-      let newQueueIndex = state.queueIndex;
+      let newQueueIndex = index === state.queueIndex ? -1 : state.queueIndex;
       if (index < state.queueIndex) {
         newQueueIndex -= 1;
       }
+      if (newQueue.length === 0) newQueueIndex = -1;
       return { queue: newQueue, queueIndex: newQueueIndex };
     });
   },
 
   clearQueue: () => {
-    set({ queue: [], queueIndex: -1 });
+    set({ queue: [], queueIndex: -1, isShuffled: false });
   },
 
   clearQueueUpcoming: () => {
@@ -452,99 +439,6 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
       return { queue: newQueue, queueIndex: newIdx };
     });
-  },
-
-  setEqGain: (bandIndex: number, gain: number) => {
-    const gains = [...get().eqGains] as [number, number, number, number, number];
-    gains[bandIndex] = gain;
-    audioEngine.setEqGain(bandIndex, gain);
-    set({ eqGains: gains, activePresetId: 'custom' });
-  },
-
-  setEqPreset: (presetId: string) => {
-    const preset =
-      DEFAULT_PRESETS.find((p) => p.id === presetId) ||
-      get().customPresets.find((p) => p.id === presetId);
-    if (preset) {
-      audioEngine.applyPreset(preset.gains);
-      set({ eqGains: [...preset.gains] as [number, number, number, number, number], activePresetId: presetId });
-    }
-  },
-
-  saveCustomPreset: (name: string) => {
-    if (!name.trim()) return;
-    const newPreset: EqualizerPreset = {
-      id: `custom_${Date.now()}`,
-      name: name.trim(),
-      gains: [...get().eqGains],
-    };
-    const updated = [...get().customPresets, newPreset];
-    try {
-      localStorage.setItem('beatnest_custom_eq_presets', JSON.stringify(updated));
-    } catch (e) {
-      console.warn('Could not save custom EQ preset:', e);
-    }
-    set({ customPresets: updated, activePresetId: newPreset.id });
-  },
-
-  deleteCustomPreset: (id: string) => {
-    const updated = get().customPresets.filter((p) => p.id !== id);
-    try {
-      localStorage.setItem('beatnest_custom_eq_presets', JSON.stringify(updated));
-    } catch (e) {
-      console.warn('Could not delete custom EQ preset:', e);
-    }
-    const nextActive = get().activePresetId === id ? 'flat' : get().activePresetId;
-    set({ customPresets: updated, activePresetId: nextActive });
-    if (nextActive === 'flat') {
-      get().setEqPreset('flat');
-    }
-  },
-
-  toggleEq: (enabled?: boolean) => {
-    const newEnabled = enabled !== undefined ? enabled : !get().eqEnabled;
-    audioEngine.setEqEnabled(newEnabled, get().eqGains);
-    set({ eqEnabled: newEnabled });
-  },
-
-  setReverbMode: (mode: ReverbMode) => {
-    audioEngine.setSpatialReverb(mode);
-    set({ reverbMode: mode });
-  },
-
-  setPreampGain: (gainDb: number) => {
-    audioEngine.setPreampGain(gainDb);
-    set({ preampGain: gainDb });
-  },
-
-  toggleAutoGain: (enabled?: boolean) => {
-    const nextState = enabled !== undefined ? enabled : !get().autoGainEnabled;
-    audioEngine.setAutoGainEnabled(nextState);
-    set({ autoGainEnabled: nextState });
-  },
-
-  setVisualizerMode: (mode: VisualizerMode) => {
-    useUIStore.getState().setVisualizerMode(mode);
-  },
-
-  toggleVisualizer: (open?: boolean) => {
-    useUIStore.getState().toggleVisualizer(open);
-  },
-
-  toggleMiniPlayer: (open?: boolean) => {
-    useUIStore.getState().toggleMiniPlayer(open);
-  },
-
-  toggleEqualizer: (open?: boolean) => {
-    useUIStore.getState().toggleEqualizer(open);
-  },
-
-  toggleShortcutModal: (open?: boolean) => {
-    useUIStore.getState().toggleShortcutModal(open);
-  },
-
-  toggleLyrics: (open?: boolean) => {
-    useUIStore.getState().toggleLyrics(open);
   },
 
   setTrackLyrics: async (trackId: string, lyricsText: string) => {

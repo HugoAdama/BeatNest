@@ -8,13 +8,8 @@ import {
   Disc,
   Mic2,
   ListMusic,
-  ShieldCheck,
-  Keyboard,
   Trash2,
   History,
-  Download,
-  Upload,
-  BarChart3,
   X,
   Sparkles,
   Clock,
@@ -24,9 +19,9 @@ import {
 import { useLibraryStore, type LibraryTab } from '../../stores/useLibraryStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useUIStore } from '../../stores/useUIStore';
-import { exportLibraryBackup, importLibraryBackup } from '../../lib/backup';
 import { exportPlaylistAsM3U } from '../../lib/playlistExport';
 import { showToast } from '../../stores/useToastStore';
+import { LibrarySidebarActions } from './LibrarySidebarActions';
 
 interface SidebarProps {
   onOpenCreatePlaylistModal: () => void;
@@ -46,39 +41,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
   } = useLibraryStore();
 
   const { recentTracks } = usePlayerStore();
-  const { isMobileSidebarOpen, toggleMobileSidebar, toggleShortcutModal } = useUIStore();
+  const { isMobileSidebarOpen, toggleMobileSidebar } = useUIStore();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const backupInputRef = useRef<HTMLInputElement | null>(null);
 
   const favoriteCount = tracks.filter((t) => t.isFavorite).length;
 
   const handleFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       importFiles(e.target.files);
-    }
-  };
-
-  const handleBackupExport = async () => {
-    try {
-      await exportLibraryBackup();
-      showToast('Respaldo generado', 'Archivo JSON descargado exitosamente');
-    } catch {
-      showToast('Error al respaldar', 'No se pudo generar el archivo de respaldo', 'warning');
-    }
-  };
-
-  const handleBackupRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      try {
-        const res = await importLibraryBackup(e.target.files[0]);
-        showToast(
-          'Respaldo restaurado',
-          `${res.playlistsRestored} playlists y ${res.favoritesRestored} favoritos sincronizados`
-        );
-      } catch (err: any) {
-        showToast('Error de restauración', err.message || 'El archivo no tiene un formato válido', 'warning');
-      }
-      e.target.value = '';
     }
   };
 
@@ -212,7 +182,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
         <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-5">
           {/* Main Section */}
           <div>
-            <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--app-text-muted)] block mb-1.5 opacity-80">
+            <span className="px-3 text-xs font-bold uppercase tracking-wider text-[var(--app-text-muted)] block mb-2">
               Biblioteca
             </span>
             <div className="space-y-0.5">
@@ -245,7 +215,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
 
           {/* Smart Playlists Section */}
           <div>
-            <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--app-text-muted)] block mb-1.5 opacity-80">
+            <span className="px-3 text-xs font-bold uppercase tracking-wider text-[var(--app-text-muted)] block mb-2">
               Listas Inteligentes
             </span>
             <div className="space-y-0.5">
@@ -285,7 +255,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
                   setSelectedPlaylistId(null);
                   if (isMobileSidebarOpen) toggleMobileSidebar(false);
                 }}
-                className="text-[10px] font-bold uppercase tracking-wider text-[var(--app-text-muted)] hover:text-[var(--app-text)] opacity-80 text-left transition-colors"
+                className="text-xs font-bold uppercase tracking-wider text-[var(--app-text-muted)] hover:text-[var(--app-text)] text-left transition-colors"
                 title="Ver todas las playlists"
               >
                 Playlists ({playlists.length})
@@ -325,7 +295,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
                       </button>
 
                       <div className="flex items-center gap-1">
-                        <span className="text-[10px] font-mono text-[var(--app-text-muted)] group-hover:hidden">
+                        <span className="text-xs font-mono text-[var(--app-text-muted)] group-hover:hidden">
                           {pl.trackIds.length}
                         </span>
                         <button
@@ -351,62 +321,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
           </div>
         </div>
 
-        {/* Footer Info & Shortcuts (Cleanly compact to guarantee zero clipping) */}
-        <div className="p-3 border-t border-[var(--liquid-glass-border-subtle)] space-y-2 shrink-0 bg-[var(--app-sidebar)]">
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl liquid-glass-subtle text-[11px] text-[var(--app-text-muted)]">
-            <ShieldCheck size={18} className="text-[var(--app-accent)] shrink-0" />
-            <div className="leading-tight">
-              <span className="text-[var(--app-text)] font-semibold block">100% Local & Privado</span>
-              <span className="text-[10px]">Archivos seguros en tu equipo</span>
-            </div>
-          </div>
-
-          {/* Backup export / import */}
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={handleBackupExport}
-              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] text-[11px] font-medium hover:border-[#7C5CFF]/50 transition-colors"
-              title="Descargar archivo .json con tus playlists y favoritos"
-            >
-              <Download size={13} className="text-[#7C5CFF]" />
-              <span>Respaldar</span>
-            </button>
-
-            <button
-              onClick={() => backupInputRef.current?.click()}
-              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] text-[11px] font-medium hover:border-[#7C5CFF]/50 transition-colors"
-              title="Restaurar archivo de respaldo .json"
-            >
-              <Upload size={13} className="text-[#4FD1C5]" />
-              <span>Restaurar</span>
-            </button>
-            <input
-              ref={backupInputRef}
-              type="file"
-              accept=".json"
-              className="hidden"
-              onChange={handleBackupRestore}
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5 pt-0.5">
-            <button
-              onClick={() => useUIStore.getState().toggleStats(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] rounded-lg transition-colors"
-            >
-              <BarChart3 size={14} className="text-[#4FD1C5]" />
-              <span>Estadísticas</span>
-            </button>
-
-            <button
-              onClick={() => toggleShortcutModal(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] rounded-lg transition-colors"
-            >
-              <Keyboard size={14} />
-              <span>Atajos</span>
-            </button>
-          </div>
-        </div>
+        <LibrarySidebarActions />
       </aside>
     </>
   );

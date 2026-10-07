@@ -49,7 +49,7 @@ npm run lint
 - **Texto secundario**: `#A0A0AB`
 
 ### 3.3 Tipografía
-- Se emplea la fuente **Inter** como tipografía base, complementada por fuentes del sistema de respaldo (`sans-serif`).
+- Se emplea la pila de fuentes del sistema (`system-ui`, Segoe UI, Roboto, sans-serif) para mantener la interfaz sin solicitudes a proveedores externos.
 - Para valores temporales, contadores e información técnica se debe usar fuentes monoespaciadas (`font-mono`) con ancho tabular (`tabular-nums`).
 
 ### 3.4 Privacidad Estricta
@@ -57,7 +57,15 @@ npm run lint
 - Toda la persistencia debe realizarse localmente en el navegador mediante **IndexedDB**.
 
 ### 3.5 Estructura Modular y Responsabilidades
-- Mantener los componentes de UI atómicos y enfocados en una sola responsabilidad, con un tamaño preferido inferior a 150 líneas.
+- Mantener componentes y módulos enfocados en una responsabilidad. Dividir por comportamiento cohesivo y dependencias; usar el tamaño como señal para revisar un módulo, no como límite rígido.
 - La lógica de síntesis de audio, cálculo de frecuencias o manipulación binaria debe residir en módulos de servicio dentro de `src/lib/`.
-- El estado visual de la interfaz (visibilidad de modales, modos de visualización y cajones) debe residir en `useUIStore`, reservando `usePlayerStore` exclusivamente para el motor de audio, la cola y los parámetros de ecualización.
+- El estado visual de modales, modos de visualización y cajones reside en `useUIStore`; la cola y reproducción en `usePlayerStore`; EQ y efectos en `useAudioSettingsStore`.
+- Los stores son la fuente de verdad del estado y coordinan sus acciones. `useLibraryStore` delega el pipeline de importación a `src/lib/libraryImport.ts`; los módulos de `src/lib/` concentran procesamiento especializado y operaciones de dominio, mientras la persistencia CRUD permanece cerca de los stores que la coordinan.
+- En la biblioteca, `LibraryView` compone secciones y delega cabecera, filtros y datos derivados en módulos especializados. `Sidebar` compone navegación y playlists; `LibrarySidebarActions` maneja respaldos y acciones auxiliares.
+- `EditTrackModal` coordina la edición de metadatos y `TrackCoverEditor` se ocupa de seleccionar, generar y previsualizar carátulas. Mantén el intercambio entre ambos explícito mediante props y callbacks.
 
+### 3.6 Sistema visual Liquid Glass y legibilidad
+- Usa `.liquid-glass` para paneles principales, `.liquid-glass-subtle` para controles y superficies secundarias, `.liquid-glass-elevated` para diálogos y menús, y `.liquid-dock` para el reproductor flotante.
+- Mantén la transparencia, el desenfoque, los reflejos y las sombras en los tokens de `src/index.css`; evita volver opacas las superficies con fondos sólidos locales salvo que el contenido necesite aislamiento.
+- Para texto de interfaz, prioriza `text-xs` (13 px) o superior. Reserva tamaños menores para etiquetas técnicas cortas y conserva contraste alto en texto secundario; evita reducir contraste usando opacidad en textos informativos.
+- Los controles deben conservar un indicador `:focus-visible`, y las animaciones deben respetar `prefers-reduced-motion`.

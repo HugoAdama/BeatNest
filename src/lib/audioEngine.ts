@@ -43,6 +43,7 @@ export class AudioEngine {
   private isCrossfading: boolean = false;
   private targetVolume: number = 0.85;
   private crossfadeTimer: ReturnType<typeof setTimeout> | null = null;
+  private pauseTimer: ReturnType<typeof setTimeout> | null = null;
 
 
   private constructor() {
@@ -406,6 +407,11 @@ export class AudioEngine {
   }
 
   public async play(): Promise<void> {
+    // A quick resume must cancel the delayed pause used for the click-free fade.
+    if (this.pauseTimer) {
+      clearTimeout(this.pauseTimer);
+      this.pauseTimer = null;
+    }
     await this.initAudioContext();
     if (this.ctx && this.ctx.state === 'suspended') {
       try {
@@ -432,6 +438,10 @@ export class AudioEngine {
   }
 
   public pause(): void {
+    if (this.pauseTimer) {
+      clearTimeout(this.pauseTimer);
+      this.pauseTimer = null;
+    }
     if (this.crossfadeTimer) {
       clearTimeout(this.crossfadeTimer);
       this.crossfadeTimer = null;
@@ -444,7 +454,7 @@ export class AudioEngine {
       this.masterGain.gain.cancelScheduledValues(now);
       this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
       this.masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.035);
-      setTimeout(() => {
+      this.pauseTimer = setTimeout(() => {
         this.audioA.pause();
         this.audioB.pause();
         if (this.masterGain && this.ctx) {
@@ -452,6 +462,7 @@ export class AudioEngine {
           this.masterGain.gain.cancelScheduledValues(resetNow);
           this.masterGain.gain.setValueAtTime(this.targetVolume, resetNow);
         }
+        this.pauseTimer = null;
       }, 36);
     } else {
       this.audioA.pause();

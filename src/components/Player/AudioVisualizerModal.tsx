@@ -21,6 +21,9 @@ import type { VisualizerMode } from '../../types/music';
 export const AudioVisualizerModal: React.FC = () => {
   const {
     currentTrack,
+    queue,
+    queueIndex,
+    repeatMode,
     isPlaying,
     togglePlay,
     nextTrack,
@@ -136,7 +139,8 @@ export const AudioVisualizerModal: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={prevTrack}
-                className="p-2 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] transition-colors"
+                disabled={!currentTrack}
+                className="p-2 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 title="Pista anterior"
               >
                 <SkipBack size={16} />
@@ -150,7 +154,8 @@ export const AudioVisualizerModal: React.FC = () => {
               </button>
               <button
                 onClick={() => nextTrack(true)}
-                className="p-2 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] transition-colors"
+                disabled={queueIndex >= queue.length - 1 && repeatMode !== 'all'}
+                className="p-2 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 title="Siguiente pista"
               >
                 <SkipForward size={16} />

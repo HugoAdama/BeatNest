@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Track, Playlist } from '../types/music';
 import { db, type StoredTrack } from '../db';
-import { extractMetadata } from '../lib/metadata';
+import { importLibraryFiles } from '../lib/libraryImport';
 import { usePlayerStore } from './usePlayerStore';
 import { generateDemoTracksPack } from '../lib/audioGenerator';
 import { showToast } from './useToastStore';
@@ -74,6 +74,8 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
 
   loadFromDatabase: async () => {
     try {
+      const previousTracks = get().tracks;
+      const previousPlaylists = get().playlists;
       const storedTracks = await db.tracks.toArray();
       const storedPlaylists = await db.playlists.toArray();
 
@@ -122,6 +124,24 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
         };
       });
 
+      // Keep the active player pointed at the newly-created URL before releasing old URLs.
+      const currentPlayerTrack = usePlayerStore.getState().currentTrack;
+      if (currentPlayerTrack) {
+        const refreshedTrack = hydratedTracks.find((track) => track.id === currentPlayerTrack.id);
+        if (refreshedTrack) {
+          usePlayerStore.getState().updateTrackInPlayer(refreshedTrack.id, {
+            coverData: refreshedTrack.coverData,
+            coverUrl: refreshedTrack.coverUrl,
+          });
+        }
+      }
+      for (const track of previousTracks) {
+        if (track.coverUrl?.startsWith('blob:')) URL.revokeObjectURL(track.coverUrl);
+      }
+      for (const playlist of previousPlaylists) {
+        if (playlist.coverUrl?.startsWith('blob:')) URL.revokeObjectURL(playlist.coverUrl);
+      }
+
       set({
         tracks: hydratedTracks,
         playlists: hydratedPlaylists,
@@ -132,110 +152,26 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   },
 
   importFiles: async (fileList: FileList | File[]) => {
-    const rawFiles = Array.from(fileList);
-    // Filter for audio extensions
-    const audioExtensions = ['.mp3', '.flac', '.wav', '.ogg', '.m4a', '.aac', '.opus', '.wma', '.webm'];
-    const audioFiles = rawFiles.filter((f) => {
-      const lower = f.name.toLowerCase();
-      return (
-        f.type.startsWith('audio/') ||
-        audioExtensions.some((ext) => lower.endsWith(ext))
-      );
-    });
+    set({ isScanning: true });
+    try {
+      const result = await importLibraryFiles(fileList, get().tracks, (scanProgress) => set({ scanProgress }));
+      set({ tracks: result.tracks });
 
-    const lrcFiles = rawFiles.filter((f) => f.name.toLowerCase().endsWith('.lrc'));
-    const lrcMap = new Map<string, File>();
-    for (const lf of lrcFiles) {
-      const base = lf.name.replace(/\.[^/.]+$/, '').toLowerCase().trim();
-      lrcMap.set(base, lf);
-    }
-
-    if (audioFiles.length === 0) return;
-
-    set({
-      isScanning: true,
-      scanProgress: { current: 0, total: audioFiles.length, filename: audioFiles[0].name },
-    });
-
-    const existingMap = new Map(get().tracks.map((t) => [t.id, t]));
-    const newlyProcessedTracks: Track[] = [];
-
-    for (let i = 0; i < audioFiles.length; i++) {
-      const file = audioFiles[i];
-      set({
-        scanProgress: {
-          current: i + 1,
-          total: audioFiles.length,
-          filename: file.name,
-        },
-      });
-
-      try {
-        const metadataTrack = await extractMetadata(file);
-
-        // Check if matching LRC file exists
-        const fileBase = file.name.replace(/\.[^/.]+$/, '').toLowerCase().trim();
-        if (lrcMap.has(fileBase)) {
-          try {
-            metadataTrack.lyrics = await lrcMap.get(fileBase)!.text();
-          } catch (err) {
-            console.warn('Could not read lyrics for', file.name, err);
-          }
-        }
-
-        // If track is already in DB, associate the active File object for playback
-        if (existingMap.has(metadataTrack.id)) {
-          const existing = existingMap.get(metadataTrack.id)!;
-          existing.file = file;
-          db.tracks.update(existing.id, { audioData: file }).catch(console.warn);
-          if (metadataTrack.lyrics && !existing.lyrics) {
-            existing.lyrics = metadataTrack.lyrics;
-            db.tracks.update(existing.id, { lyrics: existing.lyrics }).catch(console.warn);
-          }
-          if (!existing.coverUrl && metadataTrack.coverUrl) {
-            existing.coverUrl = metadataTrack.coverUrl;
-          }
-        } else {
-          existingMap.set(metadataTrack.id, metadataTrack);
-          newlyProcessedTracks.push(metadataTrack);
-
-          // Save to IndexedDB with audioData
-          const toStore: StoredTrack = {
-            id: metadataTrack.id,
-            title: metadataTrack.title,
-            artist: metadataTrack.artist,
-            album: metadataTrack.album,
-            duration: metadataTrack.duration,
-            year: metadataTrack.year,
-            genre: metadataTrack.genre,
-            coverData: metadataTrack.coverData || null,
-            audioData: file,
-            fileName: metadataTrack.fileName,
-            fileSize: metadataTrack.fileSize,
-            fileType: metadataTrack.fileType,
-            dateAdded: metadataTrack.dateAdded,
-            isFavorite: false,
-            playCount: 0,
-            lyrics: metadataTrack.lyrics,
-          };
-          try {
-            await db.tracks.put(toStore);
-          } catch (storageErr) {
-            console.warn('Storage quota limit for audio blob, saving metadata only:', storageErr);
-            await db.tracks.put({ ...toStore, audioData: null });
-          }
-        }
-      } catch (err) {
-        console.warn(`Error processing ${file.name}:`, err);
+      if (result.metadataOnlyCount > 0 || result.failedCount > 0) {
+        const availableLabel = result.estimatedAvailableBytes === null
+          ? ''
+          : ` Espacio estimado restante: ${new Intl.NumberFormat('es', { maximumFractionDigits: 0 }).format(result.estimatedAvailableBytes / (1024 * 1024))} MB.`;
+        showToast(
+          'Importación finalizada con avisos',
+          `${result.importedCount} pistas con audio guardado, ${result.metadataOnlyCount} disponibles solo en esta sesión y ${result.failedCount} con error.${availableLabel}`,
+          'warning'
+        );
+      } else if (result.importedCount > 0) {
+        showToast('Importación completada', `${result.importedCount} pistas añadidas y guardadas en este navegador.`, 'success');
       }
+    } finally {
+      set({ isScanning: false, scanProgress: null });
     }
-
-    const updatedTracks = Array.from(existingMap.values());
-    set({
-      tracks: updatedTracks,
-      isScanning: false,
-      scanProgress: null,
-    });
   },
 
   importDirectoryWithPicker: async () => {
@@ -293,7 +229,9 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   },
 
   deleteTrack: async (trackId: string) => {
+    const track = get().tracks.find((item) => item.id === trackId);
     await db.tracks.delete(trackId);
+    if (track?.coverUrl?.startsWith('blob:')) URL.revokeObjectURL(track.coverUrl);
     set((state) => ({
       tracks: state.tracks.filter((t) => t.id !== trackId),
     }));
@@ -449,11 +387,8 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
     let newCoverUrl: string | undefined = undefined;
     if (imageBlob) {
       newCoverUrl = URL.createObjectURL(imageBlob);
-    } else {
-      if (current?.coverUrl && current.coverUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(current.coverUrl);
-      }
     }
+    if (current?.coverUrl?.startsWith('blob:')) URL.revokeObjectURL(current.coverUrl);
 
     const updatedTracks = get().tracks.map((t) =>
       t.id === trackId ? { ...t, coverData: imageBlob, coverUrl: newCoverUrl } : t
@@ -477,10 +412,12 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       console.warn('Error saving playlist cover in IndexedDB:', err);
     }
 
+    const current = get().playlists.find((pl) => pl.id === playlistId);
     let newCoverUrl: string | undefined = undefined;
     if (imageBlob) {
       newCoverUrl = URL.createObjectURL(imageBlob);
     }
+    if (current?.coverUrl?.startsWith('blob:')) URL.revokeObjectURL(current.coverUrl);
 
     const updatedPlaylists = get().playlists.map((pl) =>
       pl.id === playlistId ? { ...pl, coverData: imageBlob, coverUrl: newCoverUrl } : pl

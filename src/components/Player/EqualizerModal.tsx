@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sliders, Power, RotateCcw, X, Sparkles, Gauge, Volume1, BookmarkPlus, Trash2, Check } from 'lucide-react';
-import { usePlayerStore } from '../../stores/usePlayerStore';
+import { useAudioSettingsStore } from '../../stores/useAudioSettingsStore';
 import { useUIStore } from '../../stores/useUIStore';
 import { EQ_LABELS, DEFAULT_PRESETS } from '../../lib/audioEngine';
 import type { ReverbMode } from '../../types/music';
@@ -22,7 +22,7 @@ export const EqualizerModal: React.FC = () => {
     setPreampGain,
     autoGainEnabled,
     toggleAutoGain,
-  } = usePlayerStore();
+  } = useAudioSettingsStore();
 
   const { isEqualizerOpen, toggleEqualizer } = useUIStore();
   const [isSavingCustom, setIsSavingCustom] = useState(false);
