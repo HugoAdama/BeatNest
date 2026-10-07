@@ -12,7 +12,7 @@ const getInitialTheme = (): ThemeMode => {
   if (typeof window === 'undefined') return 'dark';
   const saved = localStorage.getItem('beatnest_theme') as ThemeMode;
   if (saved === 'light' || saved === 'dark') return saved;
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  return 'dark';
 };
 
 export const useThemeStore = create<ThemeStore>((set, get) => {

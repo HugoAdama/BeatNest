@@ -405,46 +405,48 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
           />
         )}
 
-        {/* Interactive Genre & Format filter chips */}
+        {/* Interactive Genre & Format filter toolbar */}
         {activeTab !== 'artists' && activeTab !== 'albums' && (
-          <div className="flex flex-col gap-2 mt-1">
-            {/* Format Filter */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+          <div className="flex flex-wrap items-center justify-between gap-3 py-2 mb-3 border-y border-[var(--liquid-glass-border-subtle)]">
+            {/* Format Filter Segmented Controls */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <span className="text-[11px] font-semibold text-[var(--app-text-muted)] uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1 opacity-80">
-                <Layers size={12} />
+                <Layers size={12} className="text-[#4FD1C5]" />
                 <span>Formato:</span>
               </span>
-              {['ALL', 'MP3', 'FLAC', 'WAV', 'OGG', 'M4A'].map((fmt) => {
-                const isSelected = (fmt === 'ALL' && selectedFormat === null) || selectedFormat === fmt;
-                return (
-                  <button
-                    key={fmt}
-                    onClick={() => setSelectedFormat(fmt === 'ALL' ? null : fmt)}
-                    className={`px-2.5 py-0.5 rounded-lg text-[11px] font-mono font-medium transition-all shrink-0 ${
-                      isSelected
-                        ? 'bg-[#4FD1C5]/20 text-[#4FD1C5] border border-[#4FD1C5]/40 shadow-sm'
-                        : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#4FD1C5]/30'
-                    }`}
-                  >
-                    {fmt}
-                  </button>
-                );
-              })}
+              <div className="inline-flex items-center gap-1 p-0.5 rounded-xl bg-[var(--app-surface)] border border-[var(--liquid-glass-border-subtle)]">
+                {['ALL', 'MP3', 'FLAC', 'WAV', 'OGG', 'M4A'].map((fmt) => {
+                  const isSelected = (fmt === 'ALL' && selectedFormat === null) || selectedFormat === fmt;
+                  return (
+                    <button
+                      key={fmt}
+                      onClick={() => setSelectedFormat(fmt === 'ALL' ? null : fmt)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium transition-all ${
+                        isSelected
+                          ? 'bg-[#4FD1C5] text-black shadow-sm font-bold'
+                          : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
+                      }`}
+                    >
+                      {fmt}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Genre Filter */}
+            {/* Genre Filter Chips */}
             {uniqueGenres.length > 0 && (
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                 <span className="text-[11px] font-semibold text-[var(--app-text-muted)] uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1 opacity-80">
-                  <Tag size={12} />
+                  <Tag size={12} className="text-[#7C5CFF]" />
                   <span>Género:</span>
                 </span>
                 <button
                   onClick={() => setSelectedGenre(null)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 ${
+                  className={`px-3 py-1 rounded-xl text-xs font-medium transition-all shrink-0 ${
                     selectedGenre === null
-                      ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm shadow-[#7C5CFF]/30 border border-white/20'
-                      : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/40'
+                      ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm font-semibold'
+                      : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/30'
                   }`}
                 >
                   Todos
@@ -455,10 +457,10 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
                     <button
                       key={genre}
                       onClick={() => setSelectedGenre(isSelected ? null : genre)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium transition-all shrink-0 ${
+                      className={`px-3 py-1 rounded-xl text-xs font-medium transition-all shrink-0 ${
                         isSelected
-                          ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm shadow-[#7C5CFF]/30 border border-white/20'
-                          : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/40'
+                          ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm font-semibold'
+                          : 'liquid-glass-subtle text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/30'
                       }`}
                     >
                       {genre}

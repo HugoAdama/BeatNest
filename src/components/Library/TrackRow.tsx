@@ -125,13 +125,20 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p
-            className={`text-sm font-semibold truncate ${
-              isCurrent ? 'text-[#7C5CFF]' : 'text-[var(--app-text)]'
-            }`}
-          >
-            {track.title}
-          </p>
+          <div className="flex items-center gap-2">
+            <p
+              className={`text-sm font-semibold truncate ${
+                isCurrent ? 'text-[#7C5CFF]' : 'text-[var(--app-text)]'
+              }`}
+            >
+              {track.title}
+            </p>
+            {track.fileName && (
+              <span className="hidden sm:inline-block text-[9px] font-mono uppercase px-1.5 py-0.2 rounded-md bg-[var(--app-surface-hover)] text-[var(--app-text-muted)] border border-[var(--liquid-glass-border-subtle)] shrink-0 font-bold opacity-75">
+                {track.fileName.split('.').pop()?.toUpperCase()}
+              </span>
+            )}
+          </div>
           <p className="text-xs text-[var(--app-text-muted)] truncate md:hidden">
             {track.artist}
           </p>
@@ -141,7 +148,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       {/* Artist (Desktop) */}
       <div
         onClick={handleRowClick}
-        className="hidden md:block w-3/12 text-xs truncate text-[var(--app-text-muted)] hover:text-[var(--app-text)] cursor-pointer"
+        className="hidden md:block w-3/12 text-xs truncate text-[var(--app-text-muted)] hover:text-[var(--app-text)] cursor-pointer font-medium"
       >
         {track.artist}
       </div>

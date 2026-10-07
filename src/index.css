@@ -1,59 +1,59 @@
 @import "tailwindcss";
 
 :root {
-  --app-bg: #EEF2F9;
-  --app-sidebar: rgba(255, 255, 255, 0.65);
-  --app-navbar: rgba(255, 255, 255, 0.68);
-  --app-surface: rgba(255, 255, 255, 0.72);
-  --app-surface-elevated: rgba(255, 255, 255, 0.85);
-  --app-surface-hover: rgba(255, 255, 255, 0.95);
-  --app-border: rgba(255, 255, 255, 0.75);
-  --app-border-subtle: rgba(226, 232, 240, 0.6);
+  --app-bg: #F8FAFC;
+  --app-sidebar: rgba(255, 255, 255, 0.88);
+  --app-navbar: rgba(255, 255, 255, 0.9);
+  --app-surface: rgba(255, 255, 255, 0.92);
+  --app-surface-elevated: #FFFFFF;
+  --app-surface-hover: rgba(241, 245, 249, 0.95);
+  --app-border: rgba(148, 163, 184, 0.28);
+  --app-border-subtle: rgba(148, 163, 184, 0.16);
   --app-text: #0F172A;
-  --app-text-muted: #56657F;
+  --app-text-muted: #64748B;
   --app-primary: #7C5CFF;
   --app-primary-hover: #6D48F7;
   --app-primary-light: rgba(124, 92, 255, 0.12);
   --app-accent: #0284C7;
-  --app-card-shadow: 0 10px 30px -4px rgba(100, 116, 139, 0.12), 0 4px 12px -2px rgba(100, 116, 139, 0.08);
-  --app-waveform-unplayed: #CBD5E1;
-  --app-modal-bg: rgba(255, 255, 255, 0.82);
+  --app-card-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+  --app-waveform-unplayed: #E2E8F0;
+  --app-modal-bg: rgba(255, 255, 255, 0.96);
 
   /* Liquid Glass Specular and Refraction Tokens */
-  --liquid-glass-bg: rgba(255, 255, 255, 0.65);
-  --liquid-glass-border: rgba(255, 255, 255, 0.85);
-  --liquid-glass-border-subtle: rgba(255, 255, 255, 0.5);
+  --liquid-glass-bg: rgba(255, 255, 255, 0.86);
+  --liquid-glass-border: rgba(148, 163, 184, 0.28);
+  --liquid-glass-border-subtle: rgba(148, 163, 184, 0.16);
   --liquid-glass-highlight: rgba(255, 255, 255, 0.95);
-  --liquid-glass-shadow: 0 16px 36px -6px rgba(99, 102, 241, 0.09), 0 6px 16px -2px rgba(15, 23, 42, 0.05);
-  --liquid-glass-dock: rgba(255, 255, 255, 0.75);
+  --liquid-glass-shadow: 0 18px 40px -8px rgba(15, 23, 42, 0.09), 0 4px 16px -2px rgba(15, 23, 42, 0.04);
+  --liquid-glass-dock: rgba(255, 255, 255, 0.92);
 }
 
 html.dark {
-  --app-bg: #07070B;
-  --app-sidebar: rgba(15, 15, 24, 0.68);
-  --app-navbar: rgba(12, 12, 20, 0.7);
-  --app-surface: rgba(20, 20, 32, 0.65);
-  --app-surface-elevated: rgba(28, 28, 44, 0.75);
-  --app-surface-hover: rgba(38, 38, 58, 0.85);
+  --app-bg: #09090E;
+  --app-sidebar: rgba(13, 13, 20, 0.78);
+  --app-navbar: rgba(11, 11, 18, 0.82);
+  --app-surface: rgba(19, 19, 29, 0.72);
+  --app-surface-elevated: rgba(26, 26, 40, 0.85);
+  --app-surface-hover: rgba(36, 36, 56, 0.9);
   --app-border: rgba(255, 255, 255, 0.12);
   --app-border-subtle: rgba(255, 255, 255, 0.06);
   --app-text: #F8FAFC;
   --app-text-muted: #94A3B8;
-  --app-primary: #7C5CFF;
-  --app-primary-hover: #6D48F7;
-  --app-primary-light: rgba(124, 92, 255, 0.18);
-  --app-accent: #4FD1C5;
-  --app-card-shadow: 0 16px 40px -6px rgba(0, 0, 0, 0.6), 0 6px 18px -2px rgba(0, 0, 0, 0.4);
-  --app-waveform-unplayed: #262636;
-  --app-modal-bg: rgba(14, 14, 22, 0.82);
+  --app-primary: #8B5CF6;
+  --app-primary-hover: #7C3AED;
+  --app-primary-light: rgba(139, 92, 246, 0.18);
+  --app-accent: #38BDF8;
+  --app-card-shadow: 0 20px 45px -8px rgba(0, 0, 0, 0.7), 0 8px 20px -3px rgba(0, 0, 0, 0.45);
+  --app-waveform-unplayed: #222232;
+  --app-modal-bg: rgba(13, 13, 20, 0.9);
 
   /* Liquid Glass Specular and Refraction Tokens */
-  --liquid-glass-bg: rgba(18, 18, 29, 0.62);
-  --liquid-glass-border: rgba(255, 255, 255, 0.14);
+  --liquid-glass-bg: rgba(17, 17, 27, 0.7);
+  --liquid-glass-border: rgba(255, 255, 255, 0.13);
   --liquid-glass-border-subtle: rgba(255, 255, 255, 0.07);
-  --liquid-glass-highlight: rgba(255, 255, 255, 0.22);
-  --liquid-glass-shadow: 0 20px 45px -8px rgba(0, 0, 0, 0.7), 0 8px 20px -3px rgba(0, 0, 0, 0.5);
-  --liquid-glass-dock: rgba(15, 15, 24, 0.72);
+  --liquid-glass-highlight: rgba(255, 255, 255, 0.18);
+  --liquid-glass-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.75), 0 8px 22px -3px rgba(0, 0, 0, 0.5);
+  --liquid-glass-dock: rgba(14, 14, 22, 0.84);
 }
 
 @layer base {

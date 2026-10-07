@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import {
   Sliders,
-  Activity,
   Heart,
   ListMusic,
-  Minimize2,
   Music,
   AlignLeft,
-  Timer,
-  Share2,
   Play,
   Pause,
   SkipForward,
@@ -71,10 +67,10 @@ export const BottomPlayer: React.FC = () => {
     <>
       <footer className="absolute bottom-2.5 sm:bottom-3.5 left-2.5 right-2.5 sm:left-4 sm:right-4 md:left-6 md:right-6 max-w-6xl mx-auto z-30 liquid-dock rounded-2xl sm:rounded-3xl p-2.5 sm:px-4 md:px-5 sm:py-2.5 md:py-3 select-none transition-all">
         {/* Desktop & Tablet Layout (>= md) */}
-        <div className="hidden md:flex items-center justify-between gap-3 lg:gap-4">
-          {/* Left: Track Info & Favorite */}
-          <div className="flex items-center gap-3 w-1/4 min-w-[180px] max-w-[260px] shrink-0">
-            <div className="relative w-11 h-11 lg:w-12 lg:h-12 rounded-2xl overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--liquid-glass-border)] shrink-0 flex items-center justify-center shadow-md transition-all">
+        <div className="hidden md:grid md:grid-cols-12 items-center gap-3 lg:gap-5 w-full">
+          {/* Left: Track Info & Favorite (Cols 1-3) */}
+          <div className="col-span-3 flex items-center gap-3 min-w-0">
+            <div className="relative w-12 h-12 lg:w-13 lg:h-13 rounded-2xl overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--liquid-glass-border)] shrink-0 flex items-center justify-center shadow-lg transition-all">
               {currentTrack?.coverUrl ? (
                 <img
                   src={currentTrack.coverUrl}
@@ -85,7 +81,7 @@ export const BottomPlayer: React.FC = () => {
                 />
               ) : (
                 <Music
-                  size={20}
+                  size={22}
                   className={isPlaying ? 'text-[#4FD1C5]' : 'text-[#7C5CFF]'}
                 />
               )}
@@ -99,10 +95,10 @@ export const BottomPlayer: React.FC = () => {
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="text-xs lg:text-sm font-semibold text-[var(--app-text)] truncate">
+              <p className="text-xs lg:text-sm font-semibold text-[var(--app-text)] truncate leading-snug">
                 {currentTrack ? currentTrack.title : 'BeatNest'}
               </p>
-              <p className="text-[11px] lg:text-xs text-[var(--app-text-muted)] truncate">
+              <p className="text-[11px] lg:text-xs text-[var(--app-text-muted)] truncate mt-0.5">
                 {currentTrack
                   ? `${currentTrack.artist} • ${currentTrack.album}`
                   : 'Selecciona una pista para reproducir'}
@@ -112,7 +108,7 @@ export const BottomPlayer: React.FC = () => {
             {currentTrack && (
               <button
                 onClick={() => toggleFavorite(currentTrack.id)}
-                className={`p-1.5 lg:p-2 rounded-xl transition-all hover:scale-110 active:scale-95 ${
+                className={`p-1.5 lg:p-2 rounded-xl transition-all hover:scale-110 active:scale-95 shrink-0 ${
                   isFavorite
                     ? 'text-red-500 bg-red-500/10'
                     : 'text-[var(--app-text-muted)] hover:text-red-500 hover:bg-[var(--app-surface-hover)]'
@@ -124,8 +120,8 @@ export const BottomPlayer: React.FC = () => {
             )}
           </div>
 
-          {/* Center: Controls & Scrubber */}
-          <div className="flex-1 flex flex-col items-center max-w-xl min-w-0 px-2">
+          {/* Center: Controls & Spacious Scrubber (Cols 4-9 -> 50% width!) */}
+          <div className="col-span-6 flex flex-col items-center justify-center min-w-0 px-2 lg:px-4 w-full">
             <PlaybackControls
               isPlaying={isPlaying}
               isShuffled={isShuffled}
@@ -139,30 +135,25 @@ export const BottomPlayer: React.FC = () => {
               onCycleRepeat={cycleRepeat}
             />
 
-            {/* Waveform Scrubber */}
-            <WaveformScrubber
-              currentTime={currentTime}
-              duration={duration}
-              onSeek={seek}
-              isPlaying={isPlaying}
-            />
+            {/* Wide Waveform Scrubber */}
+            <div className="w-full">
+              <WaveformScrubber
+                currentTime={currentTime}
+                duration={duration}
+                onSeek={seek}
+                isPlaying={isPlaying}
+              />
+            </div>
           </div>
 
-          {/* Right: Tools & Volume */}
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 justify-end w-1/4 min-w-fit">
-            <PlayerMenus
-              playbackRate={playbackRate}
-              crossfadeDuration={crossfadeDuration}
-              onSelectPlaybackRate={setPlaybackRate}
-              onSelectCrossfadeDuration={setCrossfadeDuration}
-            />
-
+          {/* Right: Tools & Volume (Cols 10-12) */}
+          <div className="col-span-3 flex items-center gap-1.5 lg:gap-2 justify-end shrink-0">
             {/* Lyrics trigger */}
             <button
               onClick={() => toggleLyrics(true)}
-              className={`p-1.5 lg:p-2 rounded-xl transition-colors relative ${
+              className={`p-2 rounded-xl transition-all relative ${
                 isLyricsOpen
-                  ? 'bg-[var(--app-accent)]/20 text-[var(--app-accent)] font-bold'
+                  ? 'bg-[var(--app-accent)]/20 text-[var(--app-accent)] font-bold border border-[var(--app-accent)]/30'
                   : currentTrack?.lyrics
                   ? 'text-[var(--app-accent)] hover:bg-[var(--app-accent)]/15'
                   : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
@@ -178,88 +169,60 @@ export const BottomPlayer: React.FC = () => {
             {/* Equalizer trigger */}
             <button
               onClick={() => toggleEqualizer(true)}
-              className={`p-1.5 lg:p-2 rounded-xl transition-colors relative ${
+              className={`p-2 rounded-xl transition-all relative ${
                 eqEnabled
-                  ? 'text-[#7C5CFF] bg-[#7C5CFF]/15'
+                  ? 'text-[#7C5CFF] bg-[#7C5CFF]/15 border border-[#7C5CFF]/30'
                   : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
               }`}
-              title="Ecualizador de 5 bandas"
+              title="Ecualizador paramétrico"
             >
               <Sliders size={16} />
               {eqEnabled && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[var(--app-accent)]" />
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#7C5CFF]" />
               )}
-            </button>
-
-            {/* Visualizer trigger */}
-            <button
-              onClick={() => toggleVisualizer(true)}
-              className="p-1.5 lg:p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-accent)] hover:bg-[var(--app-surface-hover)] transition-colors"
-              title="Visualizador de audio"
-            >
-              <Activity size={16} />
-            </button>
-
-            {/* Sleep Timer trigger */}
-            <button
-              onClick={() => toggleSleepTimerModal(true)}
-              className={`p-1.5 lg:p-2 rounded-xl transition-colors relative ${
-                sleepTimerOption !== null
-                  ? 'text-[#4FD1C5] bg-[#4FD1C5]/15 font-bold'
-                  : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
-              }`}
-              title="Temporizador de apagado"
-            >
-              <Timer size={16} />
-              {sleepTimerOption !== null && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#4FD1C5] animate-pulse" />
-              )}
-            </button>
-
-            {/* Share Track Card trigger */}
-            {currentTrack && (
-              <button
-                onClick={() => useUIStore.getState().toggleShareTrack(true)}
-                className="hidden xl:flex p-1.5 lg:p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
-                title="Compartir tarjeta de canción"
-              >
-                <Share2 size={16} />
-              </button>
-            )}
-
-            {/* Mini Player mode toggle */}
-            <button
-              onClick={() => toggleMiniPlayer(true)}
-              className="hidden lg:flex p-1.5 lg:p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
-              title="Modo mini reproductor"
-            >
-              <Minimize2 size={16} />
             </button>
 
             {/* Queue trigger */}
             <button
               onClick={() => setIsQueueOpen(!isQueueOpen)}
-              className={`p-1.5 lg:p-2 rounded-xl transition-colors relative ${
+              className={`p-2 rounded-xl transition-all relative ${
                 isQueueOpen
-                  ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm'
+                  ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-md'
                   : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
               }`}
               title="Cola de reproducción"
             >
               <ListMusic size={16} />
               {queue.length > 0 && (
-                <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-[var(--app-accent)] text-white text-[10px] font-bold">
+                <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-[#7C5CFF] text-white text-[10px] font-bold">
                   {queue.length}
                 </span>
               )}
             </button>
 
-            <VolumeControl
-              volume={volume}
-              isMuted={isMuted}
-              onVolumeChange={setVolume}
-              onToggleMute={toggleMute}
+            {/* Unified Quick Audio Tools Popover */}
+            <PlayerMenus
+              playbackRate={playbackRate}
+              crossfadeDuration={crossfadeDuration}
+              onSelectPlaybackRate={setPlaybackRate}
+              onSelectCrossfadeDuration={setCrossfadeDuration}
+              sleepTimerActive={sleepTimerOption !== null}
+              onOpenSleepTimer={() => toggleSleepTimerModal(true)}
+              onOpenVisualizer={() => toggleVisualizer(true)}
+              onOpenMiniPlayer={() => toggleMiniPlayer(true)}
+              onOpenShareTrack={currentTrack ? () => useUIStore.getState().toggleShareTrack(true) : undefined}
+              hasTrack={!!currentTrack}
             />
+
+            {/* Volume Control */}
+            <div className="pl-1 sm:pl-2 border-l border-[var(--liquid-glass-border-subtle)]">
+              <VolumeControl
+                volume={volume}
+                isMuted={isMuted}
+                onVolumeChange={setVolume}
+                onToggleMute={toggleMute}
+              />
+            </div>
           </div>
         </div>
 
