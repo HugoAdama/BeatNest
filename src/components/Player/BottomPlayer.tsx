@@ -69,12 +69,12 @@ export const BottomPlayer: React.FC = () => {
 
   return (
     <>
-      <footer className="fixed bottom-2 sm:bottom-3.5 inset-x-2 sm:inset-x-4 md:inset-x-6 max-w-7xl mx-auto z-30 liquid-dock rounded-2xl sm:rounded-3xl p-2.5 sm:px-5 sm:py-3 select-none transition-all">
+      <footer className="absolute bottom-2.5 sm:bottom-3.5 left-2.5 right-2.5 sm:left-4 sm:right-4 md:left-6 md:right-6 max-w-6xl mx-auto z-30 liquid-dock rounded-2xl sm:rounded-3xl p-2.5 sm:px-4 md:px-5 sm:py-2.5 md:py-3 select-none transition-all">
         {/* Desktop & Tablet Layout (>= md) */}
-        <div className="hidden md:flex items-center justify-between gap-4">
+        <div className="hidden md:flex items-center justify-between gap-3 lg:gap-4">
           {/* Left: Track Info & Favorite */}
-          <div className="flex items-center gap-3 w-1/4 min-w-0">
-            <div className="relative w-12 h-12 rounded-2xl overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--liquid-glass-border)] shrink-0 flex items-center justify-center shadow-md transition-all">
+          <div className="flex items-center gap-3 w-1/4 min-w-[180px] max-w-[260px] shrink-0">
+            <div className="relative w-11 h-11 lg:w-12 lg:h-12 rounded-2xl overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--liquid-glass-border)] shrink-0 flex items-center justify-center shadow-md transition-all">
               {currentTrack?.coverUrl ? (
                 <img
                   src={currentTrack.coverUrl}
@@ -99,10 +99,10 @@ export const BottomPlayer: React.FC = () => {
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-[var(--app-text)] truncate">
+              <p className="text-xs lg:text-sm font-semibold text-[var(--app-text)] truncate">
                 {currentTrack ? currentTrack.title : 'BeatNest'}
               </p>
-              <p className="text-xs text-[var(--app-text-muted)] truncate">
+              <p className="text-[11px] lg:text-xs text-[var(--app-text-muted)] truncate">
                 {currentTrack
                   ? `${currentTrack.artist} • ${currentTrack.album}`
                   : 'Selecciona una pista para reproducir'}
@@ -112,20 +112,20 @@ export const BottomPlayer: React.FC = () => {
             {currentTrack && (
               <button
                 onClick={() => toggleFavorite(currentTrack.id)}
-                className={`p-2 rounded-xl transition-all hover:scale-110 active:scale-95 ${
+                className={`p-1.5 lg:p-2 rounded-xl transition-all hover:scale-110 active:scale-95 ${
                   isFavorite
                     ? 'text-red-500 bg-red-500/10'
                     : 'text-[var(--app-text-muted)] hover:text-red-500 hover:bg-[var(--app-surface-hover)]'
                 }`}
                 title={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
               >
-                <Heart size={17} fill={isFavorite ? 'currentColor' : 'none'} />
+                <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
               </button>
             )}
           </div>
 
           {/* Center: Controls & Scrubber */}
-          <div className="flex flex-col items-center w-1/2 max-w-xl">
+          <div className="flex-1 flex flex-col items-center max-w-xl min-w-0 px-2">
             <PlaybackControls
               isPlaying={isPlaying}
               isShuffled={isShuffled}
@@ -149,7 +149,7 @@ export const BottomPlayer: React.FC = () => {
           </div>
 
           {/* Right: Tools & Volume */}
-          <div className="flex items-center gap-1.5 w-1/4 justify-end">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 justify-end w-1/4 min-w-fit">
             <PlayerMenus
               playbackRate={playbackRate}
               crossfadeDuration={crossfadeDuration}
@@ -160,7 +160,7 @@ export const BottomPlayer: React.FC = () => {
             {/* Lyrics trigger */}
             <button
               onClick={() => toggleLyrics(true)}
-              className={`p-2 rounded-xl transition-colors relative ${
+              className={`p-1.5 lg:p-2 rounded-xl transition-colors relative ${
                 isLyricsOpen
                   ? 'bg-[var(--app-accent)]/20 text-[var(--app-accent)] font-bold'
                   : currentTrack?.lyrics
@@ -169,7 +169,7 @@ export const BottomPlayer: React.FC = () => {
               }`}
               title="Letras sincronizadas"
             >
-              <AlignLeft size={17} />
+              <AlignLeft size={16} />
               {currentTrack?.lyrics && (
                 <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[var(--app-accent)]" />
               )}
@@ -178,14 +178,14 @@ export const BottomPlayer: React.FC = () => {
             {/* Equalizer trigger */}
             <button
               onClick={() => toggleEqualizer(true)}
-              className={`p-2 rounded-xl transition-colors relative ${
+              className={`p-1.5 lg:p-2 rounded-xl transition-colors relative ${
                 eqEnabled
                   ? 'text-[#7C5CFF] bg-[#7C5CFF]/15'
                   : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
               }`}
               title="Ecualizador de 5 bandas"
             >
-              <Sliders size={17} />
+              <Sliders size={16} />
               {eqEnabled && (
                 <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[var(--app-accent)]" />
               )}
@@ -194,23 +194,23 @@ export const BottomPlayer: React.FC = () => {
             {/* Visualizer trigger */}
             <button
               onClick={() => toggleVisualizer(true)}
-              className="p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-accent)] hover:bg-[var(--app-surface-hover)] transition-colors"
+              className="p-1.5 lg:p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-accent)] hover:bg-[var(--app-surface-hover)] transition-colors"
               title="Visualizador de audio"
             >
-              <Activity size={17} />
+              <Activity size={16} />
             </button>
 
             {/* Sleep Timer trigger */}
             <button
               onClick={() => toggleSleepTimerModal(true)}
-              className={`p-2 rounded-xl transition-colors relative ${
+              className={`p-1.5 lg:p-2 rounded-xl transition-colors relative ${
                 sleepTimerOption !== null
                   ? 'text-[#4FD1C5] bg-[#4FD1C5]/15 font-bold'
                   : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
               }`}
               title="Temporizador de apagado"
             >
-              <Timer size={17} />
+              <Timer size={16} />
               {sleepTimerOption !== null && (
                 <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#4FD1C5] animate-pulse" />
               )}
@@ -220,33 +220,33 @@ export const BottomPlayer: React.FC = () => {
             {currentTrack && (
               <button
                 onClick={() => useUIStore.getState().toggleShareTrack(true)}
-                className="p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
+                className="hidden xl:flex p-1.5 lg:p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
                 title="Compartir tarjeta de canción"
               >
-                <Share2 size={17} />
+                <Share2 size={16} />
               </button>
             )}
 
             {/* Mini Player mode toggle */}
             <button
               onClick={() => toggleMiniPlayer(true)}
-              className="hidden lg:flex p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
+              className="hidden lg:flex p-1.5 lg:p-2 rounded-xl text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] transition-colors"
               title="Modo mini reproductor"
             >
-              <Minimize2 size={17} />
+              <Minimize2 size={16} />
             </button>
 
             {/* Queue trigger */}
             <button
               onClick={() => setIsQueueOpen(!isQueueOpen)}
-              className={`p-2 rounded-xl transition-colors relative ${
+              className={`p-1.5 lg:p-2 rounded-xl transition-colors relative ${
                 isQueueOpen
                   ? 'bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white shadow-sm'
                   : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
               }`}
               title="Cola de reproducción"
             >
-              <ListMusic size={17} />
+              <ListMusic size={16} />
               {queue.length > 0 && (
                 <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-[var(--app-accent)] text-white text-[10px] font-bold">
                   {queue.length}
