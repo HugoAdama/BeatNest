@@ -229,8 +229,8 @@ export const LibraryHeader: React.FC<LibraryHeaderProps> = ({
                     onClick={() => {
                       if (playlistTracks.length > 0) {
                         playTrack(playlistTracks[0], playlistTracks, false, {
-                          playlistId: currentPlaylist.id,
-                          playlistTrackIds: currentPlaylist.trackIds,
+                          playlistId: playlist.id,
+                          playlistTrackIds: playlist.trackIds,
                         });
                         showToast('Reproduciendo playlist', `Iniciando «${playlist.name}»`, 'info');
                       }
