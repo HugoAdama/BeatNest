@@ -80,6 +80,16 @@ const loadSavedCustomPresets = (): EqualizerPreset[] => {
   }
 };
 
+const loadSavedCrossfade = (): number => {
+  if (typeof window === 'undefined') return 3;
+  const val = localStorage.getItem('beatnest_crossfade');
+  if (val !== null) {
+    const num = Number(val);
+    if (!isNaN(num) && num >= 0 && num <= 12) return num;
+  }
+  return 3;
+};
+
 let hasTriggeredAutoCrossfade = false;
 
 export const usePlayerStore = create<PlayerStore>((set, get) => ({
@@ -92,7 +102,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   repeatMode: 'off',
   isShuffled: false,
   playbackRate: 1.0,
-  crossfadeDuration: 3,
+  crossfadeDuration: loadSavedCrossfade(),
   queue: [],
   queueIndex: -1,
   recentTracks: [],
@@ -124,13 +134,15 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
           });
 
           // Automatic Crossfade trigger before track ends
-          const { crossfadeDuration, queue, queueIndex } = get();
+          const { crossfadeDuration, queue, queueIndex, repeatMode } = get();
+          const hasNext = queueIndex < queue.length - 1 || repeatMode === 'all';
           if (
             crossfadeDuration > 0 &&
-            dur > crossfadeDuration * 2 &&
+            dur > crossfadeDuration + 0.5 &&
             dur - cur <= crossfadeDuration &&
             !hasTriggeredAutoCrossfade &&
-            queueIndex < queue.length - 1
+            hasNext &&
+            repeatMode !== 'one'
           ) {
             hasTriggeredAutoCrossfade = true;
             get().nextTrack(true);
@@ -140,6 +152,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
       audio.onended = () => {
         const activeAudio = audioEngine.getAudioElement();
+        // Only the current active audio ending triggers nextTrack.
+        // Outgoing audio from a crossfade is silenced and ignored.
         if (audio === activeAudio) {
           const { repeatMode, nextTrack } = get();
           if (repeatMode === 'one') {
@@ -151,16 +165,23 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         }
       };
 
-      audio.onplay = () => set({ isPlaying: true });
+      audio.onplay = () => {
+        if (audio === audioEngine.getAudioElement()) {
+          set({ isPlaying: true });
+        }
+      };
+
       audio.onpause = () => {
-        if (!audioEngine.isChannelCrossfading()) {
+        if (audio === audioEngine.getAudioElement() && !audioEngine.isChannelCrossfading()) {
           set({ isPlaying: false });
         }
       };
 
       audio.onerror = (e) => {
-        console.warn('Audio playback error:', e);
-        set({ isPlaying: false });
+        if (audio === audioEngine.getAudioElement()) {
+          console.warn('Audio playback error:', e);
+          set({ isPlaying: false });
+        }
       };
     };
 
@@ -222,7 +243,11 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       duration: track.duration || 0,
     });
 
-    const crossfadeSec = useCrossfade ? get().crossfadeDuration : 0;
+    const isAlreadyPlaying = get().isPlaying && !!audioEngine.getAudioElement().src;
+    const shouldCrossfade = useCrossfade !== undefined
+      ? useCrossfade
+      : (get().crossfadeDuration > 0 && isAlreadyPlaying);
+    const crossfadeSec = shouldCrossfade ? get().crossfadeDuration : 0;
     await audioEngine.loadTrack(track.file, crossfadeSec);
 
     try {
@@ -357,7 +382,16 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   setCrossfadeDuration: (sec: number) => {
-    set({ crossfadeDuration: Math.max(0, Math.min(12, sec)) });
+    const clamped = Math.max(0, Math.min(12, sec));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('beatnest_crossfade', String(clamped));
+    }
+    set({ crossfadeDuration: clamped });
+    showToast(
+      'Transición ajustada',
+      clamped > 0 ? `Crossfade configurado a ${clamped}s` : 'Crossfade desactivado',
+      'info'
+    );
   },
 
   addToQueue: (track: Track) => {

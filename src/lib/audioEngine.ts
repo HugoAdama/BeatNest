@@ -42,6 +42,18 @@ export class AudioEngine {
   private activeUrlB: string | null = null;
   private isCrossfading: boolean = false;
   private targetVolume: number = 0.85;
+  private crossfadeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private createFadeCurves(steps: number = 32): { outCurve: Float32Array; inCurve: Float32Array } {
+    const outCurve = new Float32Array(steps);
+    const inCurve = new Float32Array(steps);
+    for (let i = 0; i < steps; i++) {
+      const t = i / (steps - 1);
+      outCurve[i] = Math.cos(t * 0.5 * Math.PI);
+      inCurve[i] = Math.sin(t * 0.5 * Math.PI);
+    }
+    return { outCurve, inCurve };
+  }
 
   private constructor() {
     this.audioA = new Audio();
@@ -286,10 +298,20 @@ export class AudioEngine {
   public async loadTrack(fileOrUrl: File | string, crossfadeSec: number = 0): Promise<void> {
     await this.initAudioContext();
 
-    const isA = this.activeChannel === 'A';
-    const currentAudio = isA ? this.audioA : this.audioB;
-    const targetAudio = crossfadeSec > 0 && currentAudio.src && !currentAudio.paused ? (isA ? this.audioB : this.audioA) : currentAudio;
-    const isTargetA = targetAudio === this.audioA;
+    // Clear any pending crossfade timeout from a previous track transition
+    if (this.crossfadeTimer) {
+      clearTimeout(this.crossfadeTimer);
+      this.crossfadeTimer = null;
+    }
+
+    const currentAudio = this.getAudioElement();
+    const canCrossfade =
+      crossfadeSec > 0 &&
+      !!currentAudio.src &&
+      !currentAudio.paused &&
+      this.ctx !== null &&
+      this.gainNodeA !== null &&
+      this.gainNodeB !== null;
 
     // Resolve URL
     let newUrl = '';
@@ -299,119 +321,180 @@ export class AudioEngine {
       newUrl = URL.createObjectURL(fileOrUrl);
     }
 
-      if (crossfadeSec > 0 && this.ctx && this.gainNodeA && this.gainNodeB && !currentAudio.paused) {
-        this.isCrossfading = true;
+    if (canCrossfade) {
+      this.isCrossfading = true;
+      const outgoingChannel = this.activeChannel;
+      const incomingChannel = outgoingChannel === 'A' ? 'B' : 'A';
+      const outgoingAudio = outgoingChannel === 'A' ? this.audioA : this.audioB;
+      const incomingAudio = incomingChannel === 'A' ? this.audioA : this.audioB;
+      const outgoingGain = outgoingChannel === 'A' ? this.gainNodeA! : this.gainNodeB!;
+      const incomingGain = incomingChannel === 'A' ? this.gainNodeA! : this.gainNodeB!;
 
-        // Free previous target URL
-        if (isTargetA && this.activeUrlA && this.activeUrlA.startsWith('blob:')) {
-          URL.revokeObjectURL(this.activeUrlA);
-        } else if (!isTargetA && this.activeUrlB && this.activeUrlB.startsWith('blob:')) {
-          URL.revokeObjectURL(this.activeUrlB);
+      // Free previous blob for incoming channel if applicable
+      if (incomingChannel === 'A' && this.activeUrlA && this.activeUrlA.startsWith('blob:')) {
+        URL.revokeObjectURL(this.activeUrlA);
+      } else if (incomingChannel === 'B' && this.activeUrlB && this.activeUrlB.startsWith('blob:')) {
+        URL.revokeObjectURL(this.activeUrlB);
+      }
+
+      if (incomingChannel === 'A') this.activeUrlA = newUrl;
+      else this.activeUrlB = newUrl;
+
+      // Prepare incoming audio element
+      incomingAudio.src = newUrl;
+      incomingAudio.playbackRate = outgoingAudio.playbackRate;
+      incomingAudio.currentTime = 0;
+      incomingAudio.load();
+
+      // Immediately switch activeChannel so all store listeners and UI point to the new track
+      this.activeChannel = incomingChannel;
+
+      // Schedule equal-power studio crossfade ramps
+      const now = this.ctx!.currentTime;
+      outgoingGain.gain.cancelScheduledValues(now);
+      incomingGain.gain.cancelScheduledValues(now);
+
+      const { outCurve, inCurve } = this.createFadeCurves(32);
+      try {
+        outgoingGain.gain.setValueCurveAtTime(outCurve, now, crossfadeSec);
+        incomingGain.gain.setValueCurveAtTime(inCurve, now, crossfadeSec);
+      } catch {
+        outgoingGain.gain.setValueAtTime(1.0, now);
+        outgoingGain.gain.linearRampToValueAtTime(0.0, now + crossfadeSec);
+        incomingGain.gain.setValueAtTime(0.0, now);
+        incomingGain.gain.linearRampToValueAtTime(1.0, now + crossfadeSec);
+      }
+
+      // Start playing incoming audio
+      try {
+        await incomingAudio.play();
+      } catch (err) {
+        console.warn('Playback of incoming track during crossfade was prevented:', err);
+      }
+
+      // After crossfade duration, silence and pause outgoing audio
+      this.crossfadeTimer = setTimeout(() => {
+        outgoingAudio.pause();
+        outgoingAudio.currentTime = 0;
+        if (this.ctx) {
+          outgoingGain.gain.cancelScheduledValues(this.ctx.currentTime);
+          outgoingGain.gain.setValueAtTime(0, this.ctx.currentTime);
+          incomingGain.gain.cancelScheduledValues(this.ctx.currentTime);
+          incomingGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
         }
+        this.isCrossfading = false;
+        this.crossfadeTimer = null;
+      }, crossfadeSec * 1000);
 
-        if (isTargetA) this.activeUrlA = newUrl;
-        else this.activeUrlB = newUrl;
+    } else {
+      // Instant track load (no crossfade)
+      this.isCrossfading = false;
+      const isA = this.activeChannel === 'A';
+      const targetAudio = isA ? this.audioA : this.audioB;
+      const inactiveAudio = isA ? this.audioB : this.audioA;
 
-        targetAudio.src = newUrl;
-        targetAudio.load();
+      inactiveAudio.pause();
+      inactiveAudio.currentTime = 0;
 
-        const now = this.ctx.currentTime;
-        const currentGain = isA ? this.gainNodeA : this.gainNodeB;
-        const targetGain = isTargetA ? this.gainNodeA : this.gainNodeB;
-
-        // Cancel previous automation values before scheduling new ramps
-        currentGain.gain.cancelScheduledValues(now);
-        targetGain.gain.cancelScheduledValues(now);
-
-        // Prepare target gain
-        targetGain.gain.setValueAtTime(0, now);
-        targetGain.gain.linearRampToValueAtTime(1.0, now + crossfadeSec);
-
-        // Fade out current
-        currentGain.gain.setValueAtTime(1.0, now);
-        currentGain.gain.linearRampToValueAtTime(0.0, now + crossfadeSec);
-
-        await targetAudio.play();
-
-        // Switch active channel after ramp
-        setTimeout(() => {
-          currentAudio.pause();
-          currentAudio.currentTime = 0;
-          this.activeChannel = isTargetA ? 'A' : 'B';
-          this.isCrossfading = false;
-        }, crossfadeSec * 1000);
-
+      if (isA) {
+        if (this.activeUrlA && this.activeUrlA.startsWith('blob:')) URL.revokeObjectURL(this.activeUrlA);
+        this.activeUrlA = newUrl;
       } else {
-        // Instant switch (no crossfade)
-        if (isA) {
-          if (this.activeUrlA && this.activeUrlA.startsWith('blob:')) URL.revokeObjectURL(this.activeUrlA);
-          this.activeUrlA = newUrl;
-        } else {
-          if (this.activeUrlB && this.activeUrlB.startsWith('blob:')) URL.revokeObjectURL(this.activeUrlB);
-          this.activeUrlB = newUrl;
-        }
+        if (this.activeUrlB && this.activeUrlB.startsWith('blob:')) URL.revokeObjectURL(this.activeUrlB);
+        this.activeUrlB = newUrl;
+      }
 
-        if (this.gainNodeA && this.gainNodeB && this.ctx) {
+      if (this.gainNodeA && this.gainNodeB && this.ctx) {
+        const now = this.ctx.currentTime;
+        this.gainNodeA.gain.cancelScheduledValues(now);
+        this.gainNodeB.gain.cancelScheduledValues(now);
+        this.gainNodeA.gain.setValueAtTime(isA ? 1.0 : 0.0, now);
+        this.gainNodeB.gain.setValueAtTime(isA ? 0.0 : 1.0, now);
+      }
+
+      targetAudio.src = newUrl;
+      targetAudio.currentTime = 0;
+      targetAudio.load();
+    }
+  }
+
+  public async play(): Promise<void> {
+    await this.initAudioContext();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      try {
+        await this.ctx.resume();
+      } catch (err) {
+        console.warn('AudioContext resume failed:', err);
+      }
+    }
+
+    // If already in middle of active crossfade, the incoming audio is already playing with gain curve
+    if (this.isCrossfading) {
+      return this.getAudioElement().play().catch(console.warn);
+    }
+
+    // Smooth micro-fade in to eliminate clicks
+    if (this.masterGain && this.ctx) {
+      const now = this.ctx.currentTime;
+      this.masterGain.gain.cancelScheduledValues(now);
+      this.masterGain.gain.setValueAtTime(0.001, now);
+      this.masterGain.gain.linearRampToValueAtTime(this.targetVolume, now + 0.04);
+    }
+
+    return this.getAudioElement().play();
+  }
+
+  public pause(): void {
+    if (this.crossfadeTimer) {
+      clearTimeout(this.crossfadeTimer);
+      this.crossfadeTimer = null;
+    }
+    this.isCrossfading = false;
+
+    // Smooth micro-fade out over 35ms then pause elements
+    if (this.masterGain && this.ctx) {
+      const now = this.ctx.currentTime;
+      this.masterGain.gain.cancelScheduledValues(now);
+      this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
+      this.masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.035);
+      setTimeout(() => {
+        this.audioA.pause();
+        this.audioB.pause();
+        if (this.masterGain && this.ctx) {
+          const resetNow = this.ctx.currentTime;
+          this.masterGain.gain.cancelScheduledValues(resetNow);
+          this.masterGain.gain.setValueAtTime(this.targetVolume, resetNow);
+        }
+      }, 36);
+    } else {
+      this.audioA.pause();
+      this.audioB.pause();
+    }
+  }
+
+  public seek(seconds: number): void {
+    if (isFinite(seconds) && seconds >= 0) {
+      if (this.isCrossfading) {
+        if (this.crossfadeTimer) {
+          clearTimeout(this.crossfadeTimer);
+          this.crossfadeTimer = null;
+        }
+        this.isCrossfading = false;
+        const inactive = this.getInactiveAudioElement();
+        inactive.pause();
+        inactive.currentTime = 0;
+        if (this.ctx && this.gainNodeA && this.gainNodeB) {
           const now = this.ctx.currentTime;
+          const isA = this.activeChannel === 'A';
           this.gainNodeA.gain.cancelScheduledValues(now);
           this.gainNodeB.gain.cancelScheduledValues(now);
           this.gainNodeA.gain.setValueAtTime(isA ? 1.0 : 0.0, now);
           this.gainNodeB.gain.setValueAtTime(isA ? 0.0 : 1.0, now);
         }
-
-        currentAudio.src = newUrl;
-        currentAudio.load();
       }
+      this.getAudioElement().currentTime = seconds;
     }
-
-    public async play(): Promise<void> {
-      await this.initAudioContext();
-      if (this.ctx && this.ctx.state === 'suspended') {
-        try {
-          await this.ctx.resume();
-        } catch (err) {
-          console.warn('AudioContext resume failed:', err);
-        }
-      }
-
-      // Smooth micro-fade in to eliminate clicks
-      if (this.masterGain && this.ctx) {
-        const now = this.ctx.currentTime;
-        this.masterGain.gain.cancelScheduledValues(now);
-        this.masterGain.gain.setValueAtTime(0.001, now);
-        this.masterGain.gain.linearRampToValueAtTime(this.targetVolume, now + 0.04);
-      }
-
-      return this.getAudioElement().play();
-    }
-
-    public pause(): void {
-      // Smooth micro-fade out over 35ms then pause elements
-      if (this.masterGain && this.ctx) {
-        const now = this.ctx.currentTime;
-        this.masterGain.gain.cancelScheduledValues(now);
-        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
-        this.masterGain.gain.linearRampToValueAtTime(0.0001, now + 0.035);
-        setTimeout(() => {
-          this.audioA.pause();
-          this.audioB.pause();
-          if (this.masterGain && this.ctx) {
-            const resetNow = this.ctx.currentTime;
-            this.masterGain.gain.cancelScheduledValues(resetNow);
-            this.masterGain.gain.setValueAtTime(this.targetVolume, resetNow);
-          }
-        }, 36);
-      } else {
-        this.audioA.pause();
-        this.audioB.pause();
-      }
-    }
-
-    public seek(seconds: number): void {
-      if (isFinite(seconds) && seconds >= 0) {
-        this.getAudioElement().currentTime = seconds;
-      }
-    }
+  }
 
     public setVolume(vol: number): void {
       const clamped = Math.max(0, Math.min(1, vol));
