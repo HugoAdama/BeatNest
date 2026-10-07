@@ -10,6 +10,8 @@ import {
   FolderPlus,
   Trash2,
   Edit3,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import type { Track } from '../../types/music';
 import { usePlayerStore } from '../../stores/usePlayerStore';
@@ -23,12 +25,16 @@ interface TrackRowProps {
   track: Track;
   index: number;
   onOpenCreatePlaylistModal: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
 export const TrackRow: React.FC<TrackRowProps> = ({
   track,
   index,
   onOpenCreatePlaylistModal,
+  onMoveUp,
+  onMoveDown,
 }) => {
   const { currentTrack, isPlaying, playTrack, togglePlay, addToQueue, playNextInQueue } = usePlayerStore();
   const { toggleFavorite, deleteTrack, tracks } = useLibraryStore();
@@ -230,6 +236,36 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                 <Edit3 size={14} className="text-[#7C5CFF]" />
                 <span>Editar metadatos</span>
               </button>
+
+              {(onMoveUp || onMoveDown) && (
+                <>
+                  <div className="my-1 border-t border-[var(--app-border)]" />
+                  {onMoveUp && (
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        onMoveUp();
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
+                    >
+                      <ArrowUp size={14} className="text-[#4FD1C5]" />
+                      <span>Subir posición</span>
+                    </button>
+                  )}
+                  {onMoveDown && (
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        onMoveDown();
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
+                    >
+                      <ArrowDown size={14} className="text-[#4FD1C5]" />
+                      <span>Bajar posición</span>
+                    </button>
+                  )}
+                </>
+              )}
 
               <div className="my-1 border-t border-[var(--app-border)]" />
 

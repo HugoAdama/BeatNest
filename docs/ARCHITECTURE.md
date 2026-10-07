@@ -107,8 +107,38 @@ ConvolverNode (Impulso Sintético)       │
 GainNode (wetGain)                      │
         │                               │
         ├───────────────────────────────┘
+GainNode (masterGain — Crossfade y Fade-Out)
+        │
         ▼
-GainNode (masterGain — Fade-Out y Volumen Principal)
+GainNode (preampGain — Preamplificador -6 dB a +6 dB)
+        │
+        ▼
+BiquadFilterNode #0 (Lowshelf: 60 Hz)
+        │
+        ▼
+BiquadFilterNode #1 (Peaking: 250 Hz, Q: 1.0)
+        │
+        ▼
+BiquadFilterNode #2 (Peaking: 1 kHz, Q: 1.0)
+        │
+        ▼
+BiquadFilterNode #3 (Peaking: 4 kHz, Q: 1.0)
+        │
+        ▼
+BiquadFilterNode #4 (Highshelf: 16 kHz)
+        │
+        ├───────────────────────────────┐ (Canal Seco / Dry)
+        │                               ▼
+        │                         GainNode (dryGain)
+        ▼                               │
+ConvolverNode (Impulso Sintético)       │
+        │                               │
+        ▼                               │
+GainNode (wetGain)                      │
+        │                               │
+        ├───────────────────────────────┘
+        ▼
+DynamicsCompressorNode (Auto-Gain / Nivelación y Limitador Suave)
         │
         ▼
 AnalyserNode (getByteFrequencyData / getByteTimeDomainData)
@@ -126,14 +156,16 @@ Sincronización bidireccional con el sistema operativo:
 Para garantizar un mantenimiento óptimo y escalable, el código se estructura en módulos desacoplados:
 
 1. **Gestión de Estado Especializada (`src/stores/`)**:
-   - `usePlayerStore`: Controla exclusivamente la reproducción de audio, el progreso, la cola de pistas, el historial reciente de 50 canciones y los parámetros del ecualizador.
-   - `useSleepTimerStore`: Gestiona el temporizador de apagado en segundo plano, calculando el desvanecimiento de volumen progresivo en los últimos 45 segundos y pausando el reproductor al culminar.
-   - `useUIStore`: Administra de manera aislada la visibilidad de modales y paneles (Visualizador, Ecualizador, Letras sincronizadas, Mini Reproductor, Atajos de teclado, Editor de metadatos), evitando re-renderizados innecesarios cuando el temporizador de audio (`currentTime`) se actualiza continuamente.
-   - `useLibraryStore`: Gestiona la biblioteca musical, playlists, ordenamiento, filtrado por chips de género y persistencia en IndexedDB.
+   - `usePlayerStore`: Controla exclusivamente la reproducción de audio, progreso, cola, historial de 50 canciones, preamplificador y parámetros del ecualizador.
+   - `useSleepTimerStore`: Gestiona el temporizador de apagado en segundo plano con desvanecimiento de volumen progresivo en los últimos 45 segundos.
+   - `useUIStore`: Administra de manera aislada la visibilidad de modales y paneles (Visualizador, Ecualizador, Letras, Mini Reproductor, Atajos, Editor ID3, Paleta de Comandos, Estadísticas, Tarjeta para compartir).
+   - `useLibraryStore`: Gestiona la biblioteca musical, playlists con reordenamiento manual, filtros de género y persistencia en IndexedDB.
+   - `useToastStore`: Sistema unificado de avisos y notificaciones flotantes con auto-cierre temporizado.
    - `useThemeStore`: Controla el modo claro y modo oscuro.
 
 2. **Capa de Servicios y Utilidades (`src/lib/`)**:
-   - `audioEngine.ts`: Manejo de Web Audio API, nodos de ganancia con crossfade dual, simulación de sala acústica (`ConvolverNode`), atenuación gradual y análisis espectral.
+   - `audioEngine.ts`: Manejo de Web Audio API, nodos de ganancia con crossfade dual, preamplificador, reverberación convolutiva sintética, compresor dinámico y análisis espectral.
+   - `colorExtractor.ts`: Extracción de paleta cromática dominante a partir de la carátula para alimentar los fondos dinámicos reactivos.
    - `audioGenerator.ts`: Síntesis de ondas armónicas en memoria y codificación binaria WAV (`audioBufferToWav`).
    - `backup.ts`: Exportación e importación segura en formato JSON con validación de esquema y resincronización de IndexedDB.
    - `lyrics.ts`: Procesamiento y emparejamiento de letras en formato LRC.
@@ -142,5 +174,6 @@ Para garantizar un mantenimiento óptimo y escalable, el código se estructura e
 3. **Soporte PWA y Modo Offline (`public/sw.js`)**:
    - Manifiesto web para instalación como aplicación autónoma en escritorio y móviles.
    - Service Worker que implementa almacenamiento en caché estático sin interferir en peticiones de datos de audio locales.
+
 
 

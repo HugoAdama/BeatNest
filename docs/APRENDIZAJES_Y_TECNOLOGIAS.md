@@ -118,9 +118,26 @@ Los reproductores modernos suelen exigir cuentas de usuario, suscripciones o sub
 - **El Desafío**: Un Service Worker estándar que intercepte indiscriminadamente todas las solicitudes de red puede romper o degradar el rendimiento al intentar almacenar en caché URLs `blob:` de archivos de audio de alta fidelidad (FLAC/WAV de 50MB o más), lo que agotaría rápidamente la cuota de almacenamiento del navegador.
 - **El Aprendizaje**: Se configuró `public/sw.js` con una regla de filtrado estricta: solo se interceptan solicitudes HTTP/HTTPS `GET` para los recursos del cascarón de la aplicación (`index.html`, bundles JS, CSS e iconos vectoriales), ignorando por completo los flujos binarios y URLs en memoria. Esto brinda soporte offline total y capacidad de instalación como aplicación nativa manteniendo el acceso ultrarrápido a los archivos locales.
 
+### 3.11 Normalización de Sonoridad y Protección contra Saturación con DynamicsCompressorNode
+- **El Desafío**: Cuando un usuario aplica un refuerzo pronunciado de frecuencias graves en el ecualizador (+6 dB o más a 60 Hz) o reproduce pistas masterizadas con volumen dispar, la señal digital puede superar el techo de 0 dBFS, provocando desagradables artefactos de distorsión armónica por recorte (*clipping*).
+- **El Aprendizaje**: Se situó un nodo `DynamicsCompressorNode` calibrado para masterización suave al final de la cadena de efectos (antes del analizador FFT). Al habilitarse, comprime con codo suave (*knee* de 10) las crestas que superan los -20 dBFS, nivelando homogéneamente la percepción de volumen entre canciones y eliminando por completo la saturación digital sin necesidad de compresión agresiva.
+
+### 3.12 Muestreo Cromático Efímero en Canvas para Fondos Reactivos
+- **El Desafío**: Extraer colores dominantes de imágenes en el navegador suele requerir bibliotecas pesadas de cuantización de color o procesamiento intensivo en el hilo principal de renderizado.
+- **El Aprendizaje**: Se diseñó `colorExtractor.ts`, una solución ultraliviana que dibuja la carátula en un elemento `HTMLCanvasElement` diminuto de 32x32 píxeles en memoria. Al recorrer los píxeles descartando blancos, negros y tonos grisáceos apagados mediante un índice de saturación, se determinan los dos colores más vibrantes en menos de 4 milisegundos. Dichos valores se inyectan como variables CSS dinámicas (`--dynamic-glow-1`, `--dynamic-glow-2`), transformando la atmósfera de la interfaz a 60 FPS con transiciones de color orgánicas.
+
+### 3.13 Composición Gráfica en Alta Resolución y Exportación Offscreen
+- **El Desafío**: Los usuarios disfrutan compartiendo sus descubrimientos musicales en redes, pero capturar pantallas manuales recorta elementos, muestra información desordenada o pierde calidad gráfica.
+- **El Aprendizaje**: Se aprovechó la API Canvas 2D en `ShareTrackModal.tsx` para componer una tarjeta gráfica de proporción 1200x630 (estándar Open Graph). El algoritmo combina capas de gradientes reactivos, carátula con bordes redondeados y sombra, tipografía nítida y una representación gráfica matemática de ondas sonoras, exportando el resultado en un archivo PNG sin pérdidas mediante `canvas.toDataURL('image/png')` al instante.
+
+### 3.14 Paleta de Comandos y Navegación Eficiente con Atajos Modales
+- **El Desafío**: Agregar atajos globales de teclado (`Ctrl + K`) puede chocar con atajos nativos del navegador o interferir cuando el usuario está redactando títulos o buscando texto dentro de campos de formulario.
+- **El Aprendizaje**: Se estructuró un listener centralizado en `useKeyboardShortcuts.ts` que valida activamente el `e.target` ignorando cualquier elemento `input`, `textarea` o editable. La paleta de comandos unifica en una sola vista la búsqueda de canciones, filtrado de listas y disparo de herramientas, permitiendo operar BeatNest al 100% sin necesidad del ratón.
+
 ---
 
 ## 4. Conclusión
 
 BeatNest demuestra que las aplicaciones web modernas pueden competir en rendimiento, capacidades de procesamiento de audio en tiempo real y fidelidad visual con aplicaciones de escritorio tradicionales, manteniendo al mismo tiempo las ventajas de portabilidad, instalación PWA y garantía de privacidad absoluta.
+
 

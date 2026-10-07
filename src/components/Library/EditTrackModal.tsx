@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Edit3, Music, User, Disc, Tag, Calendar, Save } from 'lucide-react';
 import { useUIStore } from '../../stores/useUIStore';
 import { useLibraryStore } from '../../stores/useLibraryStore';
+import { showToast } from '../../stores/useToastStore';
 
 export const EditTrackModal: React.FC = () => {
   const { editingTrack, setEditingTrack } = useUIStore();
@@ -50,9 +51,11 @@ export const EditTrackModal: React.FC = () => {
         genre: genre.trim() || undefined,
         year: isNaN(Number(parsedYear)) ? undefined : parsedYear,
       });
+      showToast('Metadatos actualizados', `«${title.trim()}» se guardó correctamente`);
       setEditingTrack(null);
     } catch (err) {
       console.error('Error updating track metadata:', err);
+      showToast('Error al actualizar', 'No se pudieron guardar los cambios', 'warning');
     } finally {
       setIsSaving(false);
     }

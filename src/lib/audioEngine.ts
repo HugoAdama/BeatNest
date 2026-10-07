@@ -32,6 +32,10 @@ export class AudioEngine {
   private dryGain: GainNode | null = null;
   private wetGain: GainNode | null = null;
   private reverbMode: ReverbMode = 'off';
+  private preampGain: GainNode | null = null;
+  private compressor: DynamicsCompressorNode | null = null;
+  private isAutoGainEnabled: boolean = false;
+  private currentPreampDb: number = 0;
   private isInitialized: boolean = false;
 
   private activeUrlA: string | null = null;
@@ -124,8 +128,17 @@ export class AudioEngine {
       this.dryGain.gain.value = 1.0;
       this.wetGain.gain.value = 0.0;
 
-      // Chain: MasterGain -> EQ0 -> ... -> EQ4 -> (dryGain + convolver/wetGain) -> Analyser -> Destination
-      let currentNode: AudioNode = this.masterGain;
+      // Preamp Gain Node
+      this.preampGain = this.ctx.createGain();
+      this.preampGain.gain.value = Math.pow(10, this.currentPreampDb / 20);
+
+      // Dynamics Compressor (Auto-Gain Control / Peak Limiter)
+      this.compressor = this.ctx.createDynamicsCompressor();
+      this.updateCompressorSettings();
+
+      // Chain: MasterGain -> PreampGain -> EQ0 -> ... -> EQ4 -> (dryGain + convolver/wetGain) -> Compressor -> Analyser -> Destination
+      this.masterGain.connect(this.preampGain);
+      let currentNode: AudioNode = this.preampGain;
       for (const filter of this.eqFilters) {
         currentNode.connect(filter);
         currentNode = filter;
@@ -135,8 +148,9 @@ export class AudioEngine {
       currentNode.connect(this.convolver);
       this.convolver.connect(this.wetGain);
 
-      this.dryGain.connect(this.analyser);
-      this.wetGain.connect(this.analyser);
+      this.dryGain.connect(this.compressor);
+      this.wetGain.connect(this.compressor);
+      this.compressor.connect(this.analyser);
       this.analyser.connect(this.ctx.destination);
 
       this.isInitialized = true;
@@ -188,6 +202,45 @@ export class AudioEngine {
 
   public getSpatialReverb(): ReverbMode {
     return this.reverbMode;
+  }
+
+  public setPreampGain(gainDb: number): void {
+    const clamped = Math.max(-6, Math.min(6, gainDb));
+    this.currentPreampDb = clamped;
+    if (this.preampGain && this.ctx) {
+      const linear = Math.pow(10, clamped / 20);
+      this.preampGain.gain.setTargetAtTime(linear, this.ctx.currentTime, 0.05);
+    }
+  }
+
+  public getPreampGain(): number {
+    return this.currentPreampDb;
+  }
+
+  public setAutoGainEnabled(enabled: boolean): void {
+    this.isAutoGainEnabled = enabled;
+    this.updateCompressorSettings();
+  }
+
+  public isAutoGain(): boolean {
+    return this.isAutoGainEnabled;
+  }
+
+  private updateCompressorSettings(): void {
+    if (!this.compressor || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    if (this.isAutoGainEnabled) {
+      // Mastering-grade soft leveling limiter
+      this.compressor.threshold.setTargetAtTime(-20, now, 0.05);
+      this.compressor.knee.setTargetAtTime(10, now, 0.05);
+      this.compressor.ratio.setTargetAtTime(3.5, now, 0.05);
+      this.compressor.attack.setTargetAtTime(0.005, now, 0.05);
+      this.compressor.release.setTargetAtTime(0.2, now, 0.05);
+    } else {
+      // Pass-through neutral
+      this.compressor.threshold.setTargetAtTime(0, now, 0.05);
+      this.compressor.ratio.setTargetAtTime(1, now, 0.05);
+    }
   }
 
   public async fadeOut(durationSec: number): Promise<void> {

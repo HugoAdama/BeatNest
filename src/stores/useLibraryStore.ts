@@ -31,6 +31,7 @@ interface LibraryStore {
   deletePlaylist: (playlistId: string) => Promise<void>;
   addTrackToPlaylist: (playlistId: string, trackId: string) => Promise<void>;
   removeTrackFromPlaylist: (playlistId: string, trackId: string) => Promise<void>;
+  reorderPlaylistTracks: (playlistId: string, startIndex: number, endIndex: number) => Promise<void>;
   setActiveTab: (tab: LibraryTab) => void;
   setSelectedPlaylistId: (id: string | null) => void;
   setSearchQuery: (query: string) => void;
@@ -307,6 +308,28 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
         };
         db.playlists.update(playlistId, {
           trackIds: updated.trackIds,
+          updatedAt: updated.updatedAt,
+        }).catch(console.warn);
+        return updated;
+      }
+      return pl;
+    });
+    set({ playlists });
+  },
+
+  reorderPlaylistTracks: async (playlistId: string, startIndex: number, endIndex: number) => {
+    const playlists = get().playlists.map((pl) => {
+      if (pl.id === playlistId) {
+        const nextIds = [...pl.trackIds];
+        const [moved] = nextIds.splice(startIndex, 1);
+        nextIds.splice(endIndex, 0, moved);
+        const updated = {
+          ...pl,
+          trackIds: nextIds,
+          updatedAt: Date.now(),
+        };
+        db.playlists.update(playlistId, {
+          trackIds: nextIds,
           updatedAt: updated.updatedAt,
         }).catch(console.warn);
         return updated;

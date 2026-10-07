@@ -17,7 +17,7 @@ export const PlayerMenus: React.FC<PlayerMenusProps> = ({
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [showCrossfadeMenu, setShowCrossfadeMenu] = useState(false);
 
-  const speedOptions = [0.8, 1.0, 1.25, 1.5, 2.0];
+  const speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
   const crossfadeOptions = [
     { sec: 0, label: 'Desactivado' },
     { sec: 2, label: '2 segundos' },

@@ -9,6 +9,9 @@ interface UIStore {
   isLyricsOpen: boolean;
   isMiniPlayer: boolean;
   editingTrack: Track | null;
+  isCommandPaletteOpen: boolean;
+  isStatsOpen: boolean;
+  isShareTrackOpen: boolean;
 
   // Actions
   toggleVisualizer: (open?: boolean) => void;
@@ -17,6 +20,9 @@ interface UIStore {
   toggleShortcutModal: (open?: boolean) => void;
   toggleLyrics: (open?: boolean) => void;
   toggleMiniPlayer: (open?: boolean) => void;
+  toggleCommandPalette: (open?: boolean) => void;
+  toggleStats: (open?: boolean) => void;
+  toggleShareTrack: (open?: boolean) => void;
   setEditingTrack: (track: Track | null) => void;
   closeAllModals: () => void;
 }
@@ -29,6 +35,9 @@ export const useUIStore = create<UIStore>((set) => ({
   isLyricsOpen: false,
   isMiniPlayer: false,
   editingTrack: null,
+  isCommandPaletteOpen: false,
+  isStatsOpen: false,
+  isShareTrackOpen: false,
 
   toggleVisualizer: (open?: boolean) =>
     set((state) => ({
@@ -58,6 +67,21 @@ export const useUIStore = create<UIStore>((set) => ({
       isMiniPlayer: open !== undefined ? open : !state.isMiniPlayer,
     })),
 
+  toggleCommandPalette: (open?: boolean) =>
+    set((state) => ({
+      isCommandPaletteOpen: open !== undefined ? open : !state.isCommandPaletteOpen,
+    })),
+
+  toggleStats: (open?: boolean) =>
+    set((state) => ({
+      isStatsOpen: open !== undefined ? open : !state.isStatsOpen,
+    })),
+
+  toggleShareTrack: (open?: boolean) =>
+    set((state) => ({
+      isShareTrackOpen: open !== undefined ? open : !state.isShareTrackOpen,
+    })),
+
   setEditingTrack: (track: Track | null) =>
     set({ editingTrack: track }),
 
@@ -68,5 +92,8 @@ export const useUIStore = create<UIStore>((set) => ({
       isShortcutModalOpen: false,
       isLyricsOpen: false,
       editingTrack: null,
+      isCommandPaletteOpen: false,
+      isStatsOpen: false,
+      isShareTrackOpen: false,
     }),
 }));

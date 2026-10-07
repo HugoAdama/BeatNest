@@ -26,6 +26,8 @@ interface PlayerStore {
   eqEnabled: boolean;
   eqGains: [number, number, number, number, number];
   activePresetId: string;
+  preampGain: number;
+  autoGainEnabled: boolean;
   isShortcutModalOpen: boolean;
   isLyricsOpen: boolean;
 
@@ -43,6 +45,8 @@ interface PlayerStore {
   setPlaybackRate: (rate: number) => void;
   setCrossfadeDuration: (sec: number) => void;
   setReverbMode: (mode: ReverbMode) => void;
+  setPreampGain: (gainDb: number) => void;
+  toggleAutoGain: (enabled?: boolean) => void;
   addToQueue: (track: Track) => void;
   playNextInQueue: (track: Track) => void;
   removeFromQueue: (index: number) => void;
@@ -85,6 +89,8 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   eqEnabled: true,
   eqGains: [0, 0, 0, 0, 0],
   activePresetId: 'flat',
+  preampGain: 0,
+  autoGainEnabled: false,
   isShortcutModalOpen: false,
   isLyricsOpen: false,
 
@@ -392,6 +398,17 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   setReverbMode: (mode: ReverbMode) => {
     audioEngine.setSpatialReverb(mode);
     set({ reverbMode: mode });
+  },
+
+  setPreampGain: (gainDb: number) => {
+    audioEngine.setPreampGain(gainDb);
+    set({ preampGain: gainDb });
+  },
+
+  toggleAutoGain: (enabled?: boolean) => {
+    const nextState = enabled !== undefined ? enabled : !get().autoGainEnabled;
+    audioEngine.setAutoGainEnabled(nextState);
+    set({ autoGainEnabled: nextState });
   },
 
   setVisualizerMode: (mode: VisualizerMode) => {

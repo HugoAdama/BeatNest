@@ -188,4 +188,57 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 - **Service Worker Local**: Estrategia de caché de recursos estáticos (*network-first* con respaldo en caché) que permite abrir y utilizar BeatNest incluso sin conexión a Internet.
 - **Respeto a Recursos Locales**: El Service Worker omite intercepciones de streams de audio `blob:` y URLs en memoria para mantener el rendimiento nativo del decodificador del navegador.
 
+---
+
+## 18. Preamplificador y Normalización de Volumen (Auto-Gain)
+
+- **Preamplificador de Ganancia**: Deslizador de ganancia previa ajustable entre -6 dB y +6 dB antes de los filtros del ecualizador para compensar grabaciones de bajo nivel o prevenir saturación digital en pistas con realces pronunciados de graves.
+- **Normalización Dinámica (*Auto-Gain*)**: Procesamiento de nivelación basado en un nodo `DynamicsCompressorNode` configurado con compresión musical suave (umbral -20 dB, ratio 3.5:1, ataque 5ms, liberación 200ms) que unifica el volumen percibido entre diferentes pistas.
+
+---
+
+## 19. Paleta de Comandos Global (Command Palette `Ctrl + K` / `Cmd + K`)
+
+- **Búsqueda Unificada Ultrarrápida**: Acceso instantáneo a cualquier acción, pista, artista, álbum o lista de reproducción con filtrado difuso.
+- **Navegación Totalmente por Teclado**: Soporte para flechas arriba/abajo, Enter para ejecutar o reproducir, y Escape para cerrar.
+- **Acceso Rápido en Barra Superior**: Botón con insignia `Ctrl+K` integrado dentro del buscador principal de la barra de navegación.
+
+---
+
+## 20. Fondo Ambiental Dinámico Adaptativo a la Carátula
+
+- **Muestreo Cromático en Tiempo Real**: Análisis de píxeles mediante un lienzo HTML5 Canvas de baja resolución que extrae los dos colores dominantes y más saturados del arte del álbum.
+- **Halos de Gradiente Reactivos**: Variables CSS dinámicas (`--dynamic-glow-1`, `--dynamic-glow-2`) que transforman suavemente el fondo de la biblioteca y el reproductor en sintonía con la pista en curso.
+
+---
+
+## 21. Generador de Tarjetas de Pista Compartibles (Now Playing Card)
+
+- **Renderizado Gráfico en Alta Definición**: Lienzo Canvas 1200x630 píxeles que compone el arte de la carátula, título, artista, álbum, duración, espectro gráfico de ondas simuladas y marca de agua BeatNest.
+- **Exportación en 1 Clic**: Descarga directa de la tarjeta generada en formato PNG de alta fidelidad o copia rápida del texto descriptivo al portapapeles.
+
+---
+
+## 22. Estadísticas y Métricas de Escucha Locales (BeatNest Insights)
+
+- **Métricas 100% Privadas en el Dispositivo**:
+  - Tiempo total acumulado de audio (horas y minutos).
+  - Número total de pistas, favoritos, listas de reproducción e historial.
+  - Artistas y álbumes más recurrentes con barras visuales de frecuencia.
+  - Desglose porcentual por géneros musicales.
+  - Conteo de elementos únicos sin transmitir ningún dato fuera del navegador.
+
+---
+
+## 23. Sistema de Notificaciones Flotantes (Toasts) Unificado
+
+- Avisos elegantes con iconos semánticos y temporizador de auto-cierre para operaciones críticas (generación de respaldo, restauración de datos, actualización de metadatos, copia al portapapeles).
+
+---
+
+## 24. Reordenamiento Manual en Listas de Reproducción
+
+- Opciones de «Subir posición» y «Bajar posición» en el menú contextual de filas para personalizar el orden de las canciones en cualquier lista, persistiendo la nueva disposición de forma inmediata en IndexedDB.
+
+
 

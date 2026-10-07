@@ -18,6 +18,7 @@ export const ShortcutsModal: React.FC = () => {
     { key: 'V', description: 'Abrir / Cerrar visualizador Canvas' },
     { key: 'E', description: 'Abrir / Cerrar ecualizador' },
     { key: 'T', description: 'Abrir / Cerrar letras sincronizadas' },
+    { key: 'Ctrl + K', description: 'Abrir paleta de comandos' },
     { key: 'Esc', description: 'Cerrar cualquier ventana flotante' },
   ];
 

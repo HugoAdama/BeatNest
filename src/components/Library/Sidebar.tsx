@@ -14,11 +14,13 @@ import {
   History,
   Download,
   Upload,
+  BarChart3,
 } from 'lucide-react';
 import { useLibraryStore, type LibraryTab } from '../../stores/useLibraryStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useUIStore } from '../../stores/useUIStore';
 import { exportLibraryBackup, importLibraryBackup } from '../../lib/backup';
+import { showToast } from '../../stores/useToastStore';
 
 interface SidebarProps {
   onOpenCreatePlaylistModal: () => void;
@@ -50,13 +52,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
     }
   };
 
+  const handleBackupExport = async () => {
+    try {
+      await exportLibraryBackup();
+      showToast('Respaldo generado', 'Archivo JSON descargado exitosamente');
+    } catch {
+      showToast('Error al respaldar', 'No se pudo generar el archivo de respaldo', 'warning');
+    }
+  };
+
   const handleBackupRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       try {
         const res = await importLibraryBackup(e.target.files[0]);
-        alert(`Respaldo restaurado: ${res.playlistsRestored} playlists y ${res.favoritesRestored} favoritos.`);
+        showToast(
+          'Respaldo restaurado',
+          `${res.playlistsRestored} playlists y ${res.favoritesRestored} favoritos sincronizados`
+        );
       } catch (err: any) {
-        alert(err.message || 'Error al restaurar respaldo.');
+        showToast('Error de restauración', err.message || 'El archivo no tiene un formato válido', 'warning');
       }
       e.target.value = '';
     }
@@ -229,7 +243,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
         {/* Backup export / import */}
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => exportLibraryBackup()}
+            onClick={handleBackupExport}
             className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-[var(--app-surface-elevated)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] text-[11px] font-medium border border-[var(--app-border)] hover:border-[#7C5CFF]/40 transition-colors"
             title="Descargar archivo .json con tus playlists y favoritos"
           >
@@ -254,13 +268,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
           />
         </div>
 
-        <button
-          onClick={() => toggleShortcutModal(true)}
-          className="w-full flex items-center justify-center gap-2 py-1.5 text-xs text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] rounded-lg transition-colors"
-        >
-          <Keyboard size={14} />
-          <span>Atajos de teclado</span>
-        </button>
+        <div className="flex items-center gap-1.5 pt-1">
+          <button
+            onClick={() => useUIStore.getState().toggleStats(true)}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] rounded-lg transition-colors"
+          >
+            <BarChart3 size={14} className="text-[#4FD1C5]" />
+            <span>Estadísticas</span>
+          </button>
+
+          <button
+            onClick={() => toggleShortcutModal(true)}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] rounded-lg transition-colors"
+          >
+            <Keyboard size={14} />
+            <span>Atajos</span>
+          </button>
+        </div>
       </div>
     </aside>
   );

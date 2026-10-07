@@ -22,6 +22,7 @@ export function useKeyboardShortcuts() {
     toggleEqualizer,
     toggleShortcutModal,
     toggleLyrics,
+    toggleCommandPalette,
     closeAllModals,
   } = useUIStore();
 
@@ -104,6 +105,13 @@ export function useKeyboardShortcuts() {
           toggleLyrics();
           break;
 
+        case 'KeyK':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            toggleCommandPalette();
+          }
+          break;
+
         case 'Slash':
           if (e.shiftKey) {
             // '?' key
@@ -137,6 +145,7 @@ export function useKeyboardShortcuts() {
     toggleEqualizer,
     toggleShortcutModal,
     toggleLyrics,
+    toggleCommandPalette,
     closeAllModals,
     currentTrack,
     toggleFavorite,

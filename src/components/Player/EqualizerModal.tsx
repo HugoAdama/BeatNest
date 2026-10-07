@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sliders, Power, RotateCcw, X, Sparkles } from 'lucide-react';
+import { Sliders, Power, RotateCcw, X, Sparkles, Gauge, Volume1 } from 'lucide-react';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useUIStore } from '../../stores/useUIStore';
 import { EQ_LABELS, DEFAULT_PRESETS } from '../../lib/audioEngine';
@@ -15,6 +15,10 @@ export const EqualizerModal: React.FC = () => {
     setEqPreset,
     reverbMode,
     setReverbMode,
+    preampGain,
+    setPreampGain,
+    autoGainEnabled,
+    toggleAutoGain,
   } = usePlayerStore();
 
   const { isEqualizerOpen, toggleEqualizer } = useUIStore();
@@ -31,6 +35,8 @@ export const EqualizerModal: React.FC = () => {
   const handleReset = () => {
     setEqPreset('flat');
     setReverbMode('off');
+    setPreampGain(0);
+    toggleAutoGain(false);
   };
 
   return (
@@ -140,6 +146,61 @@ export const EqualizerModal: React.FC = () => {
               </span>
             </div>
           ))}
+        </div>
+
+        {/* Audiophile Preamp & Dynamic Auto-Gain Leveling */}
+        <div className="mt-4 p-3 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Volume1 size={14} className="text-[#7C5CFF]" />
+              <span className="text-xs font-semibold text-[var(--app-text)]">Preamplificador</span>
+              <span className="text-[11px] font-mono text-[var(--app-text-muted)]">
+                {preampGain > 0 ? `+${preampGain}` : preampGain} dB
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="-6"
+                max="6"
+                step="0.5"
+                value={preampGain}
+                onChange={(e) => setPreampGain(Number(e.target.value))}
+                className="w-32 h-1.5 bg-[var(--app-border)] rounded-lg appearance-none cursor-pointer accent-[#7C5CFF]"
+              />
+              <button
+                onClick={() => setPreampGain(0)}
+                className="text-[10px] px-2 py-0.5 rounded bg-[var(--app-surface)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] border border-[var(--app-border)]"
+                title="Restablecer preamplificador a 0 dB"
+              >
+                0 dB
+              </button>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-[var(--app-border-subtle)] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Gauge size={14} className="text-[#4FD1C5]" />
+              <div>
+                <span className="text-xs font-semibold text-[var(--app-text)] block">
+                  Normalización de Volumen (Auto-Gain)
+                </span>
+                <span className="text-[10px] text-[var(--app-text-muted)] block">
+                  Compensación dinámica de sonoridad y limitador suave
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => toggleAutoGain()}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                autoGainEnabled
+                  ? 'bg-[#4FD1C5] text-black shadow-sm font-semibold'
+                  : 'bg-[var(--app-surface)] text-[var(--app-text-muted)] border border-[var(--app-border)] hover:text-[var(--app-text)]'
+              }`}
+            >
+              {autoGainEnabled ? 'Activado' : 'Desactivado'}
+            </button>
+          </div>
         </div>
 
         {/* Spatial Reverb Simulator */}

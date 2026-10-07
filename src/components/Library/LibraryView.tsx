@@ -29,6 +29,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     viewMode,
     importDirectoryWithPicker,
     importFiles,
+    reorderPlaylistTracks,
   } = useLibraryStore();
 
   const { playTrack, recentTracks } = usePlayerStore();
@@ -53,7 +54,10 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     if (activeTab === 'playlists' && selectedPlaylistId) {
       const pl = playlists.find((p) => p.id === selectedPlaylistId);
       if (pl) {
-        list = list.filter((t) => pl.trackIds.includes(t.id));
+        const trackMap = new Map(tracks.map((t) => [t.id, t]));
+        list = pl.trackIds
+          .map((id) => trackMap.get(id))
+          .filter((t): t is (typeof tracks)[0] => !!t);
       }
     } else if (activeTab === 'favorites') {
       list = list.filter((t) => t.isFavorite);
@@ -78,8 +82,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
       );
     }
 
-    // Sort (skip custom sort on history to maintain chronological playback order)
-    if (activeTab !== 'history') {
+    // Sort (skip custom sort on history and custom playlists to preserve custom ordering)
+    if (activeTab !== 'history' && !(activeTab === 'playlists' && selectedPlaylistId)) {
       list.sort((a, b) => {
         let valA: string | number = '';
         let valB: string | number = '';
@@ -200,8 +204,14 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
       }`}
     >
       {/* Ambient background glows */}
-      <div className="pointer-events-none absolute -top-24 right-10 w-96 h-96 rounded-full bg-[#7C5CFF]/15 blur-3xl animate-float-1" />
-      <div className="pointer-events-none absolute top-40 left-10 w-80 h-80 rounded-full bg-[#4FD1C5]/15 blur-3xl animate-float-2" />
+      <div
+        className="pointer-events-none absolute -top-24 right-10 w-96 h-96 rounded-full blur-3xl animate-float-1 transition-colors duration-1000"
+        style={{ backgroundColor: 'var(--dynamic-glow-1, rgba(124, 92, 255, 0.15))' }}
+      />
+      <div
+        className="pointer-events-none absolute top-40 left-10 w-80 h-80 rounded-full blur-3xl animate-float-2 transition-colors duration-1000"
+        style={{ backgroundColor: 'var(--dynamic-glow-2, rgba(79, 209, 197, 0.15))' }}
+      />
 
       {/* Header Banner */}
       <div className="px-8 pt-8 pb-4 relative z-10">
@@ -371,6 +381,16 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
                   track={track}
                   index={idx}
                   onOpenCreatePlaylistModal={onOpenCreatePlaylistModal}
+                  onMoveUp={
+                    activeTab === 'playlists' && selectedPlaylistId && idx > 0
+                      ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx - 1)
+                      : undefined
+                  }
+                  onMoveDown={
+                    activeTab === 'playlists' && selectedPlaylistId && idx < displayedTracks.length - 1
+                      ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx + 1)
+                      : undefined
+                  }
                 />
               ))}
             </div>

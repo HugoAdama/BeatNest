@@ -8,6 +8,7 @@ import {
   Music,
   AlignLeft,
   Timer,
+  Share2,
 } from 'lucide-react';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useUIStore } from '../../stores/useUIStore';
@@ -218,6 +219,17 @@ export const BottomPlayer: React.FC = () => {
                 <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#4FD1C5] animate-pulse" />
               )}
             </button>
+
+            {/* Share Track Card trigger */}
+            {currentTrack && (
+              <button
+                onClick={() => useUIStore.getState().toggleShareTrack(true)}
+                className="p-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
+                title="Generar tarjeta de pista para compartir"
+              >
+                <Share2 size={18} />
+              </button>
+            )}
 
             {/* Mini Player mode toggle */}
             <button

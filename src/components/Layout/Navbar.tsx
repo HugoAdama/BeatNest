@@ -14,6 +14,7 @@ import {
 import { useLibraryStore, type SortField } from '../../stores/useLibraryStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { useThemeStore } from '../../stores/useThemeStore';
+import { useUIStore } from '../../stores/useUIStore';
 
 export const Navbar: React.FC = () => {
   const {
@@ -51,16 +52,27 @@ export const Navbar: React.FC = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Buscar canciones, artistas o álbumes..."
-          className="w-full pl-10 pr-9 py-2 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-xs text-[var(--app-text)] placeholder-[var(--app-text-muted)] focus:outline-none focus:border-[#7C5CFF] focus:ring-1 focus:ring-[#7C5CFF] transition-all"
+          className="w-full pl-10 pr-20 py-2 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-xs text-[var(--app-text)] placeholder-[var(--app-text-muted)] focus:outline-none focus:border-[#7C5CFF] focus:ring-1 focus:ring-[#7C5CFF] transition-all"
         />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-[var(--app-text-muted)] hover:text-[var(--app-text)]"
-          >
-            <X size={14} />
-          </button>
-        )}
+        <div className="absolute inset-y-0 right-2 flex items-center gap-1.5">
+          {searchQuery ? (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="p-1 text-[var(--app-text-muted)] hover:text-[var(--app-text)]"
+            >
+              <X size={14} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => useUIStore.getState().toggleCommandPalette(true)}
+              className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-[var(--app-text-muted)] bg-[var(--app-surface)] border border-[var(--app-border)] rounded hover:text-[var(--app-text)] hover:border-[#7C5CFF]/50 transition-colors"
+              title="Abrir paleta de comandos (Ctrl+K)"
+            >
+              Ctrl+K
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Center scan progress if scanning */}
