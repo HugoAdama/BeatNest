@@ -1,19 +1,43 @@
 @import "tailwindcss";
 
-@theme {
-  --color-brand-bg: #0F0F12;
-  --color-brand-surface: #1A1A1F;
-  --color-brand-surface-elevated: #24242B;
-  --color-brand-surface-hover: #2C2C36;
-  --color-brand-border: #2E2E38;
-  --color-brand-primary: #7C5CFF;
-  --color-brand-primary-hover: #6D48F7;
-  --color-brand-primary-light: rgba(124, 92, 255, 0.15);
-  --color-brand-accent: #4FD1C5;
-  --color-brand-accent-hover: #38b2ac;
-  --color-brand-text: #F5F5F7;
-  --color-brand-muted: #A0A0AB;
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+:root {
+  --app-bg: #F8F9FD;
+  --app-sidebar: #FFFFFF;
+  --app-navbar: rgba(255, 255, 255, 0.85);
+  --app-surface: #FFFFFF;
+  --app-surface-elevated: #F1F4F9;
+  --app-surface-hover: #E9EDF5;
+  --app-border: #E2E8F0;
+  --app-border-subtle: #EDF2F7;
+  --app-text: #0F172A;
+  --app-text-muted: #64748B;
+  --app-primary: #7C5CFF;
+  --app-primary-hover: #6D48F7;
+  --app-primary-light: rgba(124, 92, 255, 0.1);
+  --app-accent: #0284C7;
+  --app-card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --app-waveform-unplayed: #CBD5E1;
+  --app-modal-bg: rgba(255, 255, 255, 0.95);
+}
+
+html.dark {
+  --app-bg: #0A0A0D;
+  --app-sidebar: #121217;
+  --app-navbar: rgba(10, 10, 13, 0.85);
+  --app-surface: #18181F;
+  --app-surface-elevated: #22222C;
+  --app-surface-hover: #2B2B37;
+  --app-border: #282835;
+  --app-border-subtle: #1E1E28;
+  --app-text: #F8FAFC;
+  --app-text-muted: #94A3B8;
+  --app-primary: #7C5CFF;
+  --app-primary-hover: #6D48F7;
+  --app-primary-light: rgba(124, 92, 255, 0.15);
+  --app-accent: #4FD1C5;
+  --app-card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  --app-waveform-unplayed: #2D2D3B;
+  --app-modal-bg: rgba(18, 18, 23, 0.95);
 }
 
 @layer base {
@@ -24,14 +48,15 @@
   html, body {
     margin: 0;
     padding: 0;
-    background-color: #0F0F12;
-    color: #F5F5F7;
-    font-family: var(--font-sans);
+    background-color: var(--app-bg);
+    color: var(--app-text);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     overflow-x: hidden;
     height: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     user-select: none;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
   #root {
@@ -41,26 +66,35 @@
   }
 }
 
-/* Custom Scrollbar for Sleek Dark Look */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0F0F12;
+  background: var(--app-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2E2E38;
+  background: var(--app-border);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #7C5CFF;
+  background: var(--app-primary);
 }
 
-/* Range input styling for volume and scrubber */
 input[type="range"] {
   accent-color: #7C5CFF;
+}
+
+/* Ambient glow animation */
+@keyframes pulseSlow {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(1.08); }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 8s ease-in-out infinite;
 }

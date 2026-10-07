@@ -30,18 +30,18 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-96 z-40 bg-[#1A1A1F] border-l border-[#2E2E38] shadow-2xl flex flex-col animate-slideLeft">
+    <div className="fixed inset-y-0 right-0 w-full sm:w-96 z-40 bg-[var(--app-surface)] border-l border-[var(--app-border)] shadow-2xl flex flex-col animate-slideLeft transition-colors">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[#2E2E38]">
+      <div className="flex items-center justify-between p-4 border-b border-[var(--app-border)]">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-[#7C5CFF]/15 text-[#7C5CFF]">
             <ListMusic size={18} />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-[#F5F5F7]">
+            <h3 className="text-sm font-semibold text-[var(--app-text)]">
               Cola de reproducción
             </h3>
-            <span className="text-xs text-[#A0A0AB]">
+            <span className="text-xs text-[var(--app-text-muted)]">
               {queue.length} {queue.length === 1 ? 'pista' : 'pistas'} en cola
             </span>
           </div>
@@ -51,7 +51,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
           {queue.length > 0 && (
             <button
               onClick={clearQueue}
-              className="p-1.5 rounded-lg text-[#A0A0AB] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+              className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors"
               title="Vaciar cola"
             >
               <Trash2 size={16} />
@@ -59,7 +59,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
           )}
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] transition-colors"
+            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
             title="Cerrar cola"
           >
             <X size={18} />
@@ -70,11 +70,11 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
       {/* Queue items list */}
       <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
         {queue.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center p-6 text-center text-[#A0A0AB]">
-            <div className="w-12 h-12 rounded-2xl bg-[#24242B] border border-[#2E2E38] flex items-center justify-center mb-3 text-[#A0A0AB]">
+          <div className="h-full flex flex-col items-center justify-center p-6 text-center text-[var(--app-text-muted)]">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] flex items-center justify-center mb-3">
               <ListMusic size={22} />
             </div>
-            <p className="text-sm font-medium text-[#F5F5F7] mb-1">
+            <p className="text-sm font-medium text-[var(--app-text)] mb-1">
               La cola está vacía
             </p>
             <p className="text-xs max-w-xs">
@@ -89,14 +89,14 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
                 key={`${track.id}-${idx}`}
                 className={`group flex items-center gap-3 p-2 rounded-xl transition-all ${
                   isCurrent
-                    ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/30 text-[#F5F5F7]'
-                    : 'bg-[#24242B]/60 hover:bg-[#24242B] border border-transparent text-[#A0A0AB] hover:text-[#F5F5F7]'
+                    ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/30 text-[var(--app-text)]'
+                    : 'bg-[var(--app-surface-elevated)]/60 hover:bg-[var(--app-surface-elevated)] border border-transparent text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
                 }`}
               >
                 {/* Thumbnail / Status */}
                 <div
                   onClick={() => playTrack(track)}
-                  className="relative w-10 h-10 rounded-lg overflow-hidden bg-[#2E2E38] shrink-0 cursor-pointer flex items-center justify-center"
+                  className="relative w-10 h-10 rounded-lg overflow-hidden bg-[var(--app-surface-elevated)] shrink-0 cursor-pointer flex items-center justify-center border border-[var(--app-border)]"
                 >
                   {track.coverUrl ? (
                     <img
@@ -105,7 +105,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Music size={16} className="text-[#A0A0AB]" />
+                    <Music size={16} className="text-[var(--app-text-muted)]" />
                   )}
 
                   <div
@@ -128,18 +128,18 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
                 >
                   <p
                     className={`text-xs font-semibold truncate ${
-                      isCurrent ? 'text-[#4FD1C5]' : 'text-[#F5F5F7]'
+                      isCurrent ? 'text-[var(--app-accent)]' : 'text-[var(--app-text)]'
                     }`}
                   >
                     {track.title}
                   </p>
-                  <p className="text-[11px] text-[#A0A0AB] truncate">
+                  <p className="text-[11px] text-[var(--app-text-muted)] truncate">
                     {track.artist}
                   </p>
                 </div>
 
                 {/* Duration */}
-                <span className="text-[11px] font-mono text-[#A0A0AB] shrink-0">
+                <span className="text-[11px] font-mono text-[var(--app-text-muted)] shrink-0">
                   {formatDuration(track.duration)}
                 </span>
 
@@ -148,7 +148,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
                   {idx > 0 && (
                     <button
                       onClick={() => reorderQueue(idx, idx - 1)}
-                      className="p-1 rounded text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#2E2E38]"
+                      className="p-1 rounded text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]"
                       title="Mover arriba"
                     >
                       <ChevronUp size={14} />
@@ -157,7 +157,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
                   {idx < queue.length - 1 && (
                     <button
                       onClick={() => reorderQueue(idx, idx + 1)}
-                      className="p-1 rounded text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#2E2E38]"
+                      className="p-1 rounded text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]"
                       title="Mover abajo"
                     >
                       <ChevronDown size={14} />
@@ -165,7 +165,7 @@ export const QueueDrawer: React.FC<QueueDrawerProps> = ({ isOpen, onClose }) => 
                   )}
                   <button
                     onClick={() => removeFromQueue(idx)}
-                    className="p-1 rounded text-[#A0A0AB] hover:text-red-400 hover:bg-red-500/10"
+                    className="p-1 rounded text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/10"
                     title="Quitar de la cola"
                   >
                     <X size={14} />

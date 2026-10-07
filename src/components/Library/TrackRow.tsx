@@ -47,8 +47,8 @@ export const TrackRow: React.FC<TrackRowProps> = ({
     <div
       className={`group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all select-none ${
         isCurrent
-          ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/30 text-[#F5F5F7]'
-          : 'hover:bg-[#1A1A1F] border border-transparent text-[#A0A0AB] hover:text-[#F5F5F7]'
+          ? 'bg-[#7C5CFF]/15 border border-[#7C5CFF]/30 text-[var(--app-text)]'
+          : 'hover:bg-[var(--app-surface-hover)] border border-transparent text-[var(--app-text-muted)] hover:text-[var(--app-text)]'
       }`}
     >
       {/* Index number or Play icon */}
@@ -63,7 +63,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             <Play size={14} className="text-[#4FD1C5]" fill="currentColor" />
           ) : (
             <>
-              <span className="text-xs font-mono group-hover:hidden text-[#A0A0AB]">
+              <span className="text-xs font-mono group-hover:hidden text-[var(--app-text-muted)]">
                 {index + 1}
               </span>
               <Play size={13} className="hidden group-hover:block" fill="currentColor" />
@@ -77,7 +77,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         onClick={handleRowClick}
         className="flex items-center gap-3 min-w-0 flex-1 md:w-5/12 cursor-pointer"
       >
-        <div className="w-10 h-10 rounded-lg overflow-hidden bg-[#24242B] border border-[#2E2E38] shrink-0 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-lg overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--app-border)] shrink-0 flex items-center justify-center">
           {track.coverUrl ? (
             <img
               src={track.coverUrl}
@@ -91,13 +91,13 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
         <div className="min-w-0">
           <p
-            className={`text-sm font-medium truncate ${
-              isCurrent ? 'text-[#4FD1C5]' : 'text-[#F5F5F7]'
+            className={`text-sm font-semibold truncate ${
+              isCurrent ? 'text-[var(--app-accent)]' : 'text-[var(--app-text)]'
             }`}
           >
             {track.title}
           </p>
-          <p className="text-xs text-[#A0A0AB] truncate md:hidden">
+          <p className="text-xs text-[var(--app-text-muted)] truncate md:hidden">
             {track.artist}
           </p>
         </div>
@@ -106,7 +106,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       {/* Artist (Desktop) */}
       <div
         onClick={handleRowClick}
-        className="hidden md:block w-3/12 text-xs truncate text-[#A0A0AB] hover:text-[#F5F5F7] cursor-pointer"
+        className="hidden md:block w-3/12 text-xs truncate text-[var(--app-text-muted)] hover:text-[var(--app-text)] cursor-pointer"
       >
         {track.artist}
       </div>
@@ -114,7 +114,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       {/* Album (Desktop) */}
       <div
         onClick={handleRowClick}
-        className="hidden lg:block w-3/12 text-xs truncate text-[#A0A0AB] cursor-pointer"
+        className="hidden lg:block w-3/12 text-xs truncate text-[var(--app-text-muted)] cursor-pointer"
       >
         {track.album}
       </div>
@@ -128,15 +128,15 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           }}
           className={`p-1.5 rounded-lg transition-colors ${
             track.isFavorite
-              ? 'text-red-400'
-              : 'text-[#A0A0AB] opacity-0 group-hover:opacity-100 hover:text-white'
+              ? 'text-red-500'
+              : 'text-[var(--app-text-muted)] opacity-0 group-hover:opacity-100 hover:text-red-400'
           }`}
           title={track.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
         >
           <Heart size={15} fill={track.isFavorite ? 'currentColor' : 'none'} />
         </button>
 
-        <span className="text-xs font-mono text-[#A0A0AB] w-12 text-right tabular-nums">
+        <span className="text-xs font-mono text-[var(--app-text-muted)] w-12 text-right tabular-nums">
           {formatDuration(track.duration)}
         </span>
 
@@ -147,7 +147,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               e.stopPropagation();
               setShowMenu(!showMenu);
             }}
-            className="p-1.5 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] transition-colors"
+            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
             title="Opciones de pista"
           >
             <MoreVertical size={16} />
@@ -155,7 +155,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
           {showMenu && (
             <div
-              className="absolute right-0 top-8 z-40 w-48 bg-[#1A1A1F] border border-[#2E2E38] rounded-xl shadow-2xl p-1 animate-fadeIn text-xs"
+              className="absolute right-0 top-8 z-40 w-48 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-2xl p-1 animate-fadeIn text-xs"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -163,7 +163,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                   playNextInQueue(track);
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[#F5F5F7] hover:bg-[#24242B] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
               >
                 <PlaySquare size={14} className="text-[#4FD1C5]" />
                 <span>Reproducir siguiente</span>
@@ -174,7 +174,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                   addToQueue(track);
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[#F5F5F7] hover:bg-[#24242B] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
               >
                 <ListPlus size={14} className="text-[#7C5CFF]" />
                 <span>Añadir a la cola</span>
@@ -185,20 +185,20 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                   setShowMenu(false);
                   setShowPlaylistMenu(true);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[#F5F5F7] hover:bg-[#24242B] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
               >
-                <FolderPlus size={14} className="text-[#A0A0AB]" />
+                <FolderPlus size={14} className="text-[var(--app-text-muted)]]" />
                 <span>Añadir a playlist...</span>
               </button>
 
-              <div className="my-1 border-t border-[#2E2E38]" />
+              <div className="my-1 border-t border-[var(--app-border)]" />
 
               <button
                 onClick={() => {
                   deleteTrack(track.id);
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-red-400 hover:bg-red-500/10 transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-red-500 hover:bg-red-500/10 transition-colors"
               >
                 <Trash2 size={14} />
                 <span>Eliminar de biblioteca</span>

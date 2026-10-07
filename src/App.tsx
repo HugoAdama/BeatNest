@@ -27,7 +27,7 @@ export const App: React.FC = () => {
   }, [initAudioListeners, loadFromDatabase]);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#0F0F12] text-[#F5F5F7] font-sans antialiased">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--app-bg)] text-[var(--app-text)] font-sans antialiased transition-colors duration-200">
       {/* Left Sidebar */}
       <Sidebar onOpenCreatePlaylistModal={() => setIsCreatePlaylistOpen(true)} />
 

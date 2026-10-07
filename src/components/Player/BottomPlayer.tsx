@@ -77,12 +77,12 @@ export const BottomPlayer: React.FC = () => {
 
   return (
     <>
-      <footer className="fixed bottom-0 inset-x-0 z-30 bg-[#1A1A1F]/95 backdrop-blur-xl border-t border-[#2E2E38] px-4 py-3 select-none transition-all">
+      <footer className="fixed bottom-0 inset-x-0 z-30 bg-[var(--app-surface)]/95 backdrop-blur-xl border-t border-[var(--app-border)] px-4 py-2.5 select-none transition-colors shadow-2xl">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
           {/* Left: Track Info & Favorite */}
           <div className="flex items-center gap-3 w-full md:w-1/4 min-w-0 justify-between md:justify-start">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[#24242B] border border-[#2E2E38] shrink-0 flex items-center justify-center shadow-md">
+              <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--app-border)] shrink-0 flex items-center justify-center shadow-md">
                 {currentTrack?.coverUrl ? (
                   <img
                     src={currentTrack.coverUrl}
@@ -95,10 +95,10 @@ export const BottomPlayer: React.FC = () => {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-[#F5F5F7] truncate">
+                <p className="text-sm font-semibold text-[var(--app-text)] truncate">
                   {currentTrack ? currentTrack.title : 'BeatNest'}
                 </p>
-                <p className="text-xs text-[#A0A0AB] truncate">
+                <p className="text-xs text-[var(--app-text-muted)] truncate">
                   {currentTrack
                     ? `${currentTrack.artist} • ${currentTrack.album}`
                     : 'Selecciona una pista para reproducir'}
@@ -111,8 +111,8 @@ export const BottomPlayer: React.FC = () => {
                 onClick={() => toggleFavorite(currentTrack.id)}
                 className={`p-2 rounded-lg transition-colors ${
                   isFavorite
-                    ? 'text-red-400 bg-red-500/10'
-                    : 'text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B]'
+                    ? 'text-red-500 bg-red-500/10'
+                    : 'text-[var(--app-text-muted)] hover:text-red-500 hover:bg-[var(--app-surface-elevated)]'
                 }`}
                 title={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
               >
@@ -130,8 +130,8 @@ export const BottomPlayer: React.FC = () => {
                 onClick={toggleShuffle}
                 className={`p-2 rounded-lg transition-all ${
                   isShuffled
-                    ? 'text-[#4FD1C5] bg-[#4FD1C5]/15'
-                    : 'text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B]'
+                    ? 'text-[var(--app-accent)] bg-[var(--app-accent)]/15 font-bold'
+                    : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
                 }`}
                 title={isShuffled ? 'Aleatorio activado' : 'Aleatorio desactivado'}
               >
@@ -142,7 +142,7 @@ export const BottomPlayer: React.FC = () => {
               <button
                 onClick={prevTrack}
                 disabled={!currentTrack}
-                className="p-2 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] disabled:opacity-40 transition-colors"
+                className="p-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] disabled:opacity-30 transition-colors"
                 title="Pista anterior"
               >
                 <SkipBack size={18} />
@@ -152,7 +152,7 @@ export const BottomPlayer: React.FC = () => {
               <button
                 onClick={togglePlay}
                 disabled={!currentTrack && queue.length === 0}
-                className="p-3 rounded-2xl bg-[#7C5CFF] text-white hover:bg-[#6D48F7] active:scale-95 transition-all shadow-[0_0_15px_rgba(124,92,255,0.4)] disabled:opacity-40 disabled:hover:bg-[#7C5CFF]"
+                className="p-3 rounded-2xl bg-[#7C5CFF] text-white hover:bg-[#6D48F7] active:scale-95 transition-all shadow-[0_4px_16px_rgba(124,92,255,0.4)] disabled:opacity-30 disabled:hover:bg-[#7C5CFF]"
                 title={isPlaying ? 'Pausar' : 'Reproducir'}
               >
                 {isPlaying ? (
@@ -166,7 +166,7 @@ export const BottomPlayer: React.FC = () => {
               <button
                 onClick={() => nextTrack(true)}
                 disabled={!currentTrack && queue.length === 0}
-                className="p-2 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] disabled:opacity-40 transition-colors"
+                className="p-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] disabled:opacity-30 transition-colors"
                 title="Siguiente pista"
               >
                 <SkipForward size={18} />
@@ -177,8 +177,8 @@ export const BottomPlayer: React.FC = () => {
                 onClick={cycleRepeat}
                 className={`p-2 rounded-lg transition-all relative ${
                   repeatMode !== 'off'
-                    ? 'text-[#4FD1C5] bg-[#4FD1C5]/15'
-                    : 'text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B]'
+                    ? 'text-[var(--app-accent)] bg-[var(--app-accent)]/15 font-bold'
+                    : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
                 }`}
                 title={
                   repeatMode === 'one'
@@ -202,7 +202,7 @@ export const BottomPlayer: React.FC = () => {
           </div>
 
           {/* Right: Tools & Volume */}
-          <div className="flex items-center gap-2 w-full md:w-1/4 justify-end">
+          <div className="flex items-center gap-1.5 w-full md:w-1/4 justify-end">
             {/* Speed menu */}
             <div className="relative">
               <button
@@ -210,7 +210,7 @@ export const BottomPlayer: React.FC = () => {
                   setShowSpeedMenu(!showSpeedMenu);
                   setShowCrossfadeMenu(false);
                 }}
-                className="p-2 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] transition-colors flex items-center gap-1 text-xs font-mono"
+                className="p-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors flex items-center gap-1 text-xs font-mono"
                 title="Velocidad de reproducción"
               >
                 <Gauge size={16} />
@@ -218,7 +218,7 @@ export const BottomPlayer: React.FC = () => {
               </button>
 
               {showSpeedMenu && (
-                <div className="absolute bottom-11 right-0 bg-[#24242B] border border-[#2E2E38] rounded-xl shadow-xl p-1 z-50 flex flex-col min-w-20">
+                <div className="absolute bottom-11 right-0 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-xl p-1 z-50 flex flex-col min-w-20">
                   {speedOptions.map((speed) => (
                     <button
                       key={speed}
@@ -229,7 +229,7 @@ export const BottomPlayer: React.FC = () => {
                       className={`px-3 py-1.5 text-xs font-mono rounded-lg text-left transition-colors ${
                         playbackRate === speed
                           ? 'bg-[#7C5CFF] text-white'
-                          : 'text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#2E2E38]'
+                          : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
                       }`}
                     >
                       {speed}x
@@ -248,8 +248,8 @@ export const BottomPlayer: React.FC = () => {
                 }}
                 className={`p-2 rounded-lg transition-colors flex items-center gap-1 text-xs font-mono ${
                   crossfadeDuration > 0
-                    ? 'text-[#4FD1C5] hover:bg-[#4FD1C5]/10'
-                    : 'text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B]'
+                    ? 'text-[var(--app-accent)] hover:bg-[var(--app-accent)]/10 font-bold'
+                    : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
                 }`}
                 title="Transición suave (Crossfade)"
               >
@@ -258,8 +258,8 @@ export const BottomPlayer: React.FC = () => {
               </button>
 
               {showCrossfadeMenu && (
-                <div className="absolute bottom-11 right-0 bg-[#24242B] border border-[#2E2E38] rounded-xl shadow-xl p-1.5 z-50 flex flex-col min-w-36 text-xs">
-                  <div className="px-2.5 py-1 text-[10px] uppercase font-bold text-[#A0A0AB] border-b border-[#2E2E38] mb-1">
+                <div className="absolute bottom-11 right-0 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-xl p-1.5 z-50 flex flex-col min-w-36 text-xs">
+                  <div className="px-2.5 py-1 text-[10px] uppercase font-bold text-[var(--app-text-muted)] border-b border-[var(--app-border)] mb-1">
                     Crossfade entre pistas
                   </div>
                   {crossfadeOptions.map((opt) => (
@@ -272,7 +272,7 @@ export const BottomPlayer: React.FC = () => {
                       className={`px-2.5 py-1.5 rounded-lg text-left transition-colors ${
                         crossfadeDuration === opt.sec
                           ? 'bg-[#7C5CFF] text-white font-medium'
-                          : 'text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#2E2E38]'
+                          : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
                       }`}
                     >
                       {opt.label}
@@ -287,16 +287,16 @@ export const BottomPlayer: React.FC = () => {
               onClick={() => toggleLyrics(true)}
               className={`p-2 rounded-lg transition-colors relative ${
                 isLyricsOpen
-                  ? 'bg-[#4FD1C5]/20 text-[#4FD1C5]'
+                  ? 'bg-[var(--app-accent)]/20 text-[var(--app-accent)] font-bold'
                   : currentTrack?.lyrics
-                  ? 'text-[#4FD1C5] hover:bg-[#4FD1C5]/10'
-                  : 'text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B]'
+                  ? 'text-[var(--app-accent)] hover:bg-[var(--app-accent)]/10'
+                  : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
               }`}
               title="Letras sincronizadas"
             >
               <AlignLeft size={18} />
               {currentTrack?.lyrics && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#4FD1C5]" />
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[var(--app-accent)]" />
               )}
             </button>
 
@@ -306,20 +306,20 @@ export const BottomPlayer: React.FC = () => {
               className={`p-2 rounded-lg transition-colors relative ${
                 eqEnabled
                   ? 'text-[#7C5CFF] hover:bg-[#7C5CFF]/15'
-                  : 'text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B]'
+                  : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
               }`}
               title="Ecualizador de 5 bandas"
             >
               <Sliders size={18} />
               {eqEnabled && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#4FD1C5]" />
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[var(--app-accent)]" />
               )}
             </button>
 
             {/* Visualizer trigger */}
             <button
               onClick={() => toggleVisualizer(true)}
-              className="p-2 rounded-lg text-[#A0A0AB] hover:text-[#4FD1C5] hover:bg-[#4FD1C5]/10 transition-colors"
+              className="p-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-accent)] hover:bg-[var(--app-accent)]/10 transition-colors"
               title="Visualizador de audio con Canvas"
             >
               <Activity size={18} />
@@ -328,7 +328,7 @@ export const BottomPlayer: React.FC = () => {
             {/* Mini Player mode toggle */}
             <button
               onClick={() => toggleMiniPlayer(true)}
-              className="hidden lg:flex p-2 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] transition-colors"
+              className="hidden lg:flex p-2 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
               title="Modo mini reproductor flotante"
             >
               <Minimize2 size={18} />
@@ -339,14 +339,14 @@ export const BottomPlayer: React.FC = () => {
               onClick={() => setIsQueueOpen(!isQueueOpen)}
               className={`p-2 rounded-lg transition-colors relative ${
                 isQueueOpen
-                  ? 'bg-[#7C5CFF] text-white'
-                  : 'text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B]'
+                  ? 'bg-[#7C5CFF] text-white shadow-sm'
+                  : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]'
               }`}
               title="Cola de reproducción"
             >
               <ListMusic size={18} />
               {queue.length > 0 && (
-                <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-[#4FD1C5] text-[#0F0F12] text-[10px] font-bold">
+                <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-[var(--app-accent)] text-white text-[10px] font-bold">
                   {queue.length}
                 </span>
               )}
@@ -356,7 +356,7 @@ export const BottomPlayer: React.FC = () => {
             <div className="flex items-center gap-1.5 pl-1">
               <button
                 onClick={toggleMute}
-                className="p-1.5 text-[#A0A0AB] hover:text-[#F5F5F7] transition-colors"
+                className="p-1.5 text-[var(--app-text-muted)] hover:text-[var(--app-text)] transition-colors"
                 title={isMuted ? 'Activar sonido' : 'Silenciar'}
               >
                 {isMuted || volume === 0 ? (
@@ -374,7 +374,7 @@ export const BottomPlayer: React.FC = () => {
                 step="0.01"
                 value={isMuted ? 0 : volume}
                 onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-20 h-1.5 bg-[#2E2E38] rounded-lg cursor-pointer accent-[#7C5CFF]"
+                className="w-18 h-1.5 bg-[var(--app-border)] rounded-lg cursor-pointer accent-[#7C5CFF]"
               />
             </div>
           </div>

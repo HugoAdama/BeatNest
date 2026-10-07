@@ -27,9 +27,9 @@ export const MiniPlayer: React.FC = () => {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-80 bg-[#1A1A1F]/90 backdrop-blur-xl border border-[#2E2E38] rounded-2xl shadow-2xl overflow-hidden animate-slideUp">
+    <div className="fixed bottom-6 right-6 z-50 w-80 bg-[var(--app-surface)]/95 backdrop-blur-xl border border-[var(--app-border)] rounded-2xl shadow-2xl overflow-hidden animate-slideUp">
       {/* Top thin progress line */}
-      <div className="w-full h-1 bg-[#24242B]">
+      <div className="w-full h-1 bg-[var(--app-surface-elevated)]">
         <div
           className="h-full bg-gradient-to-r from-[#7C5CFF] to-[#4FD1C5]"
           style={{ width: `${progress}%` }}
@@ -38,7 +38,7 @@ export const MiniPlayer: React.FC = () => {
 
       <div className="p-3.5 flex items-center gap-3">
         {/* Cover Art */}
-        <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#24242B] border border-[#2E2E38] shrink-0 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-xl overflow-hidden bg-[var(--app-surface-elevated)] border border-[var(--app-border)] shrink-0 flex items-center justify-center">
           {currentTrack.coverUrl ? (
             <img
               src={currentTrack.coverUrl}
@@ -52,10 +52,10 @@ export const MiniPlayer: React.FC = () => {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-[#F5F5F7] truncate">
+          <p className="text-xs font-semibold text-[var(--app-text)] truncate">
             {currentTrack.title}
           </p>
-          <p className="text-[11px] text-[#A0A0AB] truncate">
+          <p className="text-[11px] text-[var(--app-text-muted)] truncate">
             {currentTrack.artist}
           </p>
         </div>
@@ -64,7 +64,7 @@ export const MiniPlayer: React.FC = () => {
         <div className="flex items-center gap-1">
           <button
             onClick={prevTrack}
-            className="p-1.5 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] transition-colors"
+            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
           >
             <SkipBack size={15} />
           </button>
@@ -76,13 +76,13 @@ export const MiniPlayer: React.FC = () => {
           </button>
           <button
             onClick={() => nextTrack(true)}
-            className="p-1.5 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] transition-colors"
+            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
           >
             <SkipForward size={15} />
           </button>
           <button
             onClick={() => toggleMiniPlayer(false)}
-            className="p-1.5 rounded-lg text-[#A0A0AB] hover:text-[#4FD1C5] hover:bg-[#24242B] transition-colors ml-1"
+            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-accent)] hover:bg-[var(--app-surface-elevated)] transition-colors ml-1"
             title="Restaurar reproductor"
           >
             <Maximize2 size={15} />

@@ -23,38 +23,38 @@ export const ShortcutsModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md bg-[#1A1A1F] border border-[#2E2E38] rounded-2xl shadow-2xl p-6 text-[#F5F5F7]">
-        <div className="flex items-center justify-between pb-4 border-b border-[#2E2E38]">
+      <div className="relative w-full max-w-md bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-2xl p-6 text-[var(--app-text)] transition-colors">
+        <div className="flex items-center justify-between pb-4 border-b border-[var(--app-border)]">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-[#7C5CFF]/15 text-[#7C5CFF]">
               <Keyboard size={18} />
             </div>
-            <h3 className="text-base font-semibold text-[#F5F5F7]">
+            <h3 className="text-base font-semibold text-[var(--app-text)]">
               Atajos de teclado
             </h3>
           </div>
           <button
             onClick={() => toggleShortcutModal(false)}
-            className="p-1.5 rounded-lg text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B] transition-colors"
+            className="p-1.5 rounded-lg text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)] transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
-        <div className="mt-4 divide-y divide-[#2E2E38]">
+        <div className="mt-4 divide-y divide-[var(--app-border-subtle)]">
           {shortcuts.map((sc, i) => (
             <div key={i} className="flex items-center justify-between py-2.5 text-xs">
-              <span className="text-[#A0A0AB]">{sc.description}</span>
-              <kbd className="px-2.5 py-1 rounded-md bg-[#0F0F12] border border-[#2E2E38] font-mono text-[11px] font-semibold text-[#4FD1C5] shadow-inner">
+              <span className="text-[var(--app-text-muted)]">{sc.description}</span>
+              <kbd className="px-2.5 py-1 rounded-md bg-[var(--app-surface-elevated)] border border-[var(--app-border)] font-mono text-[11px] font-semibold text-[var(--app-accent)] shadow-inner">
                 {sc.key}
               </kbd>
             </div>
           ))}
         </div>
 
-        <div className="mt-5 pt-3 border-t border-[#2E2E38] text-center">
-          <p className="text-[11px] text-[#A0A0AB]">
-            Presiona <span className="text-[#4FD1C5] font-mono">?</span> en cualquier momento para ver esta ayuda.
+        <div className="mt-5 pt-3 border-t border-[var(--app-border)] text-center">
+          <p className="text-[11px] text-[var(--app-text-muted)]">
+            Presiona <span className="text-[var(--app-accent)] font-mono">?</span> en cualquier momento para ver esta ayuda.
           </p>
         </div>
       </div>

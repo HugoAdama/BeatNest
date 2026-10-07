@@ -34,14 +34,14 @@ export const TrackCard: React.FC<TrackCardProps> = ({
   return (
     <div
       onClick={handleCardClick}
-      className={`group relative p-3.5 rounded-2xl bg-[#1A1A1F] border transition-all cursor-pointer select-none hover:shadow-xl hover:-translate-y-1 ${
+      className={`group relative p-3.5 rounded-2xl bg-[var(--app-surface)] border transition-all cursor-pointer select-none hover:shadow-xl hover:-translate-y-1 shadow-sm ${
         isCurrent
-          ? 'border-[#7C5CFF]/60 shadow-[0_0_20px_rgba(124,92,255,0.2)]'
-          : 'border-[#2E2E38] hover:border-[#3E3E4D]'
+          ? 'border-[#7C5CFF]/60 shadow-[0_4px_20px_rgba(124,92,255,0.2)] ring-1 ring-[#7C5CFF]/30'
+          : 'border-[var(--app-border)] hover:border-[#7C5CFF]/50'
       }`}
     >
       {/* Cover Image Container */}
-      <div className="relative aspect-square rounded-xl overflow-hidden bg-[#24242B] mb-3 flex items-center justify-center">
+      <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--app-surface-elevated)] mb-3 flex items-center justify-center">
         {track.coverUrl ? (
           <img
             src={track.coverUrl}
@@ -53,7 +53,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
         )}
 
         {/* Duration pill badge */}
-        <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-mono text-[#F5F5F7]">
+        <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-mono text-white">
           {formatDuration(track.duration)}
         </div>
 
@@ -80,8 +80,8 @@ export const TrackCard: React.FC<TrackCardProps> = ({
           }}
           className={`absolute top-2 left-2 p-1.5 rounded-lg bg-black/50 backdrop-blur-md transition-colors ${
             track.isFavorite
-              ? 'text-red-400'
-              : 'text-[#A0A0AB] opacity-0 group-hover:opacity-100 hover:text-white'
+              ? 'text-red-500'
+              : 'text-white/80 opacity-0 group-hover:opacity-100 hover:text-white'
           }`}
         >
           <Heart size={15} fill={track.isFavorite ? 'currentColor' : 'none'} />
@@ -94,14 +94,14 @@ export const TrackCard: React.FC<TrackCardProps> = ({
               e.stopPropagation();
               setShowMenu(!showMenu);
             }}
-            className="p-1.5 rounded-lg bg-black/50 backdrop-blur-md text-[#A0A0AB] hover:text-[#F5F5F7] transition-colors opacity-0 group-hover:opacity-100"
+            className="p-1.5 rounded-lg bg-black/50 backdrop-blur-md text-white/80 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
           >
             <MoreVertical size={15} />
           </button>
 
           {showMenu && (
             <div
-              className="absolute right-0 top-8 z-40 w-44 bg-[#1A1A1F] border border-[#2E2E38] rounded-xl shadow-2xl p-1 animate-fadeIn text-xs"
+              className="absolute right-0 top-8 z-40 w-44 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-xl shadow-2xl p-1 animate-fadeIn text-xs"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -109,7 +109,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
                   playNextInQueue(track);
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[#F5F5F7] hover:bg-[#24242B]"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]"
               >
                 <PlaySquare size={14} className="text-[#4FD1C5]" />
                 <span>Reproducir siguiente</span>
@@ -119,7 +119,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
                   addToQueue(track);
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[#F5F5F7] hover:bg-[#24242B]"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]"
               >
                 <ListPlus size={14} className="text-[#7C5CFF]" />
                 <span>Añadir a la cola</span>
@@ -129,18 +129,18 @@ export const TrackCard: React.FC<TrackCardProps> = ({
                   setShowMenu(false);
                   setShowPlaylistMenu(true);
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[#F5F5F7] hover:bg-[#24242B]"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]"
               >
-                <FolderPlus size={14} className="text-[#A0A0AB]" />
+                <FolderPlus size={14} className="text-[var(--app-text-muted)]" />
                 <span>Añadir a playlist</span>
               </button>
-              <div className="my-1 border-t border-[#2E2E38]" />
+              <div className="my-1 border-t border-[var(--app-border)]" />
               <button
                 onClick={() => {
                   deleteTrack(track.id);
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-red-400 hover:bg-red-500/10"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-red-500 hover:bg-red-500/10"
               >
                 <Trash2 size={14} />
                 <span>Eliminar</span>
@@ -161,12 +161,12 @@ export const TrackCard: React.FC<TrackCardProps> = ({
       {/* Metadata info */}
       <h4
         className={`text-sm font-semibold truncate mb-0.5 ${
-          isCurrent ? 'text-[#4FD1C5]' : 'text-[#F5F5F7]'
+          isCurrent ? 'text-[var(--app-accent)]' : 'text-[var(--app-text)]'
         }`}
       >
         {track.title}
       </h4>
-      <p className="text-xs text-[#A0A0AB] truncate">
+      <p className="text-xs text-[var(--app-text-muted)] truncate">
         {track.artist}
       </p>
     </div>

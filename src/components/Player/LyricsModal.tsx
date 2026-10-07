@@ -77,18 +77,18 @@ export const LyricsModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#0F0F12]/95 backdrop-blur-2xl animate-fadeIn text-[#F5F5F7]">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[var(--app-bg)]/95 backdrop-blur-2xl animate-fadeIn text-[var(--app-text)] transition-colors">
       {/* Top Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[#2E2E38]/50 z-20">
+      <div className="flex items-center justify-between p-4 border-b border-[var(--app-border)] z-20">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-[#7C5CFF]/15 text-[#7C5CFF]">
             <AlignLeft size={18} />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-[#F5F5F7] leading-none">
+            <h3 className="text-sm font-semibold text-[var(--app-text)] leading-none">
               Letras sincronizadas
             </h3>
-            <p className="text-xs text-[#A0A0AB] mt-1">
+            <p className="text-xs text-[var(--app-text-muted)] mt-1">
               {currentTrack ? `${currentTrack.title} — ${currentTrack.artist}` : 'Sin pista en reproducción'}
             </p>
           </div>
@@ -101,7 +101,7 @@ export const LyricsModal: React.FC = () => {
                 setLyricsInputText(currentTrack.lyrics || '');
                 setIsEditing(!isEditing);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1A1A1F] border border-[#2E2E38] text-xs text-[#A0A0AB] hover:text-[#F5F5F7] hover:border-[#7C5CFF]/50 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-xs text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:border-[#7C5CFF]/50 transition-colors"
             >
               <FileText size={14} />
               <span>{isEditing ? 'Cancelar edición' : 'Editar / Pegar'}</span>
@@ -110,7 +110,7 @@ export const LyricsModal: React.FC = () => {
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1A1A1F] border border-[#2E2E38] text-xs text-[#4FD1C5] hover:bg-[#4FD1C5]/10 border-[#4FD1C5]/30 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-xs text-[var(--app-accent)] hover:bg-[var(--app-accent)]/10 transition-colors"
           >
             <Upload size={14} />
             <span>Cargar .LRC</span>
@@ -125,7 +125,7 @@ export const LyricsModal: React.FC = () => {
 
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-lg bg-[#1A1A1F] border border-[#2E2E38] text-[#A0A0AB] hover:text-[#F5F5F7] transition-colors"
+            className="p-2 rounded-lg bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-[var(--app-text-muted)] hover:text-[var(--app-text)] transition-colors"
             title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
           >
             {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
@@ -133,7 +133,7 @@ export const LyricsModal: React.FC = () => {
 
           <button
             onClick={() => toggleLyrics(false)}
-            className="p-2 rounded-lg bg-[#1A1A1F] border border-[#2E2E38] text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-red-500/20 hover:text-red-400 transition-colors"
+            className="p-2 rounded-lg bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-[var(--app-text-muted)] hover:text-red-500 hover:bg-red-500/20 transition-colors"
             title="Cerrar letras"
           >
             <X size={16} />
@@ -145,23 +145,23 @@ export const LyricsModal: React.FC = () => {
       <div className="flex-1 overflow-hidden relative flex flex-col items-center justify-center p-6">
         {isEditing ? (
           /* Editor Mode */
-          <div className="w-full max-w-xl flex flex-col h-full max-h-[500px] bg-[#1A1A1F] border border-[#2E2E38] rounded-2xl p-5 shadow-2xl">
-            <h4 className="text-sm font-semibold mb-2 text-[#F5F5F7]">
+          <div className="w-full max-w-xl flex flex-col h-full max-h-[500px] bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl p-5 shadow-2xl">
+            <h4 className="text-sm font-semibold mb-2 text-[var(--app-text)]">
               Pegar letra en formato LRC o texto plano
             </h4>
-            <p className="text-xs text-[#A0A0AB] mb-3">
+            <p className="text-xs text-[var(--app-text-muted)] mb-3">
               Puedes pegar contenido sincronizado [00:15.20] o texto de letra estándar línea por línea.
             </p>
             <textarea
               value={lyricsInputText}
               onChange={(e) => setLyricsInputText(e.target.value)}
               placeholder="[00:12.50] Primera línea de la canción...&#10;[00:18.20] Segunda línea..."
-              className="flex-1 w-full p-3.5 rounded-xl bg-[#0F0F12] border border-[#2E2E38] text-xs font-mono text-[#F5F5F7] placeholder-[#A0A0AB]/40 focus:outline-none focus:border-[#7C5CFF] resize-none"
+              className="flex-1 w-full p-3.5 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-xs font-mono text-[var(--app-text)] placeholder-[var(--app-text-muted)]/40 focus:outline-none focus:border-[#7C5CFF] resize-none"
             />
             <div className="flex justify-end gap-2.5 mt-4">
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 rounded-xl text-xs text-[#A0A0AB] hover:text-[#F5F5F7] hover:bg-[#24242B]"
+                className="px-4 py-2 rounded-xl text-xs text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-elevated)]"
               >
                 Cancelar
               </button>
@@ -175,20 +175,20 @@ export const LyricsModal: React.FC = () => {
             </div>
           </div>
         ) : !currentTrack ? (
-          <div className="text-center text-[#A0A0AB]">
+          <div className="text-center text-[var(--app-text-muted)]">
             <Music size={36} className="mx-auto mb-3 text-[#7C5CFF]" />
             <p className="text-sm">Selecciona una pista para ver su letra.</p>
           </div>
         ) : parsedLyrics.length === 0 ? (
           /* Empty Lyrics state */
-          <div className="max-w-md text-center p-8 bg-[#1A1A1F] border border-[#2E2E38] rounded-2xl shadow-xl">
+          <div className="max-w-md text-center p-8 bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-xl">
             <div className="w-16 h-16 rounded-2xl bg-[#7C5CFF]/15 border border-[#7C5CFF]/30 flex items-center justify-center mx-auto mb-4 text-[#7C5CFF]">
               <AlignLeft size={28} />
             </div>
-            <h4 className="text-base font-semibold text-[#F5F5F7] mb-1">
+            <h4 className="text-base font-semibold text-[var(--app-text)] mb-1">
               Sin letra para «{currentTrack.title}»
             </h4>
-            <p className="text-xs text-[#A0A0AB] mb-6 leading-relaxed">
+            <p className="text-xs text-[var(--app-text-muted)] mb-6 leading-relaxed">
               No se encontró un archivo .lrc coincidente. Puedes subir un archivo .lrc de tu equipo o pegar el texto directamente.
             </p>
             <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
@@ -201,9 +201,9 @@ export const LyricsModal: React.FC = () => {
               </button>
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#24242B] border border-[#2E2E38] text-xs font-medium text-[#F5F5F7] hover:border-[#7C5CFF]/50 transition-all"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] text-xs font-medium text-[var(--app-text)] hover:border-[#7C5CFF]/50 transition-all"
               >
-                <FileText size={15} className="text-[#4FD1C5]" />
+                <FileText size={15} className="text-[var(--app-accent)]" />
                 <span>Pegar letra</span>
               </button>
             </div>

@@ -81,7 +81,7 @@ export const WaveformScrubber: React.FC<WaveformScrubberProps> = ({
 
   return (
     <div className={`flex items-center gap-3 w-full select-none ${className}`}>
-      <span className="text-xs font-mono text-[#A0A0AB] w-11 text-right tabular-nums">
+      <span className="text-xs font-mono text-[var(--app-text-muted)] w-11 text-right tabular-nums">
         {formatDuration(currentTime)}
       </span>
 
@@ -97,7 +97,7 @@ export const WaveformScrubber: React.FC<WaveformScrubberProps> = ({
         {/* Hover timestamp tooltip */}
         {hoverPosition !== null && (
           <div
-            className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded bg-[#24242B] border border-[#2E2E38] text-[11px] font-mono text-[#4FD1C5] shadow-lg pointer-events-none z-20 whitespace-nowrap"
+            className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded bg-[var(--app-surface)] border border-[var(--app-border)] text-[11px] font-mono text-[var(--app-accent)] shadow-lg pointer-events-none z-20 whitespace-nowrap font-bold"
             style={{ left: `${hoverPosition * 100}%` }}
           >
             {formatDuration(hoverTime)}
@@ -107,7 +107,7 @@ export const WaveformScrubber: React.FC<WaveformScrubberProps> = ({
         {/* Hover vertical needle line */}
         {hoverPosition !== null && (
           <div
-            className="absolute inset-y-0 w-px bg-[#4FD1C5]/60 pointer-events-none z-10"
+            className="absolute inset-y-0 w-px bg-[var(--app-accent)]/60 pointer-events-none z-10"
             style={{ left: `${hoverPosition * 100}%` }}
           />
         )}
@@ -126,11 +126,11 @@ export const WaveformScrubber: React.FC<WaveformScrubberProps> = ({
 
             const finalHeight = `${Math.min(100, barHeight * 100 * dynamicScale)}%`;
 
-            let bgColor = '#2E2E38'; // Unplayed
+            let bgColor = 'var(--app-waveform-unplayed)';
             if (isPlayed) {
-              bgColor = '#7C5CFF'; // Played brand violet/cyan
+              bgColor = '#7C5CFF';
             } else if (isHovered) {
-              bgColor = '#3E3E4D'; // Hover preview
+              bgColor = 'rgba(124, 92, 255, 0.35)';
             }
 
             return (
@@ -154,12 +154,12 @@ export const WaveformScrubber: React.FC<WaveformScrubberProps> = ({
 
         {/* Floating playhead scrubber circle on hover or drag */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#4FD1C5] border-2 border-[#0F0F12] shadow-[0_0_10px_#4FD1C5] transition-opacity duration-150 pointer-events-none opacity-0 group-hover:opacity-100"
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#4FD1C5] border-2 border-[var(--app-surface)] shadow-[0_0_10px_#4FD1C5] transition-opacity duration-150 pointer-events-none opacity-0 group-hover:opacity-100"
           style={{ left: `${progress * 100}%` }}
         />
       </div>
 
-      <span className="text-xs font-mono text-[#A0A0AB] w-11 tabular-nums">
+      <span className="text-xs font-mono text-[var(--app-text-muted)] w-11 tabular-nums">
         {formatDuration(duration)}
       </span>
     </div>
