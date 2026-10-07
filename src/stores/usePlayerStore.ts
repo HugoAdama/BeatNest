@@ -3,6 +3,8 @@ import type { Track, RepeatMode, VisualizerMode, ReverbMode } from '../types/mus
 import { audioEngine, DEFAULT_PRESETS } from '../lib/audioEngine';
 import { db } from '../db';
 import { useUIStore } from './useUIStore';
+import { showToast } from './useToastStore';
+import { generateDemoArpeggioTrack } from '../lib/audioGenerator';
 
 interface PlayerStore {
   currentTrack: Track | null;
@@ -150,6 +152,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
 
     bindAudioEvents(audioEngine.getAudioElement());
     bindAudioEvents(audioEngine.getInactiveAudioElement());
+    audioEngine.setVolume(get().volume);
   },
 
   playTrack: async (track: Track, newQueue?: Track[], useCrossfade?: boolean) => {
@@ -174,6 +177,27 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       }
     }
 
+    // Regenerate synthetic demo track if audio file is not in memory/storage
+    if (!track.file && (track.fileName === 'demo_arpeggio.wav' || track.title === 'Demo Arpeggio')) {
+      try {
+        const demoFile = await generateDemoArpeggioTrack();
+        track.file = demoFile;
+        db.tracks.update(track.id, { audioData: demoFile }).catch(console.warn);
+      } catch (err) {
+        console.warn('Could not regenerate demo track:', err);
+      }
+    }
+
+    if (!track.file) {
+      showToast(
+        'Archivo no disponible',
+        'Vuelve a añadir o importar el archivo de audio para reproducir esta pista.',
+        'warning'
+      );
+      set({ isPlaying: false });
+      return;
+    }
+
     const filteredRecent = get().recentTracks.filter((t) => t.id !== track.id);
     set({
       currentTrack: track,
@@ -185,12 +209,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     });
 
     const crossfadeSec = useCrossfade ? get().crossfadeDuration : 0;
-
-    if (track.file) {
-      await audioEngine.loadTrack(track.file, crossfadeSec);
-    } else if (track.coverUrl) {
-      await audioEngine.loadTrack(track.coverUrl, crossfadeSec);
-    }
+    await audioEngine.loadTrack(track.file, crossfadeSec);
 
     try {
       await audioEngine.play();

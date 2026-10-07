@@ -298,88 +298,104 @@ export class AudioEngine {
       newUrl = URL.createObjectURL(fileOrUrl);
     }
 
-    if (crossfadeSec > 0 && this.ctx && this.gainNodeA && this.gainNodeB && !currentAudio.paused) {
-      this.isCrossfading = true;
+      if (crossfadeSec > 0 && this.ctx && this.gainNodeA && this.gainNodeB && !currentAudio.paused) {
+        this.isCrossfading = true;
 
-      // Free previous target URL
-      if (isTargetA && this.activeUrlA && this.activeUrlA.startsWith('blob:')) {
-        URL.revokeObjectURL(this.activeUrlA);
-      } else if (!isTargetA && this.activeUrlB && this.activeUrlB.startsWith('blob:')) {
-        URL.revokeObjectURL(this.activeUrlB);
-      }
+        // Free previous target URL
+        if (isTargetA && this.activeUrlA && this.activeUrlA.startsWith('blob:')) {
+          URL.revokeObjectURL(this.activeUrlA);
+        } else if (!isTargetA && this.activeUrlB && this.activeUrlB.startsWith('blob:')) {
+          URL.revokeObjectURL(this.activeUrlB);
+        }
 
-      if (isTargetA) this.activeUrlA = newUrl;
-      else this.activeUrlB = newUrl;
+        if (isTargetA) this.activeUrlA = newUrl;
+        else this.activeUrlB = newUrl;
 
-      targetAudio.src = newUrl;
-      targetAudio.load();
+        targetAudio.src = newUrl;
+        targetAudio.load();
 
-      const now = this.ctx.currentTime;
-      const currentGain = isA ? this.gainNodeA : this.gainNodeB;
-      const targetGain = isTargetA ? this.gainNodeA : this.gainNodeB;
+        const now = this.ctx.currentTime;
+        const currentGain = isA ? this.gainNodeA : this.gainNodeB;
+        const targetGain = isTargetA ? this.gainNodeA : this.gainNodeB;
 
-      // Prepare target gain
-      targetGain.gain.setValueAtTime(0, now);
-      targetGain.gain.linearRampToValueAtTime(1.0, now + crossfadeSec);
+        // Cancel previous automation values before scheduling new ramps
+        currentGain.gain.cancelScheduledValues(now);
+        targetGain.gain.cancelScheduledValues(now);
 
-      // Fade out current
-      currentGain.gain.setValueAtTime(1.0, now);
-      currentGain.gain.linearRampToValueAtTime(0.0, now + crossfadeSec);
+        // Prepare target gain
+        targetGain.gain.setValueAtTime(0, now);
+        targetGain.gain.linearRampToValueAtTime(1.0, now + crossfadeSec);
 
-      await targetAudio.play();
+        // Fade out current
+        currentGain.gain.setValueAtTime(1.0, now);
+        currentGain.gain.linearRampToValueAtTime(0.0, now + crossfadeSec);
 
-      // Switch active channel after ramp
-      setTimeout(() => {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-        this.activeChannel = isTargetA ? 'A' : 'B';
-        this.isCrossfading = false;
-      }, crossfadeSec * 1000);
+        await targetAudio.play();
 
-    } else {
-      // Instant switch (no crossfade)
-      if (isA) {
-        if (this.activeUrlA && this.activeUrlA.startsWith('blob:')) URL.revokeObjectURL(this.activeUrlA);
-        this.activeUrlA = newUrl;
+        // Switch active channel after ramp
+        setTimeout(() => {
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+          this.activeChannel = isTargetA ? 'A' : 'B';
+          this.isCrossfading = false;
+        }, crossfadeSec * 1000);
+
       } else {
-        if (this.activeUrlB && this.activeUrlB.startsWith('blob:')) URL.revokeObjectURL(this.activeUrlB);
-        this.activeUrlB = newUrl;
+        // Instant switch (no crossfade)
+        if (isA) {
+          if (this.activeUrlA && this.activeUrlA.startsWith('blob:')) URL.revokeObjectURL(this.activeUrlA);
+          this.activeUrlA = newUrl;
+        } else {
+          if (this.activeUrlB && this.activeUrlB.startsWith('blob:')) URL.revokeObjectURL(this.activeUrlB);
+          this.activeUrlB = newUrl;
+        }
+
+        if (this.gainNodeA && this.gainNodeB && this.ctx) {
+          const now = this.ctx.currentTime;
+          this.gainNodeA.gain.cancelScheduledValues(now);
+          this.gainNodeB.gain.cancelScheduledValues(now);
+          this.gainNodeA.gain.setValueAtTime(isA ? 1.0 : 0.0, now);
+          this.gainNodeB.gain.setValueAtTime(isA ? 0.0 : 1.0, now);
+        }
+
+        currentAudio.src = newUrl;
+        currentAudio.load();
       }
+    }
 
-      if (this.gainNodeA && this.gainNodeB) {
-        this.gainNodeA.gain.value = isA ? 1.0 : 0.0;
-        this.gainNodeB.gain.value = isA ? 0.0 : 1.0;
+    public async play(): Promise<void> {
+      await this.initAudioContext();
+      if (this.ctx && this.ctx.state === 'suspended') {
+        try {
+          await this.ctx.resume();
+        } catch (err) {
+          console.warn('AudioContext resume failed:', err);
+        }
       }
-
-      currentAudio.src = newUrl;
-      currentAudio.load();
+      return this.getAudioElement().play();
     }
-  }
 
-  public async play(): Promise<void> {
-    await this.initAudioContext();
-    return this.getAudioElement().play();
-  }
-
-  public pause(): void {
-    this.audioA.pause();
-    this.audioB.pause();
-  }
-
-  public seek(seconds: number): void {
-    if (isFinite(seconds) && seconds >= 0) {
-      this.getAudioElement().currentTime = seconds;
+    public pause(): void {
+      this.audioA.pause();
+      this.audioB.pause();
     }
-  }
 
-  public setVolume(vol: number): void {
-    const clamped = Math.max(0, Math.min(1, vol));
-    if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(clamped, this.ctx.currentTime);
+    public seek(seconds: number): void {
+      if (isFinite(seconds) && seconds >= 0) {
+        this.getAudioElement().currentTime = seconds;
+      }
     }
-    this.audioA.volume = clamped;
-    this.audioB.volume = clamped;
-  }
+
+    public setVolume(vol: number): void {
+      const clamped = Math.max(0, Math.min(1, vol));
+      if (this.masterGain && this.ctx) {
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.setValueAtTime(clamped, now);
+      }
+      this.audioA.volume = 1.0;
+      this.audioB.volume = 1.0;
+    }
 
   public setMuted(muted: boolean): void {
     this.audioA.muted = muted;

@@ -62,7 +62,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       const storedTracks = await db.tracks.toArray();
       const storedPlaylists = await db.playlists.toArray();
 
-      // Convert stored tracks into memory tracks, regenerating Object URLs for covers
+      // Convert stored tracks into memory tracks, regenerating Object URLs for covers and restoring audio files
       const hydratedTracks: Track[] = storedTracks.map((st) => {
         let coverUrl: string | undefined = undefined;
         if (st.coverData) {
@@ -73,9 +73,22 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
           }
         }
 
+        let file: File | undefined = undefined;
+        if (st.audioData) {
+          try {
+            file =
+              st.audioData instanceof File
+                ? st.audioData
+                : new File([st.audioData], st.fileName, { type: st.fileType || 'audio/wav' });
+          } catch {
+            file = undefined;
+          }
+        }
+
         return {
           ...st,
           coverUrl,
+          file,
         };
       });
 
@@ -144,6 +157,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
         if (existingMap.has(metadataTrack.id)) {
           const existing = existingMap.get(metadataTrack.id)!;
           existing.file = file;
+          db.tracks.update(existing.id, { audioData: file }).catch(console.warn);
           if (metadataTrack.lyrics && !existing.lyrics) {
             existing.lyrics = metadataTrack.lyrics;
             db.tracks.update(existing.id, { lyrics: existing.lyrics }).catch(console.warn);
@@ -155,7 +169,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
           existingMap.set(metadataTrack.id, metadataTrack);
           newlyProcessedTracks.push(metadataTrack);
 
-          // Save to IndexedDB
+          // Save to IndexedDB with audioData
           const toStore: StoredTrack = {
             id: metadataTrack.id,
             title: metadataTrack.title,
@@ -165,6 +179,7 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
             year: metadataTrack.year,
             genre: metadataTrack.genre,
             coverData: metadataTrack.coverData || null,
+            audioData: file,
             fileName: metadataTrack.fileName,
             fileSize: metadataTrack.fileSize,
             fileType: metadataTrack.fileType,
@@ -173,7 +188,12 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
             playCount: 0,
             lyrics: metadataTrack.lyrics,
           };
-          await db.tracks.put(toStore);
+          try {
+            await db.tracks.put(toStore);
+          } catch (storageErr) {
+            console.warn('Storage quota limit for audio blob, saving metadata only:', storageErr);
+            await db.tracks.put({ ...toStore, audioData: null });
+          }
         }
       } catch (err) {
         console.warn(`Error processing ${file.name}:`, err);

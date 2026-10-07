@@ -3,6 +3,7 @@ import type { Track, Playlist } from '../types/music';
 
 export interface StoredTrack extends Omit<Track, 'file' | 'coverUrl'> {
   coverData?: Blob | null;
+  audioData?: Blob | null;
 }
 
 export class BeatNestDatabase extends Dexie {
