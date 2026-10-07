@@ -267,8 +267,8 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 
 ## 28. Listas de Reproducción Inteligentes (Smart Playlists)
 
-- **Más reproducidas**: Pistas filtradas automáticamente por mayor actividad de reproducción (`playCount > 0`).
-- **Añadidas recientemente**: Pistas ordenadas por fecha de importación en la biblioteca.
+- **Más reproducidas**: Pistas con actividad (`playCount > 0`), ordenadas de mayor a menor número de reproducciones.
+- **Añadidas recientemente**: Biblioteca ordenada por fecha de importación, con las últimas incorporaciones primero.
 - **Pistas largas (+5 min)**: Selección automática de temas épicos, sesiones y pistas con duración mayor o igual a 300 segundos.
 - **Acceso Directo en Barra Lateral**: Sección dedicada «Listas Inteligentes» con insignias de conteo numérico en tiempo real.
 
@@ -335,3 +335,14 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 - **Transición sin Cortes y Curvas Sincronizadas**: Conmutación inmediata de canal activo y programación de rampas de volumen lineales justo al comenzar a fluir el audio entrante, eliminando retardos o saltos abruptos.
 - **Bloqueo de Cascada por ID (`lastCrossfadedTrackId`)**: Previene la activación repetida del crossfade en la misma pista, garantizando que cada canción complete su duración.
 - **Pack Demo Integrado**: Generador en memoria de 3 pistas musicales sintetizadas completas de 14 segundos («Aurora Synthwave», «Velvet Horizon» y «Cyber Pulse») con portadas artísticas y la playlist «Favoritos Synth & Chill», permitiendo evaluar inmediatamente el reproductor, la cola y el crossfade.
+
+---
+
+## 37. Inicio y Navegación de Biblioteca
+
+- **Inicio de escucha**: Panel con la pista activa, el historial reciente, las últimas incorporaciones, las canciones más reproducidas y acceso a playlists.
+- **Rutas con historial**: Secciones, artistas, álbumes y playlists se reflejan en el fragmento de URL. Atrás/Adelante restaura la sección y los filtros; las vistas también se pueden abrir mediante un enlace directo.
+- **Navegación por colección**: Seleccionar una tarjeta de artista o álbum abre su detalle con canciones y acciones de reproducción; el botón de reproducción directa permanece separado de la navegación.
+- **Búsqueda por sección**: Buscar desde Inicio abre resultados de canciones; desde Artistas y Álbumes filtra tarjetas por sus metadatos y canciones. La paleta `Ctrl + K` / `Cmd + K` también permite abrir artistas y álbumes.
+- **Filtros visibles**: Texto, formato y género activos se muestran como chips y pueden quitarse individualmente o limpiarse juntos. Los filtros se conservan en la URL.
+- **Controles contextuales**: Orden y modo de vista se muestran únicamente en secciones donde tienen efecto. En móvil, seleccionar un destino cierra el panel lateral.

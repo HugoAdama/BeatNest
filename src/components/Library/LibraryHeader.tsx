@@ -25,6 +25,8 @@ import { showToast } from '../../stores/useToastStore';
 interface LibraryHeaderProps {
   activeTab: LibraryTab;
   selectedPlaylistId: string | null;
+  selectedArtistName: string | null;
+  selectedAlbumName: string | null;
   tracks: Track[];
   displayedTracks: Track[];
   totalDuration: number;
@@ -33,11 +35,14 @@ interface LibraryHeaderProps {
   onPlayAll: () => void;
   onShuffleAll: () => void;
   onLoadDemoPack: () => void;
+  onBackToCollection: () => void;
 }
 
 export const LibraryHeader: React.FC<LibraryHeaderProps> = ({
   activeTab,
   selectedPlaylistId,
+  selectedArtistName,
+  selectedAlbumName,
   tracks,
   displayedTracks,
   totalDuration,
@@ -46,9 +51,10 @@ export const LibraryHeader: React.FC<LibraryHeaderProps> = ({
   onPlayAll,
   onShuffleAll,
   onLoadDemoPack,
+  onBackToCollection,
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const { playlists, deletePlaylist, setSelectedPlaylistId, updatePlaylistCover } = useLibraryStore();
+  const { playlists, deletePlaylist, navigateTo, updatePlaylistCover } = useLibraryStore();
   const { playTrack, isPlaying, currentTrack, togglePlay } = usePlayerStore();
   const currentPlaylist = playlists.find((playlist) => playlist.id === selectedPlaylistId);
   const isSelectionPlaying = Boolean(
@@ -61,7 +67,8 @@ export const LibraryHeader: React.FC<LibraryHeaderProps> = ({
     event.target.value = '';
   };
 
-  const selectionActions = displayedTracks.length > 0 && activeTab !== 'artists' && activeTab !== 'albums' && (
+  const isEntityDetail = Boolean(selectedArtistName || selectedAlbumName);
+  const selectionActions = displayedTracks.length > 0 && (activeTab !== 'artists' && activeTab !== 'albums' || isEntityDetail) && activeTab !== 'home' && (
     <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
       <button
         onClick={onPlayAll}
@@ -171,7 +178,7 @@ export const LibraryHeader: React.FC<LibraryHeaderProps> = ({
           <button
             onClick={() => {
               deletePlaylist(currentPlaylist.id);
-              setSelectedPlaylistId(null);
+              navigateTo('playlists');
               showToast('Playlist eliminada', `Se eliminó la playlist «${currentPlaylist.name}»`, 'warning');
             }}
             className="p-3 rounded-2xl liquid-glass-subtle text-[var(--app-text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-all shadow-sm"
@@ -183,6 +190,8 @@ export const LibraryHeader: React.FC<LibraryHeaderProps> = ({
       </div>
     );
   }
+
+  if (activeTab === 'playlists' && selectedPlaylistId && !currentPlaylist) return null;
 
   if (activeTab === 'playlists') {
     return (
@@ -205,34 +214,36 @@ export const LibraryHeader: React.FC<LibraryHeaderProps> = ({
               .map((id) => tracks.find((track) => track.id === id))
               .filter((track): track is Track => Boolean(track));
             return (
-              <div
+              <article
                 key={playlist.id}
-                onClick={() => setSelectedPlaylistId(playlist.id)}
-                className="group relative p-3.5 rounded-2xl liquid-glass hover:bg-[var(--app-surface-hover)] border border-[var(--liquid-glass-border)] cursor-pointer transition-all shadow-sm hover:shadow-xl hover:-translate-y-0.5"
+                className="group relative rounded-2xl liquid-glass p-3.5 transition-all hover:-translate-y-0.5 hover:bg-[var(--app-surface-hover)] hover:shadow-xl"
               >
                 <div className="relative aspect-square rounded-xl overflow-hidden bg-gradient-to-tr from-[#7C5CFF] to-[#4FD1C5] mb-3 flex items-center justify-center shadow-md">
-                  {playlist.coverUrl
-                    ? <img src={playlist.coverUrl} alt={playlist.name} className="w-full h-full object-cover" />
-                    : <ListMusic size={36} className="text-white opacity-90" />}
+                  <button type="button" onClick={() => navigateTo('playlists', { playlistId: playlist.id })} aria-label={`Abrir playlist ${playlist.name}`} className="absolute inset-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white">
+                    {playlist.coverUrl
+                      ? <img src={playlist.coverUrl} alt="" className="h-full w-full object-cover" />
+                      : <ListMusic size={36} className="text-white opacity-90" />}
+                  </button>
                   <button
-                    onClick={(event) => {
-                      event.stopPropagation();
+                    type="button"
+                    onClick={() => {
                       if (playlistTracks.length > 0) {
                         playTrack(playlistTracks[0], playlistTracks, false);
                         showToast('Reproduciendo playlist', `Iniciando «${playlist.name}»`, 'info');
                       }
                     }}
-                    className="absolute bottom-2.5 right-2.5 w-10 h-10 rounded-full bg-gradient-to-tr from-[#7C5CFF] to-[#6366F1] text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:scale-110 shadow-lg transition-all"
+                    className="absolute bottom-2.5 right-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-[#7C5CFF] to-[#6366F1] text-white opacity-100 shadow-lg transition-all hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:opacity-0 sm:group-hover:opacity-100"
                     title="Reproducir playlist"
+                    aria-label={`Reproducir playlist ${playlist.name}`}
                   >
                     <Play size={16} fill="currentColor" className="ml-0.5" />
                   </button>
                 </div>
-                <h4 className="text-sm font-bold text-[var(--app-text)] truncate">{playlist.name}</h4>
+                <button type="button" onClick={() => navigateTo('playlists', { playlistId: playlist.id })} className="block max-w-full truncate text-left text-sm font-bold text-[var(--app-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]">{playlist.name}</button>
                 <p className="text-xs text-[var(--app-text-muted)] mt-0.5">
                   {playlist.trackIds.length} {playlist.trackIds.length === 1 ? 'canción' : 'canciones'}
                 </p>
-              </div>
+              </article>
             );
           })}
         </div>
@@ -263,10 +274,21 @@ export const LibraryHeader: React.FC<LibraryHeaderProps> = ({
     },
   };
   const section = sections[activeTab];
-  const title = activeTab === 'artists' ? 'Artistas' : activeTab === 'albums' ? 'Álbumes' : 'Todas las pistas';
+  const title = selectedArtistName || selectedAlbumName || (
+    activeTab === 'home' ? 'Inicio' : activeTab === 'artists' ? 'Artistas' : activeTab === 'albums' ? 'Álbumes' : 'Todas las pistas'
+  );
+  const subtitle = selectedArtistName || selectedAlbumName
+    ? `${displayedTracks.length} ${displayedTracks.length === 1 ? 'pista' : 'pistas'} • ${formatDuration(totalDuration)}`
+    : section?.subtitle ?? `${displayedTracks.length} ${displayedTracks.length === 1 ? 'pista' : 'pistas'} registradas • ${formatDuration(totalDuration)} de audio`;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <>
+    {isEntityDetail && (
+      <button type="button" onClick={onBackToCollection} className="mb-3 inline-flex min-h-9 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-[var(--app-text-muted)] hover:text-[var(--app-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]">
+        ← {selectedArtistName ? 'Artistas' : 'Álbumes'}
+      </button>
+    )}
+    <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
       <div className="flex items-center gap-4">
         {section && (
           <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center shadow-md ${section.color}`}>
@@ -277,12 +299,13 @@ export const LibraryHeader: React.FC<LibraryHeaderProps> = ({
           <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--app-text)] tracking-tight">
             {section?.title ?? title}
           </h2>
-          <p className="text-xs text-[var(--app-text-muted)] mt-1">
-            {section?.subtitle ?? `${displayedTracks.length} ${displayedTracks.length === 1 ? 'pista' : 'pistas'} registradas • ${formatDuration(totalDuration)} de audio`}
+          <p className="mt-1 text-sm text-[var(--app-text-muted)]">
+            {subtitle}
           </p>
         </div>
       </div>
       {selectionActions}
     </div>
+    </>
   );
 };

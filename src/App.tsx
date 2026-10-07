@@ -26,6 +26,7 @@ import {
 
 export const App: React.FC = () => {
   const { loadFromDatabase } = useLibraryStore();
+  const syncNavigationFromLocation = useLibraryStore((state) => state.syncNavigationFromLocation);
   const { initAudioListeners, currentTrack } = usePlayerStore();
   const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
 
@@ -36,6 +37,17 @@ export const App: React.FC = () => {
     initAudioListeners();
     loadFromDatabase();
   }, [initAudioListeners, loadFromDatabase]);
+
+  useEffect(() => {
+    const syncNavigation = () => syncNavigationFromLocation();
+    syncNavigation();
+    window.addEventListener('popstate', syncNavigation);
+    window.addEventListener('hashchange', syncNavigation);
+    return () => {
+      window.removeEventListener('popstate', syncNavigation);
+      window.removeEventListener('hashchange', syncNavigation);
+    };
+  }, [syncNavigationFromLocation]);
 
   // Adaptive ambient glow effect based on active track cover artwork
   useEffect(() => {

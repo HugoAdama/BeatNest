@@ -24,13 +24,15 @@ Todo se procesa en el cliente utilizando APIs nativas del navegador web: **File 
 - **Experiencia de Playlists Estilo Spotify**: Portada dinámica tipo collage 2x2 basada en las canciones de la lista, soporte para carátula propia personalizada, botones directos de «Reproducir todo» y «Aleatorio», y sección integrada para añadir nuevas pistas con un clic.
 - **Pack Demo Integrado con Síntesis de Estudio**: Generador offline de 3 pistas completas («Aurora Synthwave», «Velvet Horizon», «Cyber Pulse») con portadas de alta definición y creación automática de lista de reproducción inicial.
 - **Diseño Liquid Glass y Dock Rebalanceado**: Interfaz oscura obsidiana con efectos de desenfoque de fondo (*backdrop-blur*), dock inferior en rejilla de 12 columnas y herramientas de audio (ecualizador y visualizador) organizadas en popover flotante sin colisión visual.
+- **Navegación de Biblioteca con Historial**: Inicio con accesos a escuchas recientes, música añadida y playlists; rutas internas para playlists, artistas y álbumes, compatibles con Atrás/Adelante y enlaces directos.
+- **Búsqueda Contextual y Filtros Compartibles**: La búsqueda se adapta a la sección activa y conserva texto y filtros de género/formato en la URL para restaurar la vista.
 - **Letras Sincronizadas (.LRC)**: Analizador integrado con resaltado interactivo estilo karaoke, desplazamiento centrado automático (*auto-scroll*) y salto temporal al hacer clic sobre cualquier verso.
 - **Ecualizador Paramétrico de 5 Bandas**: Filtros Web Audio Biquad a 60 Hz, 250 Hz, 1 kHz, 4 kHz y 16 kHz con rango de ganancia de -12 dB a +12 dB, presets integrados y capacidad de guardar **presets personalizados** del usuario.
 - **Visualizador de Audio en Tiempo Real (Canvas 60fps)**: 4 modos de visualización reactiva (*Barras de frecuencia, Osciloscopio, Radial 360° y Pulso reactivo*), con soporte para pantalla completa.
 - **Waveform Scrubber Interactivo**: Barra de progreso con silueta de onda de audio, previsualización de tiempo al pasar el cursor y búsqueda de posición suave.
 - **Persistencia Completa en IndexedDB**: Almacenamiento local mediante Dexie.js para biblioteca, pistas de audio (blobs), favoritos, metadatos y listas de reproducción.
 - **Respaldo JSON de metadatos**: Exporta playlists, favoritos, letras y metadatos. El archivo no incluye audio; para restaurar la reproducción hay que volver a importar los archivos locales.
-- **Listas Inteligentes Dinámicas**: Acceso instantáneo a listas autocalculadas: «Más reproducidas», «Añadidas recientemente» y «Pistas largas (+5 min)».
+- **Listas Inteligentes Dinámicas**: «Más reproducidas» se ordena por actividad, «Añadidas recientemente» por fecha de importación y «Pistas largas» filtra duraciones superiores a cinco minutos.
 - **Cola de Reproducción Avanzada**: Panel lateral deslizable para ordenar, guardar la cola directamente como una nueva lista de reproducción permanente o limpiar pistas siguientes.
 - **Exportación Estándar .M3U**: Descarga de listas de reproducción en formato `.m3u` con metadatos extendidos para interoperabilidad con reproductores externos como VLC.
 - **Filtros por Formato y Género**: Filtrado instantáneo por contenedor de audio (MP3, FLAC, WAV, OGG, M4A) y chips de género interactivos.

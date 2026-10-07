@@ -7,6 +7,7 @@ import { generateDemoTracksPack } from '../lib/audioGenerator';
 import { showToast } from './useToastStore';
 
 export type LibraryTab =
+  | 'home'
   | 'tracks'
   | 'artists'
   | 'albums'
@@ -20,13 +21,78 @@ export type LibraryTab =
 export type SortField = 'title' | 'artist' | 'album' | 'duration' | 'dateAdded' | 'playCount';
 export type SortOrder = 'asc' | 'desc';
 
+interface LibraryNavigationDetails {
+  playlistId?: string | null;
+  artistName?: string | null;
+  albumName?: string | null;
+  albumArtistName?: string | null;
+}
+
+const createLibraryHash = (
+  tab: LibraryTab,
+  details: LibraryNavigationDetails,
+  searchQuery: string,
+  selectedGenre: string | null,
+  selectedFormat: string | null,
+) => {
+  const path = tab === 'smart-top' ? 'smart/top'
+    : tab === 'smart-recent' ? 'smart/recent'
+    : tab === 'smart-long' ? 'smart/long'
+    : tab === 'artists' && details.artistName ? `artists/${encodeURIComponent(details.artistName)}`
+    : tab === 'albums' && details.albumName ? `albums/${encodeURIComponent(details.albumName)}`
+    : tab === 'playlists' && details.playlistId ? `playlists/${encodeURIComponent(details.playlistId)}`
+    : tab;
+  const params = new URLSearchParams();
+  if (searchQuery) params.set('q', searchQuery);
+  if (selectedGenre) params.set('genre', selectedGenre);
+  if (selectedFormat) params.set('format', selectedFormat);
+  if (tab === 'albums' && details.albumArtistName) params.set('artist', details.albumArtistName);
+  const query = params.toString();
+  return `#/${path}${query ? `?${query}` : ''}`;
+};
+
+const parseLibraryHash = (hash: string) => {
+  const [rawPath, rawQuery = ''] = hash.replace(/^#\/?/, '').split('?');
+  const segments = (rawPath || 'home').split('/').map((segment) => {
+    try { return decodeURIComponent(segment); } catch { return segment; }
+  });
+  const params = new URLSearchParams(rawQuery);
+  const detail = segments[1] ?? null;
+  let activeTab: LibraryTab = 'home';
+  switch (segments[0]) {
+    case 'tracks': activeTab = 'tracks'; break;
+    case 'favorites': activeTab = 'favorites'; break;
+    case 'artists': activeTab = 'artists'; break;
+    case 'albums': activeTab = 'albums'; break;
+    case 'playlists': activeTab = 'playlists'; break;
+    case 'history': activeTab = 'history'; break;
+    case 'smart':
+      activeTab = detail === 'top' ? 'smart-top' : detail === 'long' ? 'smart-long' : 'smart-recent';
+      break;
+  }
+  return {
+    activeTab,
+    selectedPlaylistId: activeTab === 'playlists' ? detail : null,
+    selectedArtistName: activeTab === 'artists' ? detail : null,
+    selectedAlbumName: activeTab === 'albums' ? detail : null,
+    selectedAlbumArtistName: activeTab === 'albums' ? params.get('artist') : null,
+    searchQuery: params.get('q') ?? '',
+    selectedGenre: params.get('genre'),
+    selectedFormat: params.get('format'),
+  };
+};
+
 interface LibraryStore {
   tracks: Track[];
   playlists: Playlist[];
   activeTab: LibraryTab;
   selectedPlaylistId: string | null;
+  selectedArtistName: string | null;
+  selectedAlbumName: string | null;
+  selectedAlbumArtistName: string | null;
   searchQuery: string;
   selectedGenre: string | null;
+  selectedFormat: string | null;
   sortBy: SortField;
   sortOrder: SortOrder;
   viewMode: 'list' | 'grid';
@@ -45,9 +111,12 @@ interface LibraryStore {
   removeTrackFromPlaylist: (playlistId: string, trackId: string) => Promise<void>;
   reorderPlaylistTracks: (playlistId: string, startIndex: number, endIndex: number) => Promise<void>;
   setActiveTab: (tab: LibraryTab) => void;
+  navigateTo: (tab: LibraryTab, details?: LibraryNavigationDetails) => void;
+  syncNavigationFromLocation: () => void;
   setSelectedPlaylistId: (id: string | null) => void;
   setSearchQuery: (query: string) => void;
   setSelectedGenre: (genre: string | null) => void;
+  setSelectedFormat: (format: string | null) => void;
   setSort: (field: SortField, order?: SortOrder) => void;
   setViewMode: (mode: 'list' | 'grid') => void;
   updateTrackMetadata: (
@@ -62,10 +131,14 @@ interface LibraryStore {
 export const useLibraryStore = create<LibraryStore>((set, get) => ({
   tracks: [],
   playlists: [],
-  activeTab: 'tracks',
+  activeTab: 'home',
   selectedPlaylistId: null,
+  selectedArtistName: null,
+  selectedAlbumName: null,
+  selectedAlbumArtistName: null,
   searchQuery: '',
   selectedGenre: null,
+  selectedFormat: null,
   sortBy: 'dateAdded',
   sortOrder: 'desc',
   viewMode: 'list',
@@ -248,21 +321,20 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       updatedAt: Date.now(),
     };
     await db.playlists.put(newPlaylist);
-    set((state) => ({
-      playlists: [...state.playlists, newPlaylist],
-      selectedPlaylistId: id,
-      activeTab: 'playlists',
-    }));
+    set((state) => ({ playlists: [...state.playlists, newPlaylist] }));
+    get().navigateTo('playlists', { playlistId: id });
     return id;
   },
 
   deletePlaylist: async (playlistId: string) => {
+    const wasSelected = get().selectedPlaylistId === playlistId;
     await db.playlists.delete(playlistId);
     set((state) => ({
       playlists: state.playlists.filter((p) => p.id !== playlistId),
       selectedPlaylistId:
         state.selectedPlaylistId === playlistId ? null : state.selectedPlaylistId,
     }));
+    if (wasSelected) get().navigateTo('playlists');
   },
 
   addTrackToPlaylist: async (playlistId: string, trackId: string) => {
@@ -328,19 +400,76 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
   },
 
   setActiveTab: (tab: LibraryTab) => {
-    set({ activeTab: tab });
+    get().navigateTo(tab);
+  },
+
+  navigateTo: (tab: LibraryTab, details: LibraryNavigationDetails = {}) => {
+    const next = {
+      activeTab: tab,
+      selectedPlaylistId: tab === 'playlists' ? details.playlistId ?? null : null,
+      selectedArtistName: tab === 'artists' ? details.artistName ?? null : null,
+      selectedAlbumName: tab === 'albums' ? details.albumName ?? null : null,
+      selectedAlbumArtistName: tab === 'albums' ? details.albumArtistName ?? null : null,
+    };
+    set(tab === 'home' ? { ...next, searchQuery: '', selectedGenre: null, selectedFormat: null } : next);
+    if (typeof window !== 'undefined') {
+      const hash = createLibraryHash(tab, details, get().searchQuery, get().selectedGenre, get().selectedFormat);
+      if (window.location.hash !== hash) {
+        window.history.pushState(null, '', `${window.location.pathname}${window.location.search}${hash}`);
+      }
+    }
+  },
+
+  syncNavigationFromLocation: () => {
+    if (typeof window === 'undefined') return;
+    const navigation = parseLibraryHash(window.location.hash);
+    set(navigation);
+    const hash = createLibraryHash(
+      navigation.activeTab,
+      {
+        playlistId: navigation.selectedPlaylistId,
+        artistName: navigation.selectedArtistName,
+        albumName: navigation.selectedAlbumName,
+        albumArtistName: navigation.selectedAlbumArtistName,
+      },
+      navigation.searchQuery,
+      navigation.selectedGenre,
+      navigation.selectedFormat,
+    );
+    if (window.location.hash !== hash) {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${hash}`);
+    }
   },
 
   setSelectedPlaylistId: (id: string | null) => {
-    set({ selectedPlaylistId: id });
+    get().navigateTo('playlists', { playlistId: id });
   },
 
   setSearchQuery: (query: string) => {
     set({ searchQuery: query });
+    if (typeof window !== 'undefined') {
+      const { activeTab, selectedPlaylistId, selectedArtistName, selectedAlbumName, selectedAlbumArtistName, selectedGenre, selectedFormat } = get();
+      const hash = createLibraryHash(activeTab, { playlistId: selectedPlaylistId, artistName: selectedArtistName, albumName: selectedAlbumName, albumArtistName: selectedAlbumArtistName }, query, selectedGenre, selectedFormat);
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${hash}`);
+    }
   },
 
   setSelectedGenre: (genre: string | null) => {
     set({ selectedGenre: genre });
+    if (typeof window !== 'undefined') {
+      const { activeTab, selectedPlaylistId, selectedArtistName, selectedAlbumName, selectedAlbumArtistName, searchQuery, selectedFormat } = get();
+      const hash = createLibraryHash(activeTab, { playlistId: selectedPlaylistId, artistName: selectedArtistName, albumName: selectedAlbumName, albumArtistName: selectedAlbumArtistName }, searchQuery, genre, selectedFormat);
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${hash}`);
+    }
+  },
+
+  setSelectedFormat: (format: string | null) => {
+    set({ selectedFormat: format });
+    if (typeof window !== 'undefined') {
+      const { activeTab, selectedPlaylistId, selectedArtistName, selectedAlbumName, selectedAlbumArtistName, searchQuery, selectedGenre } = get();
+      const hash = createLibraryHash(activeTab, { playlistId: selectedPlaylistId, artistName: selectedArtistName, albumName: selectedAlbumName, albumArtistName: selectedAlbumArtistName }, searchQuery, selectedGenre, format);
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${hash}`);
+    }
   },
 
   setSort: (field: SortField, order?: SortOrder) => {
@@ -479,9 +608,8 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       set((state) => ({
         tracks: [...newTracks, ...state.tracks],
         playlists: [demoPlaylist, ...state.playlists],
-        activeTab: 'playlists',
-        selectedPlaylistId: playlistId,
       }));
+      get().navigateTo('playlists', { playlistId });
 
       showToast(
         'Pack de demostración cargado',

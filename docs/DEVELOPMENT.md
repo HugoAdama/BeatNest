@@ -69,3 +69,11 @@ npm run lint
 - Mantén la transparencia, el desenfoque, los reflejos y las sombras en los tokens de `src/index.css`; evita volver opacas las superficies con fondos sólidos locales salvo que el contenido necesite aislamiento.
 - Para texto de interfaz, prioriza `text-xs` (13 px) o superior. Reserva tamaños menores para etiquetas técnicas cortas y conserva contraste alto en texto secundario; evita reducir contraste usando opacidad en textos informativos.
 - Los controles deben conservar un indicador `:focus-visible`, y las animaciones deben respetar `prefers-reduced-motion`.
+
+### 3.7 Navegación, URL y búsqueda
+- Las vistas de biblioteca se navegan mediante `useLibraryStore.navigateTo`; no se debe modificar `location.hash` directamente desde los componentes.
+- Mantén las rutas compatibles con el despliegue estático de GitHub Pages: se usa `#/...` y se sincroniza el estado desde `syncNavigationFromLocation` en `App`.
+- Para una navegación del usuario, crea una entrada de historial; para cambios sucesivos de búsqueda o filtros, reemplaza la entrada actual. Así Atrás/Adelante vuelve entre pantallas, no entre caracteres escritos.
+- Las tarjetas de artista y álbum deben separar la acción de abrir detalle de la acción de reproducir. Usa elementos `button` con nombre accesible y estado de foco visible.
+- Si una búsqueda o combinación de filtros no encuentra pistas, presenta un estado vacío que permita limpiar los filtros.
+- Mantén los ordenamientos de listas inteligentes ligados a su propósito: `playCount` descendente y `dateAdded` descendente. Evita mostrar controles de orden o presentación que no afecten la vista actual.

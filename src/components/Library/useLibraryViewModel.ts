@@ -8,6 +8,9 @@ interface LibraryViewModelInput {
   recentTracks: Track[];
   activeTab: LibraryTab;
   selectedPlaylistId: string | null;
+  selectedArtistName: string | null;
+  selectedAlbumName: string | null;
+  selectedAlbumArtistName: string | null;
   selectedGenre: string | null;
   selectedFormat: string | null;
   searchQuery: string;
@@ -21,6 +24,9 @@ export function useLibraryViewModel({
   recentTracks,
   activeTab,
   selectedPlaylistId,
+  selectedArtistName,
+  selectedAlbumName,
+  selectedAlbumArtistName,
   selectedGenre,
   selectedFormat,
   searchQuery,
@@ -62,6 +68,12 @@ export function useLibraryViewModel({
     if (selectedGenre) {
       list = list.filter((track) => track.genre?.toLowerCase() === selectedGenre.toLowerCase());
     }
+    if (activeTab === 'artists' && selectedArtistName) {
+      list = list.filter((track) => track.artist === selectedArtistName);
+    }
+    if (activeTab === 'albums' && selectedAlbumName) {
+      list = list.filter((track) => track.album === selectedAlbumName && (!selectedAlbumArtistName || track.artist === selectedAlbumArtistName));
+    }
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       list = list.filter((track) =>
@@ -72,7 +84,11 @@ export function useLibraryViewModel({
       );
     }
 
-    if (activeTab !== 'history' && !(activeTab === 'playlists' && selectedPlaylistId)) {
+    if (activeTab === 'smart-top') {
+      list.sort((a, b) => (b.playCount || 0) - (a.playCount || 0));
+    } else if (activeTab === 'smart-recent') {
+      list.sort((a, b) => b.dateAdded - a.dateAdded);
+    } else if (activeTab !== 'history' && !(activeTab === 'playlists' && selectedPlaylistId)) {
       list.sort((a, b) => {
         const value = (track: Track): string | number => {
           switch (sortBy) {
@@ -93,19 +109,35 @@ export function useLibraryViewModel({
       });
     }
     return list;
-  }, [tracks, recentTracks, playlists, activeTab, selectedPlaylistId, selectedGenre, selectedFormat, searchQuery, sortBy, sortOrder]);
+  }, [tracks, recentTracks, playlists, activeTab, selectedPlaylistId, selectedArtistName, selectedAlbumName, selectedAlbumArtistName, selectedGenre, selectedFormat, searchQuery, sortBy, sortOrder]);
+
+  const tracksInCollectionFilters = useMemo(() => tracks.filter((track) => {
+    const matchesGenre = !selectedGenre || track.genre?.toLocaleLowerCase() === selectedGenre.toLocaleLowerCase();
+    const extension = track.fileName.split('.').pop()?.toUpperCase();
+    const matchesFormat = !selectedFormat || extension === selectedFormat;
+    return matchesGenre && matchesFormat;
+  }), [tracks, selectedGenre, selectedFormat]);
 
   const groupedArtists = useMemo(() => {
     const groups = new Map<string, Track[]>();
-    tracks.forEach((track) => groups.set(track.artist, [...(groups.get(track.artist) ?? []), track]));
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [tracks]);
+    tracksInCollectionFilters.forEach((track) => groups.set(track.artist, [...(groups.get(track.artist) ?? []), track]));
+    const entries = Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+    const query = searchQuery.trim().toLocaleLowerCase();
+    return query ? entries.filter(([name, artistTracks]) => name.toLocaleLowerCase().includes(query) || artistTracks.some((track) => `${track.title} ${track.album} ${track.fileName}`.toLocaleLowerCase().includes(query))) : entries;
+  }, [tracksInCollectionFilters, searchQuery]);
 
   const groupedAlbums = useMemo(() => {
     const groups = new Map<string, Track[]>();
-    tracks.forEach((track) => groups.set(track.album, [...(groups.get(track.album) ?? []), track]));
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [tracks]);
+    tracksInCollectionFilters.forEach((track) => {
+      const albumKey = `${track.album}\u0000${track.artist}`;
+      groups.set(albumKey, [...(groups.get(albumKey) ?? []), track]);
+    });
+    const entries = Array.from(groups.values())
+      .map((albumTracks) => [albumTracks[0]?.album ?? '', albumTracks] as [string, Track[]])
+      .sort(([a], [b]) => a.localeCompare(b));
+    const query = searchQuery.trim().toLocaleLowerCase();
+    return query ? entries.filter(([name, albumTracks]) => name.toLocaleLowerCase().includes(query) || albumTracks.some((track) => `${track.artist} ${track.title} ${track.fileName}`.toLocaleLowerCase().includes(query))) : entries;
+  }, [tracksInCollectionFilters, searchQuery]);
 
   const currentPlaylist = playlists.find((playlist) => playlist.id === selectedPlaylistId) ?? null;
   const availableTracksToAdd = useMemo(() => {

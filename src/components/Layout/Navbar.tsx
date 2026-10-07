@@ -21,6 +21,11 @@ export const Navbar: React.FC = () => {
   const {
     searchQuery,
     setSearchQuery,
+    activeTab,
+    selectedPlaylistId,
+    selectedArtistName,
+    selectedAlbumName,
+    navigateTo,
     viewMode,
     setViewMode,
     sortBy,
@@ -42,6 +47,9 @@ export const Navbar: React.FC = () => {
     { field: 'dateAdded', label: 'Fecha' },
     { field: 'playCount', label: 'Más reproducidas' },
   ];
+  const isCollectionDetail = Boolean(selectedArtistName || selectedAlbumName);
+  const canSort = ['tracks', 'favorites', 'history', 'smart-long'].includes(activeTab) || isCollectionDetail;
+  const canChangeView = activeTab !== 'home' && (!(activeTab === 'artists' || activeTab === 'albums') || isCollectionDetail) && !(activeTab === 'playlists' && !selectedPlaylistId);
 
   return (
     <header className="h-[4.25rem] px-4 sm:px-6 flex items-center justify-between gap-3 liquid-glass border-b border-[var(--liquid-glass-border-subtle)] sticky top-0 z-20 transition-all">
@@ -61,9 +69,14 @@ export const Navbar: React.FC = () => {
         </div>
         <input
           type="text"
+          aria-label="Buscar en tu biblioteca"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Buscar canciones, artistas o álbumes..."
+          onChange={(e) => {
+            const query = e.target.value;
+            if (activeTab === 'home' && query.trim()) navigateTo('tracks');
+            setSearchQuery(query);
+          }}
+          placeholder="Buscar pistas, artistas o álbumes..."
           className="w-full pl-10 pr-16 sm:pr-20 py-2.5 rounded-xl liquid-glass-subtle text-sm text-[var(--app-text)] placeholder-[var(--app-text-muted)] focus:outline-none focus:border-[#7C5CFF] focus:ring-1 focus:ring-[#7C5CFF]/60 transition-all shadow-sm"
         />
         <div className="absolute inset-y-0 right-2 flex items-center gap-1.5">
@@ -103,7 +116,7 @@ export const Navbar: React.FC = () => {
       {/* Right controls */}
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         {/* Sort Selector */}
-        <div className="hidden sm:flex items-center liquid-glass-subtle rounded-xl px-2.5 py-1 text-xs text-[var(--app-text-muted)] shadow-sm">
+        {canSort && <div className="hidden sm:flex items-center liquid-glass-subtle rounded-xl px-2.5 py-1 text-xs text-[var(--app-text-muted)] shadow-sm">
           <ArrowUpDown size={14} className="mr-1 text-[var(--app-text-muted)]" />
           <select
             value={sortBy}
@@ -123,10 +136,10 @@ export const Navbar: React.FC = () => {
           >
             {sortOrder === 'asc' ? 'ASC' : 'DESC'}
           </button>
-        </div>
+        </div>}
 
         {/* View mode toggle */}
-        <div className="flex items-center liquid-glass-subtle rounded-xl p-0.5 shadow-sm">
+        {canChangeView && <div className="flex items-center liquid-glass-subtle rounded-xl p-0.5 shadow-sm">
           <button
             onClick={() => setViewMode('list')}
             className={`p-1.5 rounded-lg transition-colors ${
@@ -149,7 +162,7 @@ export const Navbar: React.FC = () => {
           >
             <LayoutGrid size={15} />
           </button>
-        </div>
+        </div>}
 
         {/* Equalizer button */}
         <button

@@ -12,6 +12,7 @@ import { showToast } from '../../stores/useToastStore';
 import { useLibraryViewModel } from './useLibraryViewModel';
 import { LibraryHeader } from './LibraryHeader';
 import { LibraryFilters } from './LibraryFilters';
+import { LibraryHomeView } from './LibraryHomeView';
 
 interface LibraryViewProps {
   onOpenCreatePlaylistModal: () => void;
@@ -23,9 +24,16 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     playlists,
     activeTab,
     selectedPlaylistId,
+    selectedArtistName,
+    selectedAlbumName,
+    selectedAlbumArtistName,
     searchQuery,
     selectedGenre,
     setSelectedGenre,
+    selectedFormat,
+    setSelectedFormat,
+    setSearchQuery,
+    navigateTo,
     sortBy,
     sortOrder,
     viewMode,
@@ -36,9 +44,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     loadDemoPack,
   } = useLibraryStore();
 
-  const { playTrack, recentTracks } = usePlayerStore();
+  const { playTrack, recentTracks, currentTrack, isPlaying, togglePlay } = usePlayerStore();
   const [isDragOver, setIsDragOver] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
 
   const {
     uniqueGenres,
@@ -55,6 +62,9 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     recentTracks,
     activeTab,
     selectedPlaylistId,
+    selectedArtistName,
+    selectedAlbumName,
+    selectedAlbumArtistName,
     selectedGenre,
     selectedFormat,
     searchQuery,
@@ -124,6 +134,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
       <LibraryHeader
         activeTab={activeTab}
         selectedPlaylistId={selectedPlaylistId}
+        selectedArtistName={selectedArtistName}
+        selectedAlbumName={selectedAlbumName}
         tracks={tracks}
         displayedTracks={displayedTracks}
         totalDuration={totalDuration}
@@ -132,35 +144,64 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
         onPlayAll={handlePlayAll}
         onShuffleAll={handleShuffleAll}
         onLoadDemoPack={loadDemoPack}
+        onBackToCollection={() => navigateTo(activeTab)}
       />
         {/* Top Slim Stats Strip */}
-        {activeTab !== 'playlists' && (
+        {activeTab !== 'playlists' && activeTab !== 'home' && (
           <LibraryStatsBanner
             trackCount={tracks.length}
             totalDuration={tracks.reduce((acc, t) => acc + (t.duration || 0), 0)}
-            artistCount={uniqueGenres.length > 0 ? groupedArtists.length : 1}
-            albumCount={groupedAlbums.length}
+            artistCount={new Set(tracks.map((track) => track.artist)).size}
+            albumCount={new Set(tracks.map((track) => `${track.album}\u0000${track.artist}`)).size}
           />
         )}
 
-        <LibraryFilters
+        {activeTab !== 'home' && <LibraryFilters
           activeTab={activeTab}
           selectedPlaylistId={selectedPlaylistId}
           uniqueGenres={uniqueGenres}
           selectedGenre={selectedGenre}
           selectedFormat={selectedFormat}
+          searchQuery={searchQuery}
           onSelectGenre={setSelectedGenre}
           onSelectFormat={setSelectedFormat}
-        />
-        {/* Content Views: Artists, Albums, Table, or Grid */}
-        {activeTab === 'playlists' && !selectedPlaylistId ? null : activeTab === 'artists' ? (
+          onClearSearch={() => setSearchQuery('')}
+          onClearAll={() => {
+            setSearchQuery('');
+            setSelectedGenre(null);
+            setSelectedFormat(null);
+          }}
+        />}
+        {/* Content Views: home, artist/album collections, table, or grid */}
+        {activeTab !== 'home' && activeTab !== 'playlists' && displayedTracks.length === 0 && (
+          <div className="my-4 rounded-2xl border border-dashed border-[var(--liquid-glass-border)] bg-[var(--app-surface)]/45 px-5 py-8 text-center">
+            <p className="text-base font-semibold text-[var(--app-text)]">No encontramos resultados</p>
+            <p className="mt-1 text-sm text-[var(--app-text-muted)]">Prueba con otro término o elimina los filtros activos.</p>
+            <button type="button" onClick={() => { setSearchQuery(''); setSelectedGenre(null); setSelectedFormat(null); }} className="mt-3 rounded-lg px-3 py-2 text-sm font-semibold text-[var(--app-accent)] hover:bg-[var(--app-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]">Limpiar filtros</button>
+          </div>
+        )}
+        {activeTab === 'home' ? (
+          <LibraryHomeView
+            tracks={tracks}
+            playlists={playlists}
+            recentTracks={recentTracks}
+            currentTrack={currentTrack}
+            isPlaying={isPlaying}
+            onPlayTrack={(track, queue) => playTrack(track, queue, false)}
+            onTogglePlayback={togglePlay}
+            onNavigate={(tab) => navigateTo(tab)}
+            onOpenPlaylist={(playlistId) => navigateTo('playlists', { playlistId })}
+          />
+        ) : activeTab === 'playlists' && selectedPlaylistId && !currentPlaylist ? null : activeTab !== 'playlists' && displayedTracks.length === 0 ? null : activeTab === 'playlists' && !selectedPlaylistId ? null : activeTab === 'artists' && !selectedArtistName ? (
           <ArtistsGridView
             groupedArtists={groupedArtists}
+            onSelectArtist={(artistName) => navigateTo('artists', { artistName })}
             onPlayArtist={(artistTracks) => playTrack(artistTracks[0], artistTracks)}
           />
-        ) : activeTab === 'albums' ? (
+        ) : activeTab === 'albums' && !selectedAlbumName ? (
           <AlbumsGridView
             groupedAlbums={groupedAlbums}
+            onSelectAlbum={(albumName, albumArtistName) => navigateTo('albums', { albumName, albumArtistName })}
             onPlayAlbum={(albumTracks) => playTrack(albumTracks[0], albumTracks)}
           />
         ) : viewMode === 'list' ? (
@@ -264,6 +305,12 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
           </div>
         )}
       </div>
+      {activeTab === 'playlists' && selectedPlaylistId && !currentPlaylist && (
+        <div className="mx-4 mb-5 rounded-2xl border border-dashed border-[var(--liquid-glass-border)] p-6 text-center sm:mx-8">
+          <p className="text-sm font-semibold text-[var(--app-text)]">Esta playlist ya no está disponible.</p>
+          <button type="button" onClick={() => navigateTo('playlists')} className="mt-2 rounded-lg px-3 py-2 text-sm font-semibold text-[var(--app-accent)] hover:bg-[var(--app-surface-hover)]">Volver a tus playlists</button>
+        </div>
+      )}
     </div>
   );
 };

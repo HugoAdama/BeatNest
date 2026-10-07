@@ -121,10 +121,16 @@ Administra colecciones, playlists y controles de navegación. La extracción y e
 | `loadDemoPack()` | Sintetiza e inserta 3 pistas demo de estudio con carátulas procedurales y genera una playlist temática inicial |
 | `setSearchQuery(query)` | Aplica filtro de búsqueda en tiempo real |
 | `setSort(field, order)` | Modifica el criterio y dirección de ordenación |
+| `navigateTo(tab, details?)` | Cambia la sección y añade una ruta hash al historial del navegador; acepta ID de playlist o nombre de artista/álbum |
+| `syncNavigationFromLocation()` | Restaura la vista y los filtros a partir de la URL al iniciar o usar Atrás/Adelante |
+| `setSelectedGenre(genre)` / `setSelectedFormat(format)` | Aplica un filtro y actualiza la URL sin crear entradas por cada ajuste |
+
+El estado de navegación incluye `activeTab`, `selectedPlaylistId`, `selectedArtistName`, `selectedAlbumName`, `selectedAlbumArtistName`, `searchQuery`, `selectedGenre` y `selectedFormat`. Las rutas utilizan el fragmento del documento (`#/home`, `#/tracks`, `#/playlists/:id`, `#/artists/:name`, `#/albums/:name?artist=...` y `#/smart/:type`), por lo que funcionan con el despliegue estático y no requieren servidor de rutas.
 
 ## 6. Componentes de biblioteca
 
 - `src/components/Library/LibraryView.tsx`: compone la vista de biblioteca y conecta el estado con los controles de presentación.
 - `LibraryHeader.tsx`, `LibraryFilters.tsx` y `useLibraryViewModel.ts`: presentan cabeceras y filtros, y calculan las colecciones visibles sin mezclar esos cálculos con el store.
+- `LibraryHomeView.tsx`: muestra escucha reciente, incorporaciones, canciones más reproducidas y playlists; los elementos abren reproducción o la sección correspondiente.
 - `Sidebar.tsx` mantiene navegación y playlists; `LibrarySidebarActions.tsx` encapsula respaldo/restauración y accesos a estadísticas y atajos.
 - `EditTrackModal.tsx` guarda metadatos y coordina la edición; `TrackCoverEditor.tsx` gestiona por separado la selección, generación y previsualización de carátulas.

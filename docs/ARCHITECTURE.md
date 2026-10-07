@@ -181,3 +181,10 @@ Para garantizar un mantenimiento óptimo y escalable, el código se estructura e
    - `LibraryView` compone la vista de biblioteca y delega cabecera, filtros y cálculos de presentación en módulos especializados.
    - `Sidebar` conserva la navegación y playlists; `LibrarySidebarActions` concentra respaldo/restauración y acciones auxiliares.
    - `EditTrackModal` coordina los metadatos; `TrackCoverEditor` administra selección, generación y previsualización de carátulas.
+
+### 2.7 Navegación del Frontend
+- `useLibraryStore` es la fuente de verdad de la sección seleccionada y del detalle activo (playlist, artista o álbum).
+- La navegación se serializa en el hash (`#/...`) para soportar despliegue estático, enlaces directos y el historial Atrás/Adelante sin añadir un servidor de rutas.
+- `App` escucha los cambios del historial y sincroniza la URL con el store. `navigateTo` crea una entrada al cambiar de sección; filtros y búsqueda reemplazan la entrada actual para evitar un paso del historial por cada tecla.
+- Los parámetros de búsqueda, género y formato acompañan a la vista en el hash y se restauran al volver a ella.
+- `LibraryHomeView` compone los accesos a la escucha reciente, incorporaciones, favoritos de escucha y playlists. `LibraryHeader` y las vistas de artista/álbum implementan el detalle y el retorno a la colección.

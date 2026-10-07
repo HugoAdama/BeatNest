@@ -15,6 +15,8 @@ import {
   BarChart3,
   X,
   Music,
+  Mic2,
+  Disc,
 } from 'lucide-react';
 import { useUIStore } from '../../stores/useUIStore';
 import { useLibraryStore } from '../../stores/useLibraryStore';
@@ -28,7 +30,7 @@ import type { Track, Playlist } from '../../types/music';
 interface CommandAction {
   id: string;
   title: string;
-  category: 'Acción' | 'Pista' | 'Playlist';
+  category: 'Acción' | 'Pista' | 'Playlist' | 'Artista' | 'Álbum';
   icon: React.ReactNode;
   perform?: () => void;
 }
@@ -44,7 +46,7 @@ export const CommandPaletteModal: React.FC = () => {
     toggleStats,
   } = useUIStore();
 
-  const { tracks, playlists, setActiveTab, setSelectedPlaylistId } = useLibraryStore();
+  const { tracks, playlists, navigateTo } = useLibraryStore();
   const { playTrack, togglePlay, isPlaying } = usePlayerStore();
   const { theme, toggleTheme } = useThemeStore();
   const { toggleModal: toggleSleepTimer } = useSleepTimerStore();
@@ -230,14 +232,37 @@ export const CommandPaletteModal: React.FC = () => {
             title: `Playlist: ${p.name}`,
             category: 'Playlist',
             icon: <ListMusic size={16} className="text-[#4FD1C5]" />,
-            perform: () => {
-              setActiveTab('playlists');
-              setSelectedPlaylistId(p.id);
-            },
+            perform: () => navigateTo('playlists', { playlistId: p.id }),
           }))
       : [];
 
-    return [...matchingPlaylists, ...matchingTracks, ...filteredActions];
+    const matchingArtists: CommandAction[] = q
+      ? [...new Set(tracks.map((track) => track.artist))]
+          .filter((artist) => artist.toLocaleLowerCase().includes(q))
+          .slice(0, 4)
+          .map((artist) => ({
+            id: `artist-${artist}`,
+            title: `Artista: ${artist}`,
+            category: 'Artista',
+            icon: <Mic2 size={16} className="text-[#7C5CFF]" />,
+            perform: () => navigateTo('artists', { artistName: artist }),
+          }))
+      : [];
+
+    const matchingAlbums: CommandAction[] = q
+      ? [...new Map(tracks.map((track) => [`${track.album}\u0000${track.artist}`, track])).values()]
+          .filter((track) => `${track.album} ${track.artist}`.toLocaleLowerCase().includes(q))
+          .slice(0, 4)
+          .map((track) => ({
+            id: `album-${track.album}-${track.artist}`,
+            title: `Álbum: ${track.album} • ${track.artist}`,
+            category: 'Álbum',
+            icon: <Disc size={16} className="text-[#4FD1C5]" />,
+            perform: () => navigateTo('albums', { albumName: track.album, albumArtistName: track.artist }),
+          }))
+      : [];
+
+    return [...matchingPlaylists, ...matchingArtists, ...matchingAlbums, ...matchingTracks, ...filteredActions];
   }, [
     query,
     tracks,
@@ -253,8 +278,7 @@ export const CommandPaletteModal: React.FC = () => {
     toggleTheme,
       toggleShortcutModal,
       playTrack,
-      setActiveTab,
-      setSelectedPlaylistId,
+      navigateTo,
       handleExport,
   ]);
 

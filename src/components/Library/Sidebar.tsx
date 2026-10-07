@@ -15,6 +15,7 @@ import {
   Clock,
   Timer,
   FileDown,
+  House,
 } from 'lucide-react';
 import { useLibraryStore, type LibraryTab } from '../../stores/useLibraryStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
@@ -32,9 +33,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
     tracks,
     playlists,
     activeTab,
-    setActiveTab,
+    navigateTo,
     selectedPlaylistId,
-    setSelectedPlaylistId,
     importDirectoryWithPicker,
     importFiles,
     deletePlaylist,
@@ -64,12 +64,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
   };
 
   const navItems: { id: LibraryTab; label: string; icon: React.ReactNode; count?: number }[] = [
+    { id: 'home', label: 'Inicio', icon: <House size={17} /> },
     { id: 'tracks', label: 'Todas las pistas', icon: <Music size={17} />, count: tracks.length },
     { id: 'favorites', label: 'Favoritos', icon: <Heart size={17} />, count: favoriteCount },
-    { id: 'artists', label: 'Artistas', icon: <Mic2 size={17} /> },
-    { id: 'albums', label: 'Álbumes', icon: <Disc size={17} /> },
     { id: 'history', label: 'Historial reciente', icon: <History size={17} />, count: recentTracks.length },
   ];
+
+  const exploreItems: { id: LibraryTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'artists', label: 'Artistas', icon: <Mic2 size={17} /> },
+    { id: 'albums', label: 'Álbumes', icon: <Disc size={17} /> },
+  ];
+
+  const renderNavItems = (items: typeof navItems) => items.map((item) => {
+    const isActive = activeTab === item.id && selectedPlaylistId === null;
+    return (
+      <button
+        key={item.id}
+        type="button"
+        onClick={() => handleSelectTab(item.id)}
+        aria-current={isActive ? 'page' : undefined}
+        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          isActive
+            ? 'bg-[#7C5CFF]/15 text-[#7C5CFF] border border-[#7C5CFF]/40 font-semibold shadow-sm backdrop-blur-md'
+            : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
+        }`}
+      >
+        <span className="flex items-center gap-2.5">{item.icon}<span>{item.label}</span></span>
+        {item.count !== undefined && <span className="text-xs font-mono text-[var(--app-text-muted)] tabular-nums">{item.count}</span>}
+      </button>
+    );
+  });
 
   const smartItems: { id: LibraryTab; label: string; icon: React.ReactNode; count?: number }[] = [
     {
@@ -93,16 +117,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
   ];
 
   const handleSelectTab = (tab: LibraryTab) => {
-    setActiveTab(tab);
-    setSelectedPlaylistId(null);
+    navigateTo(tab);
     if (isMobileSidebarOpen) {
       toggleMobileSidebar(false);
     }
   };
 
   const handleSelectPlaylist = (id: string) => {
-    setSelectedPlaylistId(id);
-    setActiveTab('playlists');
+    navigateTo('playlists', { playlistId: id });
     if (isMobileSidebarOpen) {
       toggleMobileSidebar(false);
     }
@@ -120,6 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
 
       {/* Main Sidebar Shell */}
       <aside
+        aria-label="Navegación de BeatNest"
         className={`fixed inset-y-0 left-0 z-50 lg:static w-72 lg:w-64 liquid-glass flex flex-col h-full select-none shrink-0 transition-transform duration-300 ease-in-out ${
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
@@ -151,18 +174,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
         </div>
 
         {/* Main Import Action Buttons */}
-        <div className="p-3.5 space-y-2 border-b border-[var(--liquid-glass-border-subtle)]">
+        <div className="p-3.5 border-b border-[var(--liquid-glass-border-subtle)]">
           <button
             onClick={importDirectoryWithPicker}
-            className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-xs font-semibold hover:opacity-95 active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(124,92,255,0.35)] border border-white/20"
+            className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFF] to-[#6366F1] text-white text-sm font-semibold hover:opacity-95 active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(124,92,255,0.35)] border border-white/20"
           >
             <FolderOpen size={16} />
-            <span>Abrir carpeta local</span>
+            <span>Importar música</span>
           </button>
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-full flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl liquid-glass-subtle text-[var(--app-text)] text-xs font-medium hover:border-[#7C5CFF]/60 hover:bg-[var(--app-surface-hover)] active:scale-[0.98] transition-all"
+            className="w-full mt-1.5 flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[var(--app-text-muted)] text-xs font-medium hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)] active:scale-[0.98] transition-all"
           >
             <FileAudio size={16} className="text-[var(--app-accent)]" />
             <span>Añadir archivos</span>
@@ -179,38 +202,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
         </div>
 
         {/* Navigation Sections (min-h-0 prevents bottom footer clipping) */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-5">
+        <nav aria-label="Secciones de la biblioteca" className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-5">
           {/* Main Section */}
           <div>
-            <span className="px-3 text-xs font-bold uppercase tracking-wider text-[var(--app-text-muted)] block mb-2">
-              Biblioteca
-            </span>
-            <div className="space-y-0.5">
-              {navItems.map((item) => {
-                const isActive = activeTab === item.id && selectedPlaylistId === null;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSelectTab(item.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                      isActive
-                        ? 'bg-[#7C5CFF]/15 text-[#7C5CFF] border border-[#7C5CFF]/40 font-semibold shadow-sm backdrop-blur-md'
-                        : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </div>
-                    {item.count !== undefined && (
-                      <span className="text-[11px] font-mono text-[var(--app-text-muted)] tabular-nums">
-                        {item.count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <span className="mb-2 block px-3 text-xs font-bold uppercase tracking-wider text-[var(--app-text-muted)]">Tu biblioteca</span>
+            <div className="space-y-0.5">{renderNavItems(navItems)}</div>
+          </div>
+
+          <div>
+            <span className="mb-2 block px-3 text-xs font-bold uppercase tracking-wider text-[var(--app-text-muted)]">Explorar</span>
+            <div className="space-y-0.5">{renderNavItems(exploreItems)}</div>
           </div>
 
           {/* Smart Playlists Section */}
@@ -219,30 +220,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
               Listas Inteligentes
             </span>
             <div className="space-y-0.5">
-              {smartItems.map((item) => {
-                const isActive = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSelectTab(item.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                      isActive
-                        ? 'bg-[#4FD1C5]/15 text-[#4FD1C5] border border-[#4FD1C5]/40 font-semibold shadow-sm backdrop-blur-md'
-                        : 'text-[var(--app-text-muted)] hover:text-[var(--app-text)] hover:bg-[var(--app-surface-hover)]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </div>
-                    {item.count !== undefined && (
-                      <span className="text-[11px] font-mono text-[var(--app-text-muted)] tabular-nums">
-                        {item.count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+              {renderNavItems(smartItems)}
             </div>
           </div>
 
@@ -251,8 +229,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
             <div className="flex items-center justify-between px-3 mb-1.5">
               <button
                 onClick={() => {
-                  setActiveTab('playlists');
-                  setSelectedPlaylistId(null);
+                  navigateTo('playlists');
                   if (isMobileSidebarOpen) toggleMobileSidebar(false);
                 }}
                 className="text-xs font-bold uppercase tracking-wider text-[var(--app-text-muted)] hover:text-[var(--app-text)] text-left transition-colors"
@@ -280,6 +257,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
                   return (
                     <div
                       key={pl.id}
+                      aria-current={isSelected ? 'page' : undefined}
                       className={`group w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                         isSelected
                           ? 'bg-[#7C5CFF]/15 text-[#7C5CFF] border border-[#7C5CFF]/40 font-semibold backdrop-blur-md'
@@ -306,7 +284,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
                           <FileDown size={13} />
                         </button>
                         <button
-                          onClick={() => deletePlaylist(pl.id)}
+                          onClick={() => {
+                            deletePlaylist(pl.id);
+                            if (selectedPlaylistId === pl.id) navigateTo('playlists');
+                          }}
                           className="hidden group-hover:block p-1 text-[var(--app-text-muted)] hover:text-red-400 transition-colors"
                           title="Eliminar playlist"
                         >
@@ -319,7 +300,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
               )}
             </div>
           </div>
-        </div>
+        </nav>
 
         <LibrarySidebarActions />
       </aside>
