@@ -1,12 +1,11 @@
 import React from 'react';
 import { Sliders, Power, RotateCcw, X } from 'lucide-react';
 import { usePlayerStore } from '../../stores/usePlayerStore';
+import { useUIStore } from '../../stores/useUIStore';
 import { EQ_LABELS, DEFAULT_PRESETS } from '../../lib/audioEngine';
 
 export const EqualizerModal: React.FC = () => {
   const {
-    isEqualizerOpen,
-    toggleEqualizer,
     eqEnabled,
     toggleEq,
     eqGains,
@@ -14,6 +13,8 @@ export const EqualizerModal: React.FC = () => {
     activePresetId,
     setEqPreset,
   } = usePlayerStore();
+
+  const { isEqualizerOpen, toggleEqualizer } = useUIStore();
 
   if (!isEqualizerOpen) return null;
 

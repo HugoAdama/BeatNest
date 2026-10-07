@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Track, RepeatMode, VisualizerMode } from '../types/music';
 import { audioEngine, DEFAULT_PRESETS } from '../lib/audioEngine';
 import { db } from '../db';
+import { useUIStore } from './useUIStore';
 
 interface PlayerStore {
   currentTrack: Track | null;
@@ -381,37 +382,27 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   setVisualizerMode: (mode: VisualizerMode) => {
-    set({ visualizerMode: mode });
+    useUIStore.getState().setVisualizerMode(mode);
   },
 
   toggleVisualizer: (open?: boolean) => {
-    set((state) => ({
-      isVisualizerOpen: open !== undefined ? open : !state.isVisualizerOpen,
-    }));
+    useUIStore.getState().toggleVisualizer(open);
   },
 
   toggleMiniPlayer: (open?: boolean) => {
-    set((state) => ({
-      isMiniPlayer: open !== undefined ? open : !state.isMiniPlayer,
-    }));
+    useUIStore.getState().toggleMiniPlayer(open);
   },
 
   toggleEqualizer: (open?: boolean) => {
-    set((state) => ({
-      isEqualizerOpen: open !== undefined ? open : !state.isEqualizerOpen,
-    }));
+    useUIStore.getState().toggleEqualizer(open);
   },
 
   toggleShortcutModal: (open?: boolean) => {
-    set((state) => ({
-      isShortcutModalOpen: open !== undefined ? open : !state.isShortcutModalOpen,
-    }));
+    useUIStore.getState().toggleShortcutModal(open);
   },
 
   toggleLyrics: (open?: boolean) => {
-    set((state) => ({
-      isLyricsOpen: open !== undefined ? open : !state.isLyricsOpen,
-    }));
+    useUIStore.getState().toggleLyrics(open);
   },
 
   setTrackLyrics: async (trackId: string, lyricsText: string) => {

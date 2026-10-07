@@ -55,3 +55,9 @@ npm run lint
 ### 3.4 Privacidad Estricta
 - Ningún archivo, metadata, hash o contenido de audio debe ser transmitido a servidores remotos ni a servicios de análisis o telemetría.
 - Toda la persistencia debe realizarse localmente en el navegador mediante **IndexedDB**.
+
+### 3.5 Estructura Modular y Responsabilidades
+- Mantener los componentes de UI atómicos y enfocados en una sola responsabilidad, con un tamaño preferido inferior a 150 líneas.
+- La lógica de síntesis de audio, cálculo de frecuencias o manipulación binaria debe residir en módulos de servicio dentro de `src/lib/`.
+- El estado visual de la interfaz (visibilidad de modales, modos de visualización y cajones) debe residir en `useUIStore`, reservando `usePlayerStore` exclusivamente para el motor de audio, la cola y los parámetros de ecualización.
+

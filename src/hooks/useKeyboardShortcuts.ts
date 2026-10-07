@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { usePlayerStore } from '../stores/usePlayerStore';
+import { useUIStore } from '../stores/useUIStore';
 import { useLibraryStore } from '../stores/useLibraryStore';
 
 export function useKeyboardShortcuts() {
@@ -13,16 +14,16 @@ export function useKeyboardShortcuts() {
     toggleMute,
     toggleShuffle,
     cycleRepeat,
+    currentTrack,
+  } = usePlayerStore();
+
+  const {
     toggleVisualizer,
     toggleEqualizer,
     toggleShortcutModal,
     toggleLyrics,
-    isLyricsOpen,
-    isShortcutModalOpen,
-    isEqualizerOpen,
-    isVisualizerOpen,
-    currentTrack,
-  } = usePlayerStore();
+    closeAllModals,
+  } = useUIStore();
 
   const { toggleFavorite } = useLibraryStore();
 
@@ -112,10 +113,7 @@ export function useKeyboardShortcuts() {
           break;
 
         case 'Escape':
-          if (isShortcutModalOpen) toggleShortcutModal(false);
-          if (isEqualizerOpen) toggleEqualizer(false);
-          if (isVisualizerOpen) toggleVisualizer(false);
-          if (isLyricsOpen) toggleLyrics(false);
+          closeAllModals();
           break;
 
         default:
@@ -139,10 +137,7 @@ export function useKeyboardShortcuts() {
     toggleEqualizer,
     toggleShortcutModal,
     toggleLyrics,
-    isLyricsOpen,
-    isShortcutModalOpen,
-    isEqualizerOpen,
-    isVisualizerOpen,
+    closeAllModals,
     currentTrack,
     toggleFavorite,
   ]);

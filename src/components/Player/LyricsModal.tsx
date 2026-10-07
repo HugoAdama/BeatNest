@@ -10,17 +10,18 @@ import {
   AlignLeft,
 } from 'lucide-react';
 import { usePlayerStore } from '../../stores/usePlayerStore';
+import { useUIStore } from '../../stores/useUIStore';
 import { parseLRC, getActiveLyricIndex } from '../../lib/lyrics';
 
 export const LyricsModal: React.FC = () => {
   const {
     currentTrack,
     currentTime,
-    isLyricsOpen,
-    toggleLyrics,
     seek,
     setTrackLyrics,
   } = usePlayerStore();
+
+  const { isLyricsOpen, toggleLyrics } = useUIStore();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);

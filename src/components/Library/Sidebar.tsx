@@ -13,7 +13,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useLibraryStore, type LibraryTab } from '../../stores/useLibraryStore';
-import { usePlayerStore } from '../../stores/usePlayerStore';
+import { useUIStore } from '../../stores/useUIStore';
 
 interface SidebarProps {
   onOpenCreatePlaylistModal: () => void;
@@ -32,7 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenCreatePlaylistModal }) =
     deletePlaylist,
   } = useLibraryStore();
 
-  const { toggleShortcutModal } = usePlayerStore();
+  const { toggleShortcutModal } = useUIStore();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const favoriteCount = tracks.filter((t) => t.isFavorite).length;

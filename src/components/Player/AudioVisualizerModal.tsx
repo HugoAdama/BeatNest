@@ -14,21 +14,25 @@ import {
   Music,
 } from 'lucide-react';
 import { usePlayerStore } from '../../stores/usePlayerStore';
+import { useUIStore } from '../../stores/useUIStore';
 import { CanvasVisualizer } from './CanvasVisualizer';
 import type { VisualizerMode } from '../../types/music';
 
 export const AudioVisualizerModal: React.FC = () => {
   const {
-    isVisualizerOpen,
-    toggleVisualizer,
-    visualizerMode,
-    setVisualizerMode,
     currentTrack,
     isPlaying,
     togglePlay,
     nextTrack,
     prevTrack,
   } = usePlayerStore();
+
+  const {
+    isVisualizerOpen,
+    toggleVisualizer,
+    visualizerMode,
+    setVisualizerMode,
+  } = useUIStore();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
 

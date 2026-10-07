@@ -8,7 +8,7 @@ import {
   Music,
 } from 'lucide-react';
 import { usePlayerStore } from '../../stores/usePlayerStore';
-
+import { useUIStore } from '../../stores/useUIStore';
 import { PlayingIndicator } from '../Common/PlayingIndicator';
 
 export const MiniPlayer: React.FC = () => {
@@ -20,9 +20,9 @@ export const MiniPlayer: React.FC = () => {
     togglePlay,
     nextTrack,
     prevTrack,
-    isMiniPlayer,
-    toggleMiniPlayer,
   } = usePlayerStore();
+
+  const { isMiniPlayer, toggleMiniPlayer } = useUIStore();
 
   if (!isMiniPlayer || !currentTrack) return null;
 

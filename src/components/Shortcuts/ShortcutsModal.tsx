@@ -1,9 +1,9 @@
 import React from 'react';
 import { Keyboard, X } from 'lucide-react';
-import { usePlayerStore } from '../../stores/usePlayerStore';
+import { useUIStore } from '../../stores/useUIStore';
 
 export const ShortcutsModal: React.FC = () => {
-  const { isShortcutModalOpen, toggleShortcutModal } = usePlayerStore();
+  const { isShortcutModalOpen, toggleShortcutModal } = useUIStore();
 
   if (!isShortcutModalOpen) return null;
 

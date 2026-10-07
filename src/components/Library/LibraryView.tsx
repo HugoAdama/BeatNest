@@ -1,21 +1,15 @@
 import React, { useMemo, useState } from 'react';
-import {
-  FolderOpen,
-  Music,
-  Play,
-  Heart,
-  ListMusic,
-  Disc,
-  Mic2,
-  Sparkles,
-  Info,
-  Clock,
-} from 'lucide-react';
+import { Play, Heart, ListMusic } from 'lucide-react';
 import { useLibraryStore } from '../../stores/useLibraryStore';
 import { usePlayerStore } from '../../stores/usePlayerStore';
 import { TrackRow } from './TrackRow';
 import { TrackCard } from './TrackCard';
+import { LibraryStatsBanner } from './LibraryStatsBanner';
+import { LibraryEmptyState } from './LibraryEmptyState';
+import { ArtistsGridView } from './ArtistsGridView';
+import { AlbumsGridView } from './AlbumsGridView';
 import { formatDuration } from '../../lib/metadata';
+import { generateDemoArpeggioTrack } from '../../lib/audioGenerator';
 
 interface LibraryViewProps {
   onOpenCreatePlaylistModal: () => void;
@@ -38,11 +32,11 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
   const { playTrack } = usePlayerStore();
   const [isDragOver, setIsDragOver] = useState(false);
 
-  // Filter tracks based on activeTab, selected playlist, and search query
+  // Filter & sort tracks based on activeTab, selected playlist, and search query
   const displayedTracks = useMemo(() => {
     let list = [...tracks];
 
-    // Filter by Playlist
+    // Filter by Playlist or Favorites
     if (activeTab === 'playlists' && selectedPlaylistId) {
       const pl = playlists.find((p) => p.id === selectedPlaylistId);
       if (pl) {
@@ -153,28 +147,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
 
   const handleGenerateSampleTrack = async () => {
     try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const sampleRate = 44100;
-      const durationSeconds = 5;
-      const numFrames = sampleRate * durationSeconds;
-      const audioBuffer = ctx.createBuffer(2, numFrames, sampleRate);
-
-      const left = audioBuffer.getChannelData(0);
-      const right = audioBuffer.getChannelData(1);
-
-      const notes = [261.63, 329.63, 392.0, 523.25, 659.25];
-      for (let i = 0; i < numFrames; i++) {
-        const t = i / sampleRate;
-        const noteIndex = Math.floor(t * 2) % notes.length;
-        const freq = notes[noteIndex];
-        const envelope = Math.exp(-((t % 0.5) * 4));
-        const sample = Math.sin(2 * Math.PI * freq * t) * envelope * 0.4;
-        left[i] = sample;
-        right[i] = sample;
-      }
-
-      const wavBlob = audioBufferToWav(audioBuffer);
-      const demoFile = new File([wavBlob], 'BeatNest Intro - Demo Arpeggio.wav', { type: 'audio/wav' });
+      const demoFile = await generateDemoArpeggioTrack();
       await importFiles([demoFile]);
     } catch (err) {
       console.warn('Could not generate sample track:', err);
@@ -184,52 +157,14 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
   // If entire library is empty
   if (tracks.length === 0) {
     return (
-      <div
+      <LibraryEmptyState
+        isDragOver={isDragOver}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`flex-1 flex flex-col items-center justify-center p-8 text-center transition-all relative ${
-          isDragOver ? 'bg-[#7C5CFF]/10 border-2 border-dashed border-[#7C5CFF]' : ''
-        }`}
-      >
-        <div className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-[#7C5CFF]/15 blur-3xl" />
-
-        <div className="max-w-lg flex flex-col items-center relative z-10">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#7C5CFF]/20 to-[#4FD1C5]/20 border border-[#7C5CFF]/40 flex items-center justify-center mb-6 shadow-2xl">
-            <Music size={36} className="text-[#4FD1C5]" />
-          </div>
-
-          <h2 className="text-2xl font-bold tracking-tight text-[var(--app-text)] mb-2">
-            Tu música, sin nube
-          </h2>
-          <p className="text-sm text-[var(--app-text-muted)] mb-8 leading-relaxed">
-            BeatNest reproduce tus canciones directamente desde tu dispositivo sin subirlas a ningún servidor. Privado, instantáneo y 100% offline.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center mb-6">
-            <button
-              onClick={importDirectoryWithPicker}
-              className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-[#7C5CFF] text-white font-medium text-sm hover:bg-[#6D48F7] active:scale-95 transition-all shadow-[0_4px_20px_rgba(124,92,255,0.4)]"
-            >
-              <FolderOpen size={18} />
-              <span>Seleccionar carpeta de música</span>
-            </button>
-
-            <button
-              onClick={handleGenerateSampleTrack}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-[var(--app-surface)] border border-[var(--app-border)] text-[var(--app-accent)] text-sm hover:border-[var(--app-accent)]/50 hover:bg-[var(--app-surface-hover)] transition-all shadow-sm"
-            >
-              <Sparkles size={16} />
-              <span>Generar pista demo</span>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-[var(--app-text-muted)] bg-[var(--app-surface)] px-4 py-2 rounded-xl border border-[var(--app-border)] shadow-sm">
-            <Info size={14} className="text-[#7C5CFF]" />
-            <span>Formatos compatibles: MP3, FLAC, WAV, OGG, M4A, AAC, OPUS</span>
-          </div>
-        </div>
-      </div>
+        onImportDirectory={importDirectoryWithPicker}
+        onGenerateSampleTrack={handleGenerateSampleTrack}
+      />
     );
   }
 
@@ -311,49 +246,14 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
           </div>
         )}
 
-        {/* Quick Stats Banner to enrich layout */}
+        {/* Quick Stats Banner */}
         {activeTab === 'tracks' && displayedTracks.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[var(--app-surface)] border border-[var(--app-border)] shadow-sm">
-              <div className="p-2 rounded-lg bg-[#7C5CFF]/15 text-[#7C5CFF]">
-                <Music size={18} />
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs text-[var(--app-text-muted)] block">Pistas</span>
-                <span className="text-sm font-bold text-[var(--app-text)]">{tracks.length}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[var(--app-surface)] border border-[var(--app-border)] shadow-sm">
-              <div className="p-2 rounded-lg bg-[var(--app-accent)]/15 text-[var(--app-accent)]">
-                <Clock size={18} />
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs text-[var(--app-text-muted)] block">Duración</span>
-                <span className="text-sm font-bold text-[var(--app-text)]">{formatDuration(totalDuration)}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[var(--app-surface)] border border-[var(--app-border)] shadow-sm">
-              <div className="p-2 rounded-lg bg-emerald-500/15 text-emerald-500">
-                <Mic2 size={18} />
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs text-[var(--app-text-muted)] block">Artistas</span>
-                <span className="text-sm font-bold text-[var(--app-text)]">{groupedArtists.length}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[var(--app-surface)] border border-[var(--app-border)] shadow-sm">
-              <div className="p-2 rounded-lg bg-amber-500/15 text-amber-500">
-                <Disc size={18} />
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs text-[var(--app-text-muted)] block">Álbumes</span>
-                <span className="text-sm font-bold text-[var(--app-text)]">{groupedAlbums.length}</span>
-              </div>
-            </div>
-          </div>
+          <LibraryStatsBanner
+            trackCount={tracks.length}
+            totalDuration={totalDuration}
+            artistCount={groupedArtists.length}
+            albumCount={groupedAlbums.length}
+          />
         )}
       </div>
 
@@ -371,60 +271,17 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
             </p>
           </div>
         ) : activeTab === 'artists' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {groupedArtists.map(([artistName, artistTracks]) => (
-              <div
-                key={artistName}
-                onClick={() => playTrack(artistTracks[0], artistTracks)}
-                className="p-4 rounded-2xl bg-[var(--app-surface)] border border-[var(--app-border)] hover:border-[#7C5CFF]/60 hover:shadow-lg transition-all cursor-pointer group shadow-sm"
-              >
-                <div className="w-16 h-16 rounded-full bg-[var(--app-surface-elevated)] border border-[var(--app-border)] flex items-center justify-center mb-3 text-[#7C5CFF] group-hover:bg-[#7C5CFF] group-hover:text-white transition-colors">
-                  <Mic2 size={24} />
-                </div>
-                <h4 className="text-sm font-semibold text-[var(--app-text)] truncate">
-                  {artistName}
-                </h4>
-                <p className="text-xs text-[var(--app-text-muted)] mt-0.5">
-                  {artistTracks.length} {artistTracks.length === 1 ? 'pista' : 'pistas'}
-                </p>
-              </div>
-            ))}
-          </div>
+          <ArtistsGridView
+            groupedArtists={groupedArtists}
+            onPlayArtist={(artistTracks) => playTrack(artistTracks[0], artistTracks)}
+          />
         ) : activeTab === 'albums' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {groupedAlbums.map(([albumName, albumTracks]) => {
-              const coverUrl = albumTracks.find((t) => t.coverUrl)?.coverUrl;
-              return (
-                <div
-                  key={albumName}
-                  onClick={() => playTrack(albumTracks[0], albumTracks)}
-                  className="p-4 rounded-2xl bg-[var(--app-surface)] border border-[var(--app-border)] hover:border-[#7C5CFF]/60 hover:shadow-lg transition-all cursor-pointer group shadow-sm"
-                >
-                  <div className="aspect-square rounded-xl bg-[var(--app-surface-elevated)] border border-[var(--app-border)] overflow-hidden flex items-center justify-center mb-3">
-                    {coverUrl ? (
-                      <img
-                        src={coverUrl}
-                        alt={albumName}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      />
-                    ) : (
-                      <Disc size={36} className="text-[#7C5CFF]" />
-                    )}
-                  </div>
-                  <h4 className="text-sm font-semibold text-[var(--app-text)] truncate">
-                    {albumName}
-                  </h4>
-                  <p className="text-xs text-[var(--app-text-muted)] mt-0.5">
-                    {albumTracks[0]?.artist || 'Varios artistas'} • {albumTracks.length} pistas
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+          <AlbumsGridView
+            groupedAlbums={groupedAlbums}
+            onPlayAlbum={(albumTracks) => playTrack(albumTracks[0], albumTracks)}
+          />
         ) : viewMode === 'list' ? (
-          /* Enriched card table container */
           <div className="bg-[var(--app-surface)] border border-[var(--app-border)] rounded-2xl shadow-sm p-2">
-            {/* List column headers */}
             <div className="flex items-center gap-3 px-3.5 py-2.5 text-[11px] font-bold text-[var(--app-text-muted)] uppercase tracking-wider border-b border-[var(--app-border)]">
               <span className="w-8 text-center">#</span>
               <span className="flex-1 md:w-5/12">Título</span>
@@ -459,45 +316,3 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
     </div>
   );
 };
-
-function audioBufferToWav(buffer: AudioBuffer): Blob {
-  const numChannels = buffer.numberOfChannels;
-  const sampleRate = buffer.sampleRate;
-  const format = 1;
-  const bitDepth = 16;
-
-  const length = buffer.length * numChannels * 2;
-  const bufferArray = new ArrayBuffer(44 + length);
-  const view = new DataView(bufferArray);
-
-  const writeString = (offset: number, str: string) => {
-    for (let i = 0; i < str.length; i++) {
-      view.setUint8(offset + i, str.charCodeAt(i));
-    }
-  };
-
-  writeString(0, 'RIFF');
-  view.setUint32(4, 36 + length, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true);
-  view.setUint16(20, format, true);
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true);
-  view.setUint16(32, numChannels * (bitDepth / 8), true);
-  view.setUint16(34, bitDepth, true);
-  writeString(36, 'data');
-  view.setUint32(40, length, true);
-
-  let offset = 44;
-  for (let i = 0; i < buffer.length; i++) {
-    for (let channel = 0; channel < numChannels; channel++) {
-      const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
-      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
-      offset += 2;
-    }
-  }
-
-  return new Blob([view], { type: 'audio/wav' });
-}
