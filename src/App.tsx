@@ -1,0 +1,55 @@
+import React, { useEffect, useState } from 'react';
+import { Sidebar } from './components/Library/Sidebar';
+import { Navbar } from './components/Layout/Navbar';
+import { LibraryView } from './components/Library/LibraryView';
+import { BottomPlayer } from './components/Player/BottomPlayer';
+import { AudioVisualizerModal } from './components/Player/AudioVisualizerModal';
+import { EqualizerModal } from './components/Player/EqualizerModal';
+import { MiniPlayer } from './components/Player/MiniPlayer';
+import { ShortcutsModal } from './components/Shortcuts/ShortcutsModal';
+import { PlaylistModal } from './components/Playlists/PlaylistModal';
+import { LyricsModal } from './components/Player/LyricsModal';
+import { useLibraryStore } from './stores/useLibraryStore';
+import { usePlayerStore } from './stores/usePlayerStore';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+
+export const App: React.FC = () => {
+  const { loadFromDatabase } = useLibraryStore();
+  const { initAudioListeners } = usePlayerStore();
+  const [isCreatePlaylistOpen, setIsCreatePlaylistOpen] = useState(false);
+
+  // Initialize global keyboard shortcuts
+  useKeyboardShortcuts();
+
+  useEffect(() => {
+    initAudioListeners();
+    loadFromDatabase();
+  }, [initAudioListeners, loadFromDatabase]);
+
+  return (
+    <div className="flex h-screen w-screen overflow-hidden bg-[#0F0F12] text-[#F5F5F7] font-sans antialiased">
+      {/* Left Sidebar */}
+      <Sidebar onOpenCreatePlaylistModal={() => setIsCreatePlaylistOpen(true)} />
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
+        <Navbar />
+        <LibraryView onOpenCreatePlaylistModal={() => setIsCreatePlaylistOpen(true)} />
+        <BottomPlayer />
+      </main>
+
+      {/* Modals & Overlays */}
+      <AudioVisualizerModal />
+      <EqualizerModal />
+      <ShortcutsModal />
+      <LyricsModal />
+      <PlaylistModal
+        isOpen={isCreatePlaylistOpen}
+        onClose={() => setIsCreatePlaylistOpen(false)}
+      />
+      <MiniPlayer />
+    </div>
+  );
+};
+
+export default App;
