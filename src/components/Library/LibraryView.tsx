@@ -277,7 +277,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
 
             {displayedTracks.length > 150 ? (
               <VirtualizedTrackRows tracks={displayedTracks} renderTrack={(track, idx) => (
-                <TrackRow key={track.id} track={track} index={idx} onOpenCreatePlaylistModal={onOpenCreatePlaylistModal} playbackContext={playlistPlaybackContext} virtualized={true} selectionMode={selectionMode} isSelected={selectedTrackIds.has(track.id)} onToggleSelected={() => toggleTrackSelection(track.id)} onMoveUp={activeTab === 'playlists' && selectedPlaylistId && idx > 0 ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx - 1) : undefined} onMoveDown={activeTab === 'playlists' && selectedPlaylistId && idx < displayedTracks.length - 1 ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx + 1) : undefined} />
+                <TrackRow key={track.id} track={track} index={idx} onOpenCreatePlaylistModal={onOpenCreatePlaylistModal} playbackContext={playlistPlaybackContext} playbackQueue={displayedTracks} virtualized={true} selectionMode={selectionMode} isSelected={selectedTrackIds.has(track.id)} onToggleSelected={() => toggleTrackSelection(track.id)} onMoveUp={activeTab === 'playlists' && selectedPlaylistId && idx > 0 ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx - 1) : undefined} onMoveDown={activeTab === 'playlists' && selectedPlaylistId && idx < displayedTracks.length - 1 ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx + 1) : undefined} />
               )} />
             ) : (
               <div className="divide-y divide-[var(--liquid-glass-border-subtle)]">
@@ -286,6 +286,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
                     key={track.id} track={track} index={idx}
                     onOpenCreatePlaylistModal={onOpenCreatePlaylistModal}
                     playbackContext={playlistPlaybackContext}
+                    playbackQueue={displayedTracks}
                     selectionMode={selectionMode} isSelected={selectedTrackIds.has(track.id)}
                     onToggleSelected={() => toggleTrackSelection(track.id)}
                     onMoveUp={activeTab === 'playlists' && selectedPlaylistId && idx > 0 ? () => reorderPlaylistTracks(selectedPlaylistId, idx, idx - 1) : undefined}
@@ -303,6 +304,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onOpenCreatePlaylistMo
                 track={track}
                 onOpenCreatePlaylistModal={onOpenCreatePlaylistModal}
                 playbackContext={playlistPlaybackContext}
+                playbackQueue={displayedTracks}
                 selectionMode={selectionMode}
                 isSelected={selectedTrackIds.has(track.id)}
                 onToggleSelected={() => toggleTrackSelection(track.id)}

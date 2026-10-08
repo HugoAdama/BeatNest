@@ -417,3 +417,9 @@ Incluye soporte para modo **Pantalla Completa** (`requestFullscreen`) y controle
 - **Carga diferida de carátulas**: Las imágenes de filas, tarjetas, Inicio y cola se cargan al acercarse al área visible.
 - **Cola táctil y accesible**: Reordenar y quitar canciones está disponible con controles visibles en pantallas táctiles y etiquetas accesibles.
 - **Acciones de cola**: Se mantiene la opción de guardar la cola como playlist y de mover pistas arriba o abajo.
+
+## 47. Orden de Reproducción y Crossfade
+
+- **Orden coherente**: Al iniciar una pista desde una lista ordenada o filtrada, la cola sigue el orden visible; en playlists se conserva el orden propio de la playlist.
+- **Transiciones estables**: Durante la carga de una pista se ignoran eventos atrasados del audio anterior para evitar saltos de cola y cambios inesperados de pista.
+- **Crossfade automático**: La transición usa la siguiente pista de la cola activa y comienza dentro del intervalo configurado.

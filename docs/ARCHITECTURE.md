@@ -191,6 +191,7 @@ Para garantizar un mantenimiento óptimo y escalable, el código se estructura e
 - La navegación se serializa en el hash (`#/...`) para soportar despliegue estático, enlaces directos y el historial Atrás/Adelante sin añadir un servidor de rutas.
 - `App` escucha los cambios del historial y sincroniza la URL con el store. `navigateTo` crea una entrada al cambiar de sección; filtros y búsqueda reemplazan la entrada actual para evitar un paso del historial por cada tecla.
 - Los parámetros de búsqueda, género y formato acompañan a la vista en el hash y se restauran al volver a ella.
+- `TrackRow` y `TrackCard` reciben como cola la lista visible ya ordenada o filtrada para mantener el avance en el mismo orden que muestra la biblioteca.
 - `LibraryHomeView` compone los accesos a la escucha reciente, incorporaciones, favoritos de escucha y playlists. `LibraryHeader` y las vistas de artista/álbum implementan el detalle y el retorno a la colección.
 
 ### 2.8 Preferencias del Reproductor y Perfiles de Audio
@@ -214,6 +215,7 @@ Para garantizar un mantenimiento óptimo y escalable, el código se estructura e
 ### 2.11 Sesión de Reproducción y Rendimiento de Biblioteca
 - `usePlayerStore` serializa la sesión reproducible en `beatnest_playback_session`: identificadores de pista y cola, posición, historial reciente, repetición, aleatorio y contexto de playlist. Al iniciar, `App` espera a que `useLibraryStore.loadFromDatabase` hidrate las pistas antes de resolver los identificadores; el audio se carga únicamente tras la acción explícita de Reanudar.
 - El progreso de reproducción se escribe con límite de frecuencia para evitar persistir cada evento `timeupdate`. Los archivos de audio siguen residiendo en IndexedDB.
+- Mientras `playTrack` carga o conmuta el canal de audio, los eventos de tiempo y fin pendientes de la pista anterior se ignoran para que no adelanten la cola ni suplanten el progreso de la pista elegida.
 - `recordTrackPlay` incrementa y persiste `playCount`; el Inicio usa este dato para la sección Más reproducido.
 - `updateTracksMetadata` agrupa la escritura en IndexedDB y aplica un solo cambio a la biblioteca, sincronizando después la cola y el historial mediante `updateTracksInPlayer`.
 - `LibraryView` ofrece selección múltiple en lista y cuadrícula y abre `BulkEditTracksModal` para artista, álbum y género. La lista de tabla delega catálogos de más de 150 pistas en `VirtualizedTrackRows`, con altura estable por fila y margen de renderizado para desplazamiento.

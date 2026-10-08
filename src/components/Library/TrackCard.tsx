@@ -13,6 +13,7 @@ interface TrackCardProps {
   track: Track;
   onOpenCreatePlaylistModal: () => void;
   playbackContext?: PlaybackCollectionContext | null;
+  playbackQueue?: Track[];
   selectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelected?: () => void;
@@ -22,6 +23,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
   track,
   onOpenCreatePlaylistModal,
   playbackContext,
+  playbackQueue: visiblePlaybackQueue,
   selectionMode = false,
   isSelected = false,
   onToggleSelected,
@@ -48,7 +50,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
         ? playbackContext.playlistTrackIds
             .map((trackId) => tracks.find((item) => item.id === trackId))
             .filter((item): item is Track => !!item)
-        : tracks;
+        : visiblePlaybackQueue ?? tracks;
       playTrack(track, playbackQueue, undefined, playbackContext);
     }
   };

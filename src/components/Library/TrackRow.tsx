@@ -32,6 +32,7 @@ interface TrackRowProps {
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   playbackContext?: PlaybackCollectionContext | null;
+  playbackQueue?: Track[];
   selectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelected?: () => void;
@@ -45,6 +46,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   onMoveUp,
   onMoveDown,
   playbackContext,
+  playbackQueue: visiblePlaybackQueue,
   selectionMode = false,
   isSelected = false,
   onToggleSelected,
@@ -72,7 +74,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         ? playbackContext.playlistTrackIds
             .map((trackId) => tracks.find((item) => item.id === trackId))
             .filter((item): item is Track => !!item)
-        : tracks;
+        : visiblePlaybackQueue ?? tracks;
       playTrack(track, playbackQueue, undefined, playbackContext);
     }
   };

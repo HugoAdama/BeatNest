@@ -124,6 +124,7 @@ const loadSavedCrossfade = (): number => {
 };
 
 let lastCrossfadedTrackId: string | null = null;
+let pendingTrackLoads = 0;
 
 export const usePlayerStore = create<PlayerStore>((set, get) => ({
   currentTrack: null,
@@ -186,7 +187,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     const bindAudioEvents = (audio: HTMLAudioElement) => {
       audio.ontimeupdate = () => {
         const activeAudio = audioEngine.getAudioElement();
-        if (audio === activeAudio) {
+        if (audio === activeAudio && pendingTrackLoads === 0) {
           const cur = activeAudio.currentTime;
           const dur = activeAudio.duration && !isNaN(activeAudio.duration) ? activeAudio.duration : get().duration;
           
@@ -218,7 +219,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
         const activeAudio = audioEngine.getAudioElement();
         // Only the current active audio ending triggers nextTrack.
         // Outgoing audio from a crossfade is silenced and ignored.
-        if (audio === activeAudio) {
+        if (audio === activeAudio && pendingTrackLoads === 0) {
           const { repeatMode, queue, nextTrack } = get();
           if (repeatMode === 'one') {
             activeAudio.currentTime = 0;
@@ -260,6 +261,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
   },
 
   playTrack: async (track: Track, newQueue?: Track[], useCrossfade?: boolean, context?: PlaybackCollectionContext | null, startAtSeconds: number = 0) => {
+    pendingTrackLoads += 1;
     if (!useCrossfade) {
       lastCrossfadedTrackId = null;
     }
@@ -295,6 +297,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
     }
 
     if (!track.file) {
+      pendingTrackLoads = Math.max(0, pendingTrackLoads - 1);
       showToast(
         'Archivo no disponible',
         'Vuelve a añadir o importar el archivo de audio para reproducir esta pista.',
@@ -321,15 +324,19 @@ export const usePlayerStore = create<PlayerStore>((set, get) => ({
       .then(({ useLibraryStore }) => useLibraryStore.getState().recordTrackPlay(track.id))
       .catch((error) => console.warn('Could not record track play:', error));
 
-    useAudioSettingsStore.getState().applyAutomaticAudioProfile(track, context);
+    try {
+      useAudioSettingsStore.getState().applyAutomaticAudioProfile(track, context);
 
-    const isAlreadyPlaying = get().isPlaying && !!audioEngine.getAudioElement().src;
-    const shouldCrossfade = useCrossfade !== undefined
-      ? useCrossfade
-      : (get().crossfadeDuration > 0 && isAlreadyPlaying);
-    const crossfadeSec = shouldCrossfade ? get().crossfadeDuration : 0;
-    await audioEngine.loadTrack(track.file, crossfadeSec);
-    if (startAt > 0) audioEngine.seek(startAt);
+      const isAlreadyPlaying = get().isPlaying && !!audioEngine.getAudioElement().src;
+      const shouldCrossfade = useCrossfade !== undefined
+        ? useCrossfade
+        : (get().crossfadeDuration > 0 && isAlreadyPlaying);
+      const crossfadeSec = shouldCrossfade ? get().crossfadeDuration : 0;
+      await audioEngine.loadTrack(track.file, crossfadeSec);
+      if (startAt > 0) audioEngine.seek(startAt);
+    } finally {
+      pendingTrackLoads = Math.max(0, pendingTrackLoads - 1);
+    }
 
     try {
       await audioEngine.play();
