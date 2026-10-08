@@ -19,7 +19,7 @@ Todo se procesa en el cliente utilizando APIs nativas del navegador web: **File 
 - **Privacidad Local**: No se envían archivos ni datos de escucha a servidores. La interfaz usa fuentes del sistema y el modo offline solo almacena recursos del propio BeatNest.
 - **Acceso a Archivos Locales**: Selección de carpetas directas con la File System Access API y fallback automático de entrada HTML5 para compatibilidad multiplataforma (Chrome, Edge, Firefox, Safari, Brave).
 - **Extracción de Metadatos Completa**: Extracción automática de ID3v1, ID3v2, FLAC Vorbis Comments y contenedores MP4 con `music-metadata-browser`, además de cálculo de duración y obtención de carátulas en alta resolución.
-- **Transición Suave (Crossfade) y Zero-Click Audio**: Arquitectura de doble canal con nodos `GainNode` para fundir suavemente canciones sin cortes abruptos, protección anticascada y micro-fade analógico de 35-40ms al pausar o dar play.
+- **Transición Suave (Crossfade) y Zero-Click Audio**: Arquitectura de doble canal con nodos `GainNode` para fundir suavemente canciones sin cortes abruptos; la siguiente pista respeta el orden activo de la cola y se descartan eventos atrasados del canal anterior.
 - **Gestor de Carátulas y Generador de Arte Procedural**: Asignación de fotos mediante selector de archivos o arrastrar y soltar, generador algorítmico de carátulas abstractas en Canvas HTML5 y persistencia completa en IndexedDB.
 - **Experiencia de Playlists Estilo Spotify**: Portada dinámica tipo collage 2x2 basada en las canciones de la lista, soporte para carátula propia personalizada, botones directos de «Reproducir todo» y «Aleatorio», y sección integrada para añadir nuevas pistas con un clic.
 - **Pack Demo Integrado con Síntesis de Estudio**: Generador offline de 3 pistas completas («Aurora Synthwave», «Velvet Horizon», «Cyber Pulse») con portadas de alta definición y creación automática de lista de reproducción inicial.
@@ -31,9 +31,11 @@ Todo se procesa en el cliente utilizando APIs nativas del navegador web: **File 
 - **Visualizador de Audio en Tiempo Real (Canvas 60fps)**: 4 modos de visualización reactiva (*Barras de frecuencia, Osciloscopio, Radial 360° y Pulso reactivo*), con soporte para pantalla completa.
 - **Waveform Scrubber Interactivo**: Barra de progreso con silueta de onda de audio, previsualización de tiempo al pasar el cursor y búsqueda de posición suave.
 - **Persistencia Completa en IndexedDB**: Almacenamiento local mediante Dexie.js para biblioteca, pistas de audio (blobs), favoritos, metadatos y listas de reproducción.
+- **Reanudación de Sesión**: Guarda localmente la pista activa, su posición, cola e historial reciente; al volver a abrir BeatNest, la reproducción espera a que el usuario pulse Reanudar.
 - **Respaldo JSON de metadatos**: Exporta playlists, favoritos, letras y metadatos. El archivo no incluye audio; para restaurar la reproducción hay que volver a importar los archivos locales.
 - **Listas Inteligentes Dinámicas**: «Más reproducidas» se ordena por actividad, «Añadidas recientemente» por fecha de importación y «Pistas largas» filtra duraciones superiores a cinco minutos.
-- **Cola de Reproducción Avanzada**: Panel lateral deslizable para ordenar, guardar la cola directamente como una nueva lista de reproducción permanente o limpiar pistas siguientes.
+- **Cola de Reproducción Avanzada**: Panel lateral deslizable para reordenar canciones, guardarla como playlist y limpiar pistas siguientes; los controles también están disponibles en pantallas táctiles.
+- **Edición Masiva y Bibliotecas Grandes**: Selecciona varias pistas para actualizar artista, álbum o género; las listas extensas virtualizan filas y cargan carátulas de forma diferida.
 - **Exportación Estándar .M3U**: Descarga de listas de reproducción en formato `.m3u` con metadatos extendidos para interoperabilidad con reproductores externos como VLC.
 - **Filtros por Formato y Género**: Filtrado instantáneo por contenedor de audio (MP3, FLAC, WAV, OGG, M4A) y chips de género interactivos.
 - **Mini Reproductor Flotante**: Modo compacto para mantener el control de la música mientras trabajas en otras pestañas.
